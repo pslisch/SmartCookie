@@ -1,0 +1,22 @@
+# YAML Manifest Template
+feature: [Feature Name]
+version: 1.0.0
+description: "[Brief explanation of feature goals]"
+components:
+  - src/components/ui/MyComponent.tsx
+pages:
+  - src/pages/MyPage.tsx
+apis:
+  - /api/my-endpoint
+database_tables:
+  - my_table
+routes:
+  - /my-route
+permissions:
+  - Student
+events:
+  - event:triggered
+dependencies:
+  - lucide-react
+tests:
+  - src/tests/my-test.test.ts
