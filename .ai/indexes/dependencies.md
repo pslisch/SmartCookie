@@ -45,3 +45,8 @@ Each feature should eventually map:
 - **Components**: None (Catalog stream cards are inline placeholders)
 - **Routes**: `catalog`
 - **Events**: None
+
+---
+
+## 🟡 Unused / Reserved Dependencies
+- **Packages**: `@google/genai`, `express`, `dotenv` (Platform-injected defaults, currently unused in the v1.0.0 client-only build. See [ADR-0002](../decisions/README.md#adr-0002-document-unused-platform-dependencies)).

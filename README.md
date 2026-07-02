@@ -1,20 +1,16 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# SmartCookie
 
-# Run and deploy your AI Studio app
+Learning Management System foundation shell with navigation, My Lessons dashboard, and comprehensive documentation system.
 
-This contains everything you need to run your app locally.
+Full documentation: see [/docs/README.md](./docs/README.md)
 
-View your app in AI Studio: https://ai.studio/apps/84c1033d-efc6-4c75-9144-cc0b45950ff9
+---
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+To spin up the development server locally, execute:
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+npm install
+npm run dev
+```

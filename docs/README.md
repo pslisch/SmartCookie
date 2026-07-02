@@ -47,24 +47,25 @@ The project is structured modularly to promote separation of concerns, scalabili
 
 ```
 docs/                     # Comprehensive documentation system
+.ai/                      # AI-maintained indices, decision logs, and blueprints
 src/
-├── assets/               # Static assets (images, logos, SVGs)
-├── components/           # Reusable UI and shared components
-│   ├── common/           # Domain-independent visual components (buttons, badges)
-│   ├── layout/           # Page structural layout components (Shell, Content, Footer)
-│   └── ui/               # Interactive UI pieces
-├── navigation/           # Navigation bars, tabs, drawer layouts
-├── pages/                # Independent views/screens (MyLessons, Catalog)
-├── hooks/                # Custom React Hooks
-├── services/             # API and external integrations (Placeholder)
-├── contexts/             # Global React state providers (Placeholder)
-├── types/                # TypeScript interfaces, types, and enums
-├── utils/                # Helper functions and utilities
-├── constants/            # Global application constants
-├── routes/               # Navigation routing configuration (Placeholder)
-├── styles/               # Global CSS files and theme overrides
-├── App.tsx               # Main application component coordinating navigation/views
-└── main.tsx              # Application mount point
+├── features/             # Independent, self-contained business logic modules
+│   ├── lessons/          # Student hub and enrolled lessons
+│   │   ├── README.md
+│   │   └── pages/
+│   │       └── MyLessons.tsx
+│   └── catalog/          # Curriculum tracks catalog and search
+│       ├── README.md
+│       └── pages/
+│           └── Catalog.tsx
+├── shared/               # Code shared across multiple features
+│   ├── components/
+│   │   └── layout/       # Viewports, sticky header, navigation, and footer (Shell.tsx, Navbar.tsx, Footer.tsx)
+│   └── types/
+│       └── index.ts      # Shared TypeScript definitions
+├── App.tsx               # Main visual orchestrator and view controller
+├── main.tsx              # Application mount point
+└── index.css             # Tailwind CSS entries and global styles
 ```
 
 ---

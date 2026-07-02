@@ -15,8 +15,20 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0002] Document Unused Platform Dependencies
+- **Status**: Draft
+- **Date**: 2026-07-02
+- **Authors**: AI Coding Agent
+- **Context**: package.json includes `@google/genai`, `express`, and `dotenv`. None are imported or used anywhere in `/src`. They originate from the default AI Studio platform template, alongside `metadata.json`'s `"MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"` flag.
+- **Decision**: Keep these dependencies and configuration settings for now pending an explicit product decision, rather than deleting them, and do not wire them into any codebase feature in this pass.
+- **Consequences**:
+  - **Positives**: Retains full compatibility with any future AI features or backend server capability if requested.
+  - **Negatives**: Flags as technical debt and dead weight if no AI or custom server features are scoped within the next 2 release cycles. Recommend revisiting.
+
+---
+
 ## 🔮 Planned ADRs
 
-- **ADR-002: Authentication Strategy**: Detailing Firebase Auth and route guard schemas.
-- **ADR-003: Client Routing**: React Router integration and active state triggers.
-- **ADR-004: Relational Databases vs Document Stores**: Comparison between Postgres and Firestore configurations.
+- **ADR-0003: Authentication Strategy**: Detailing Firebase Auth and route guard schemas.
+- **ADR-0004: Client Routing**: React Router integration and active state triggers.
+- **ADR-0005: Relational Databases vs Document Stores**: Comparison between Postgres and Firestore configurations.
