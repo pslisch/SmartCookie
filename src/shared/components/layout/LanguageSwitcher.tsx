@@ -2,8 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Languages, Check } from 'lucide-react';
 
-export const LanguageSwitcher: React.FC = () => {
-  const { i18n } = useTranslation();
+interface LanguageSwitcherProps {
+  variant: 'desktop' | 'mobile';
+}
+
+export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant }) => {
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -51,14 +55,14 @@ export const LanguageSwitcher: React.FC = () => {
   };
 
   return (
-    <div className="relative inline-block text-left" ref={containerRef} id="language-switcher-container">
+    <div className="relative inline-block text-left" ref={containerRef} id={`language-switcher-container-${variant}`}>
       <button
         onClick={handleToggle}
         className="flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:bg-slate-100"
         aria-haspopup="true"
         aria-expanded={isOpen}
-        id="language-switcher-btn"
-        title="Change language"
+        id={`language-switcher-btn-${variant}`}
+        title={t('nav.changeLanguage')}
       >
         <Languages className="h-4 w-4 mr-1.5 text-slate-500" />
         <span className="text-xs font-semibold uppercase">{currentLanguage}</span>
@@ -69,8 +73,8 @@ export const LanguageSwitcher: React.FC = () => {
           className="absolute right-0 mt-2 w-40 origin-top-right rounded-lg border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-none z-50"
           role="menu"
           aria-orientation="vertical"
-          aria-labelledby="language-switcher-btn"
-          id="language-switcher-dropdown"
+          aria-labelledby={`language-switcher-btn-${variant}`}
+          id={`language-switcher-dropdown-${variant}`}
         >
           {supportedLanguages.map((lang) => {
             const isSelected = currentLanguage === lang.code;
@@ -84,7 +88,7 @@ export const LanguageSwitcher: React.FC = () => {
                     : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                 }`}
                 role="menuitem"
-                id={`lang-option-${lang.code}`}
+                id={`lang-option-${lang.code}-${variant}`}
               >
                 <span>{lang.label}</span>
                 {isSelected && <Check className="h-3.5 w-3.5 text-blue-600" />}
