@@ -41,3 +41,10 @@ Every registered component should include:
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx`
 - **Dependencies**: React, Motion, `package.json` metadata
+
+### 4. `LanguageSwitcher`
+- **Location**: `src/shared/components/layout/LanguageSwitcher.tsx`
+- **Purpose**: Keyboard-accessible language selection drop-down with click-outside and escape-key dismissal.
+- **Props**: None (Self-contained).
+- **Used By**: `src/shared/components/layout/Navbar.tsx`
+- **Dependencies**: React, Lucide React, `react-i18next`

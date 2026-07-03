@@ -1,0 +1,12 @@
+{
+  "nav": {
+    "myLessons": "My Lessons",
+    "catalog": "Catalog",
+    "account": "Account",
+    "openMenu": "Open main menu"
+  },
+  "footer": {
+    "brand": "SmartCookie",
+    "version": "Version"
+  }
+}

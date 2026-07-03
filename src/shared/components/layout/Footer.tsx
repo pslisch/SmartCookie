@@ -5,10 +5,12 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 import pkg from '@/package.json';
 
 export const Footer: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <footer className="h-12 w-full border-t border-slate-200 bg-white flex items-center shrink-0 mt-auto" id="footer-root">
@@ -46,7 +48,7 @@ export const Footer: React.FC = () => {
                     transition={{ duration: 0.15 }}
                     className="text-slate-400 font-normal"
                   >
-                    SmartCookie
+                    {t('footer.brand')}
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -55,7 +57,7 @@ export const Footer: React.FC = () => {
 
           {/* Version Info from package.json */}
           <div className="flex items-center space-x-1.5 font-mono text-xs text-slate-400" id="footer-version-tag">
-            <span>Version</span>
+            <span>{t('footer.version')}</span>
             <span className="px-2 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">v{pkg.version}</span>
           </div>
 

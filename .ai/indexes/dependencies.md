@@ -46,6 +46,16 @@ Each feature should eventually map:
 - **Routes**: `catalog`
 - **Events**: None
 
+### 4. Internationalization Engine (i18n)
+- **Uses**: `i18next`, `react-i18next`, `i18next-browser-languagedetector`, `src/shared/i18n/locales/en/common.json`
+- **Used By**: `src/main.tsx`, `src/shared/components/layout/Navbar.tsx`, `src/shared/components/layout/Footer.tsx`, `src/shared/components/layout/LanguageSwitcher.tsx`
+- **Database**: None
+- **Services**: Translation loading, detection and persistence
+- **Components**: `LanguageSwitcher`
+- **Routes**: App-wide / global
+- **Events**: `i18next.changeLanguage` triggers
+
+
 ---
 
 ## 🟡 Unused / Reserved Dependencies

@@ -69,3 +69,15 @@ Every logged feature should eventually document:
 - **Routes**: `catalog` Tab
 - **Events**: None
 - **Dependencies**: Lucide React, Motion, React
+
+### 5. Internationalization (i18n) Infrastructure
+- **Description**: Multi-language translation framework supporting locale auto-detection, persistent localStorage caching, and logical layout properties. Details defined in [ADR-0003](../decisions/README.md#adr-0003-i18n-architecture).
+- **Components**: `src/shared/components/layout/LanguageSwitcher.tsx`
+- **Pages**: Global / layout-wide integration
+- **Services**: i18n initialization (`src/shared/i18n/config.ts`)
+- **APIs**: None
+- **Database**: None
+- **Permissions**: Public access
+- **Routes**: App-wide
+- **Events**: `i18n.changeLanguage` language switches
+- **Dependencies**: `i18next`, `react-i18next`, `i18next-browser-languagedetector`
