@@ -10,5 +10,41 @@
   "footer": {
     "brand": "SmartCookie",
     "version": "Version"
+  },
+  "setup": {
+    "title": "System Setup Wizard",
+    "subtitle": "Configure your SmartCookie application instance",
+    "step1": "Step 1 of 2",
+    "step2": "Step 2 of 2",
+    "superuserRequired": "Superuser Required",
+    "companyConfig": "Company Configuration",
+    "createPrimaryAdmin": "Create Primary Admin",
+    "adminDesc": "This administrator account will hold root permissions to configure companies and lessons.",
+    "username": "Admin Username",
+    "recoveryEmail": "Recovery Email Address",
+    "recoveryEmailDesc": "Used to receive important system notifications.",
+    "password": "Secure Password",
+    "complexity": "Complexity Guidelines:",
+    "complexityMin": "Minimum 8 characters",
+    "complexityCase": "At least 1 uppercase and 1 lowercase letter",
+    "complexitySym": "At least 1 number and 1 special symbol",
+    "createContinue": "Create & Continue",
+    "setupPrimaryCompany": "Set Up Primary Company",
+    "companyDesc": "Define the primary workspace identity. This represents your root entity.",
+    "companyName": "Company / Workspace Name",
+    "contactInfo": "Contact Information",
+    "contactInfoDesc": "Support info associated with this workspace profile.",
+    "completeLaunch": "Complete Configuration & Launch"
+  },
+  "login": {
+    "title": "SmartCookie",
+    "subtitle": "Administrator Control Center",
+    "secureAccess": "Secure Access",
+    "required": "Login Required",
+    "username": "Username",
+    "password": "Password",
+    "signIn": "Secure Sign In",
+    "placeholderUser": "Enter your username",
+    "placeholderPass": "••••••••"
   }
 }

@@ -59,4 +59,4 @@ Each feature should eventually map:
 ---
 
 ## 🟡 Unused / Reserved Dependencies
-- **Packages**: `@google/genai`, `express`, `dotenv` (Platform-injected defaults, currently unused in the v1.0.0 client-only build. See [ADR-0002](../decisions/README.md#adr-0002-document-unused-platform-dependencies)).
+- **Packages**: `@google/genai` (Platform-injected default, currently unused pending explicit AI feature requests).

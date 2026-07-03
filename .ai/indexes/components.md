@@ -48,3 +48,29 @@ Every registered component should include:
 - **Props**: None (Self-contained).
 - **Used By**: `src/shared/components/layout/Navbar.tsx`
 - **Dependencies**: React, Lucide React, `react-i18next`
+
+### 5. `AppGate`
+- **Location**: `src/shared/components/AppGate.tsx`
+- **Purpose**: Main orchestrator and security state machine for app entry. Intercepts views, verifies setup status, validates sessions, and renders either setup wizard, login page, or primary workspace children.
+- **Props**:
+  - `children`: `React.ReactNode` - Child layouts authorized to render after login.
+- **Used By**: `src/App.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `SetupWizard`, `Login`, Lucide Icons
+
+### 6. `SetupWizard`
+- **Location**: `src/features/auth/pages/SetupWizard.tsx`
+- **Purpose**: A localized, multi-step layout directing system administrators to register a primary superuser account and root company entity.
+- **Props**:
+  - `step`: `'superuser' | 'company'` - Active step matching database setup status.
+  - `onSuperuserSubmit`: `(username, password, recoveryEmail) => Promise<void>` - Superuser creation trigger.
+  - `onCompanySubmit`: `(name, contactInfo) => Promise<void>` - Company registration trigger.
+- **Used By**: `src/shared/components/AppGate.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, Lucide Icons
+
+### 7. `Login`
+- **Location**: `src/features/auth/pages/Login.tsx`
+- **Purpose**: Secure administrator and user credentials form. Integrates with attempted-page storage for automatic redirect-back behavior.
+- **Props**:
+  - `onLoginSuccess`: `() => Promise<void>` - Refresh trigger on session creation.
+- **Used By**: `src/shared/components/AppGate.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, Lucide Icons

@@ -1,0 +1,54 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  DISABLED
+  ARCHIVED
+  LOCKED
+}
+
+model User {
+  id            String     @id @default(uuid())
+  username      String     @unique
+  passwordHash  String
+  isSuperuser   Boolean    @default(false)
+  recoveryEmail String
+  companyId     String?
+  company       Company?   @relation(fields: [companyId], references: [id])
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Company {
+  id               String    @id @default(uuid())
+  name             String
+  contactInfo      String
+  setupCompletedAt DateTime?
+  users            User[]
+
+  @@map("companies")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+
+  @@map("sessions")
+}

@@ -81,3 +81,15 @@ Every logged feature should eventually document:
 - **Routes**: App-wide
 - **Events**: `i18n.changeLanguage` language switches
 - **Dependencies**: `i18next`, `react-i18next`, `i18next-browser-languagedetector`
+
+### 6. Authentication & System Setup Wizard
+- **Description**: Ensures secure enterprise initialization via a multi-step wizard, creates root superuser credentials, establishes a primary company partition, governs user access via cookie-bound session profiles, and provides a rate-limited secure login gate.
+- **Components**: `src/shared/components/AppGate.tsx`, `src/features/auth/pages/SetupWizard.tsx`, `src/features/auth/pages/Login.tsx`
+- **Pages**: Root / Workspace Access controls
+- **Services**: `SetupWizardService` (`server/src/features/auth/services/setupWizard.service.ts`), `EmailPasswordAuthProvider` (`server/src/features/auth/services/auth.service.ts`), `EmailService` (`server/src/shared/email/email.service.ts`)
+- **APIs**: `/api/setup/status`, `/api/setup/superuser`, `/api/setup/company`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/session`, `/api/auth/recovery-email`
+- **Database**: `users`, `companies`, `sessions` (Prisma schema + MariaDB)
+- **Permissions**: Public for initialization and login, superuser for company step, session-bound for core pages and recovery profile changes.
+- **Routes**: Wizard triggers, Login gate, Client state routing with redirect-back persistence
+- **Events**: Account email updates fire notification events via standard SMTP/Email transporters.
+- **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, express-rate-limit, cookie-parser
