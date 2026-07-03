@@ -43,8 +43,80 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
-## 🔮 Planned ADRs
+### [ADR-0004] Backend Runtime & Data Layer
+- **Status**: Approved
+- **Date**: 2026-07-03
+- **Authors**: AI Coding Agent
+- **Context**: SmartCookie has been a client-only static SPA (v1.0.0) with
+  no backend, database, or persistence layer — every `.ai/indexes/*` file
+  confirms this. The Authentication feature is the first to require
+  server-side infrastructure: identity, sessions, password hashing,
+  invitation tokens. ADR-0002 already reserved `express`/`dotenv` pending
+  exactly this decision.
+- **Decision**:
+  - **Backend runtime**: Node.js + TypeScript + Express. Matches the
+    existing AI Studio platform scaffolding, and keeps one language across
+    the whole stack — types and validation schemas can be shared between
+    frontend and backend instead of hand-duplicated.
+  - **Database**: MariaDB (relational). User/role/permission/company data
+    is inherently relational (foreign keys, joins), which resolves the
+    previously "Planned" ADR comparing relational vs. document stores in
+    favor of relational — see Supersedes below.
+  - **ORM**: Prisma. Type-safe generated queries and migrations, fits the
+    TypeScript-everywhere approach.
+  - **Sessions**: DB-backed session store, not stateless JWT — required to
+    support "logout from all devices" and server-side session invalidation
+    as specified in the Authentication feature doc.
+  - **Schema note**: The Setup Wizard's "Organization" step creates a
+    single `company` record — one per install, not multi-tenant. Every
+    `user` belongs to that company. The future Organization/groups/
+    subgroups roadmap feature will add a separate, self-referencing
+    `org_units` hierarchy plus a `users`⇄`org_units` join table for
+    group-based lesson assignment. This is purely additive — no redesign
+    of the tables introduced here.
+- **Consequences**:
+  - **Positives**: single-language stack, mature relational tooling,
+    session model matches requirements without workarounds, low
+    operational risk (standard managed MariaDB + Prisma migrations).
+  - **Negatives**: introduces the project's first real backend deployment
+    surface (migrations, environment secrets, DB hosting) — must be
+    planned as its own task before any Authentication task lands.
+- **Supersedes**: Resolves the previously Planned "Relational Databases
+  vs Document Stores" ADR in favor of relational (MariaDB). Removed from
+  the Planned list below.
 
-- **ADR-0004: Authentication Strategy**: Detailing Firebase Auth and route guard schemas.
-- **ADR-0005: Client Routing**: React Router integration and active state triggers.
-- **ADR-0006: Relational Databases vs Document Stores**: Comparison between Postgres and Firestore configurations.
+---
+
+### [ADR-0005] Notification / Email Architecture
+- **Status**: Approved
+- **Date**: 2026-07-03
+- **Authors**: AI Coding Agent
+- **Context**: Authentication requires transactional email (invitations,
+  password resets). Self-hosting a mail transfer agent carries significant
+  deliverability risk (IP reputation, SPF/DKIM/DMARC, blacklists)
+  unrelated to the LMS's core purpose.
+- **Decision**: Build an in-app `EmailService` abstraction — the rest of
+  the app never talks to a mail transport directly, mirroring the
+  auth-provider abstraction already required by the Authentication feature
+  spec (§3). Use Nodemailer (open source, MIT license) as the transport
+  implementation, initially configured against a standard SMTP relay. A
+  self-hosted open-source mail server (e.g. Postal) can be substituted
+  later as a pure transport swap, with zero application-code changes.
+- **Consequences**:
+  - **Positives**: no deliverability risk in MVP, provider-agnostic from
+    day one, satisfies both "build our own" and "open source" without the
+    operational burden of running a mail server immediately.
+  - **Negatives**: initial reliance on a third-party SMTP relay until/
+    unless a self-hosted mail server is stood up later.
+
+---
+
+## 🔮 Planned ADRs (updated)
+
+- **ADR-0006: Authentication Strategy**: Detailing the Superuser,
+  Setup Wizard, and Email/Password provider implementation (MVP scope).
+- **ADR-0007: Client Routing**: React Router integration and active
+  state triggers.
+
+(Previously "ADR-0006: Relational Databases vs Document Stores" removed —
+resolved by ADR-0004.)
