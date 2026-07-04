@@ -17,15 +17,15 @@ export class AuthenticationError extends Error {
 
 export interface AuthUser {
   id: string;
-  username: string;
+  username: string | null;
   isSuperuser: boolean;
-  recoveryEmail: string;
+  recoveryEmail: string | null;
   companyId: string | null;
   status: string;
 }
 
 export interface AuthCredentials {
-  username: string;
+  identifier: string;
   password: string;
 }
 
@@ -98,29 +98,35 @@ export class EmailPasswordAuthProvider implements AuthProvider {
   }
 
   /**
-   * Authenticates a user with username and password.
+   * Authenticates a user with username/email and password.
    */
   async authenticate(credentials: AuthCredentials): Promise<AuthUser> {
-    const { username, password } = credentials;
+    const { identifier, password } = credentials;
 
-    if (!username || typeof username !== 'string') {
-      throw new AuthenticationError('Username is required.');
+    if (!identifier || typeof identifier !== 'string') {
+      throw new AuthenticationError('Username or email is required.');
     }
     if (!password || typeof password !== 'string') {
       throw new AuthenticationError('Password is required.');
     }
 
-    // Find user in database
-    const user = await prisma.user.findUnique({
-      where: { username },
+    // Find user in database by username first, then by email
+    let user = await prisma.user.findUnique({
+      where: { username: identifier },
     });
+
+    if (!user) {
+      user = await prisma.user.findUnique({
+        where: { email: identifier.trim().toLowerCase() },
+      });
+    }
 
     if (!user) {
       throw new AuthenticationError('Invalid username or password.');
     }
 
     // Verify password
-    const isValid = await this.verifyPassword(password, user.passwordHash);
+    const isValid = user.passwordHash ? await this.verifyPassword(password, user.passwordHash) : false;
     if (!isValid) {
       throw new AuthenticationError('Invalid username or password.');
     }

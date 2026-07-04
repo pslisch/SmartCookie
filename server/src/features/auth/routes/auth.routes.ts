@@ -11,16 +11,17 @@ import { TokenPurpose } from '@prisma/client';
 const router = Router();
 
 /**
- * POST /api/auth/login -> { username, password }
+ * POST /api/auth/login -> { identifier, password }
  */
 router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required.' });
+    const { identifier, username, password } = req.body;
+    const loginIdentifier = identifier || username;
+    if (!loginIdentifier || !password) {
+      return res.status(400).json({ error: 'Username/email and password are required.' });
     }
 
-    const user = await emailPasswordAuthProvider.authenticate({ username, password });
+    const user = await emailPasswordAuthProvider.authenticate({ identifier: loginIdentifier, password });
 
     // Reset rate limiter count for this identifier on successful login
     loginRateLimiter.reset(req);

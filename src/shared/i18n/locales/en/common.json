@@ -17,10 +17,12 @@
     "secureAccess": "Secure Access",
     "required": "Login Required",
     "username": "Username",
+    "identifier": "Username or Email",
     "password": "Password",
     "forgotPassword": "Forgot password?",
     "signIn": "Secure Sign In",
     "placeholderUser": "Enter your username",
+    "placeholderIdentifier": "Enter your username or email",
     "placeholderPass": "••••••••",
     "errors": {
       "fieldsRequired": "All fields are required.",

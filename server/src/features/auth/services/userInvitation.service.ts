@@ -40,14 +40,10 @@ export class UserInvitationService {
     }
 
     // Create User in PENDING status
-    // Note: passwordHash is non-nullable String in schema, so we set it to ""
-    // Note: recoveryEmail is non-nullable String in schema, so we set it to ""
     const newUser = await prisma.user.create({
       data: {
         email: normalizedEmail,
         username: null,
-        passwordHash: '',
-        recoveryEmail: '',
         companyId: company.id,
         status: UserStatus.PENDING,
       },

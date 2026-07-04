@@ -20,7 +20,7 @@ function getCookie(name: string): string {
 
 export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
   const { t } = useTranslation();
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -42,7 +42,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
     e.preventDefault();
     setError('');
 
-    if (!username.trim() || !password) {
+    if (!identifier.trim() || !password) {
       setError(t('login.errors.fieldsRequired'));
       return;
     }
@@ -56,7 +56,8 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
           'X-CSRF-Token': getCookie('csrfToken'),
         },
         body: JSON.stringify({
-          username: username.trim(),
+          identifier: identifier.trim(),
+          username: identifier.trim(),
           password: password,
         }),
       });
@@ -113,17 +114,17 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="login-username">
-                {t('login.username')}
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="login-identifier">
+                {t('login.identifier')}
               </label>
               <input
                 type="text"
-                id="login-username"
+                id="login-identifier"
                 required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder={t('login.placeholderUser')}
+                placeholder={t('login.placeholderIdentifier')}
               />
             </div>
 
