@@ -22,8 +22,9 @@ export function requirePermission(module: string, action: string) {
         }
 
         return res.status(403).json({ error: `Forbidden: Missing required permission "${module}:${action}".` });
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message || 'Internal server error validating permission.' });
+      } catch (error) {
+        console.error(`Permission validation error for ${module}:${action}:`, error);
+        return res.status(500).json({ error: 'Internal server error validating permission.' });
       }
     });
   };

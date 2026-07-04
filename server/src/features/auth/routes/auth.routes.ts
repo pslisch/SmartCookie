@@ -74,12 +74,13 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
         effectivePermissions,
       },
     });
-  } catch (error: any) {
-    if (error.name === 'AuthenticationError') {
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    if (err.name === 'AuthenticationError') {
       loginRateLimiter.recordFailure(req);
-      return res.status(401).json({ error: error.message });
+      return res.status(401).json({ error: err.message });
     }
-    res.status(500).json({ error: error.message || 'An internal error occurred.' });
+    res.status(500).json({ error: err.message || 'An internal error occurred.' });
   }
 });
 
@@ -98,8 +99,9 @@ router.post('/logout', async (req: Request, res: Response) => {
     }
 
     res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'An internal error occurred.' });
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    res.status(500).json({ error: err.message || 'An internal error occurred.' });
   }
 });
 
@@ -135,8 +137,9 @@ router.get('/session', requireAuth, async (req: Request, res: Response) => {
         effectivePermissions,
       },
     });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'An internal error occurred.' });
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    res.status(500).json({ error: err.message || 'An internal error occurred.' });
   }
 });
 
@@ -170,8 +173,9 @@ router.patch('/recovery-email', requireAuth, async (req: Request, res: Response)
       success: true,
       newEmail: trimmedNewEmail,
     });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'An internal error occurred.' });
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    res.status(500).json({ error: err.message || 'An internal error occurred.' });
   }
 });
 
@@ -263,16 +267,17 @@ router.post('/activate', async (req: Request, res: Response) => {
         effectivePermissions,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
     const isValidationError =
-      error.name === 'PasswordValidationError' ||
-      error.message === 'Invalid token' ||
-      error.message === 'Token already used' ||
-      error.message === 'Token expired' ||
-      error.message === 'Token already used or expired';
+      err.name === 'PasswordValidationError' ||
+      err.message === 'Invalid token' ||
+      err.message === 'Token already used' ||
+      err.message === 'Token expired' ||
+      err.message === 'Token already used or expired';
 
     return res.status(isValidationError ? 400 : 500).json({
-      error: error.message || 'An internal error occurred.'
+      error: err.message || 'An internal error occurred.'
     });
   }
 });
@@ -316,7 +321,7 @@ router.post('/forgot-password', forgotPasswordRateLimiter.middleware, async (req
       success: true,
       message: 'If the email exists and is active, a password reset link has been sent.',
     });
-  } catch (error: any) {
+  } catch (error) {
     return res.status(500).json({ error: 'An internal error occurred.' });
   }
 });
@@ -411,16 +416,17 @@ router.post('/reset-password', async (req: Request, res: Response) => {
         effectivePermissions,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
     const isValidationError =
-      error.name === 'PasswordValidationError' ||
-      error.message === 'Invalid token' ||
-      error.message === 'Token already used' ||
-      error.message === 'Token expired' ||
-      error.message === 'Token already used or expired';
+      err.name === 'PasswordValidationError' ||
+      err.message === 'Invalid token' ||
+      err.message === 'Token already used' ||
+      err.message === 'Token expired' ||
+      err.message === 'Token already used or expired';
 
     return res.status(isValidationError ? 400 : 500).json({
-      error: error.message || 'An internal error occurred.',
+      error: err.message || 'An internal error occurred.',
     });
   }
 });

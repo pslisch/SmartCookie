@@ -10,6 +10,10 @@ export class RoleService {
       throw new Error('Role name is required.');
     }
 
+    if (trimmedName.toLowerCase() === 'superuser') {
+      throw new Error('The role name "Superuser" is reserved for system use.');
+    }
+
     // Verify company exists
     const company = await prisma.company.findUnique({
       where: { id: companyId },
@@ -52,6 +56,10 @@ export class RoleService {
 
     if (role.isProtected) {
       throw new Error(`Cannot rename the protected role "${role.name}".`);
+    }
+
+    if (trimmedName.toLowerCase() === 'superuser') {
+      throw new Error('The role name "Superuser" is reserved for system use.');
     }
 
     return await prisma.role.update({
@@ -237,13 +245,6 @@ export class RoleService {
         },
       });
     });
-  }
-
-  /**
-   * Alias for updatePermissions to match different naming conventions.
-   */
-  async editPermissions(roleId: string, permissionIds: string[]) {
-    return this.updatePermissions(roleId, permissionIds);
   }
 
   /**

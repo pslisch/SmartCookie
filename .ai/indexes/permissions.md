@@ -35,6 +35,6 @@ Every permission represents a logical action on a module:
 ### 4. Active Permission Controls
 | Module | Action | Purpose | Server Gate | Frontend Element |
 | :--- | :--- | :--- | :--- | :--- |
-| `users` | `invite` | Inviting new users to the organization | `POST /api/users/invite`, etc. | Invite user dialog controls |
-| `users` | `reset-password` | Initiating passwords reset for others | `POST /api/users/:id/admin-reset-password` | Admin reset password trigger button |
+| `users` | `create` | Inviting new users/creating accounts | `POST /api/users/invite` | Invite user dialog controls |
+| `users` | `edit` | Resending invitations or admin-resetting passwords | `POST /api/users/:id/resend-invitation`, `POST /api/users/:id/admin-reset-password` | Admin reset password trigger, Resend invite button |
 | `roles` | `manage` | Full configuration of role registry, parent hierarchies, and system settings | `/api/roles/*`, `/api/company/settings` | **Settings** Navigation tab & Role Management editor |
