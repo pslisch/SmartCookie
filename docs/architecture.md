@@ -85,17 +85,23 @@ The diagram below outlines the full-stack system architecture, detailing the ent
 ## 📂 Key Folders & Responsibilities
 
 ### Frontend Architecture
-- **`src/shared/components/AppGate.tsx`**: System access orchestrator. Intercepts visual mounting, polls setup status, manages active user states, blocks access to child layouts, and forces redirects to Setup Wizard or Login screens.
+- **`src/shared/components/AppGate.tsx`**: System access orchestrator. Intercepts visual mounting, polls setup status, manages active user states, blocks access to child layouts, intercepts invitation activation or password reset tokens from URLs, and routes users to appropriate portals (`SetupWizard`, `Login`, `AcceptInvitation`, `ResetPassword`, or `ForgotPassword`).
 - **`src/features/auth/pages/SetupWizard.tsx`**: Dynamic multi-step form that guides initial system setup. Step 1 collects superuser credentials (enforces database-level uniqueness and complexity rules); Step 2 registers company profiles.
-- **`src/features/auth/pages/Login.tsx`**: High-density secure administrator form with redirect-back tracking.
+- **`src/features/auth/pages/Login.tsx`**: High-density secure administrator form with redirect-back tracking. Includes a portal toggle for the secure Forgot Password recovery path.
+- **`src/features/auth/pages/AcceptInvitation.tsx`**: Account activation workflow. Collects new password input, enforces the system-wide password policy, activates the user, and initiates an immediate log in.
+- **`src/features/auth/pages/ForgotPassword.tsx`**: Privacy-safe recovery trigger. Implements an enumeration-free frontend, showing the exact same confirmation regardless of whether the email is registered or not.
+- **`src/features/auth/pages/ResetPassword.tsx`**: Action page for the recovery flow. Consumes the cryptographic token, validates the new password, destroys all other device sessions to protect compromised credentials, and creates a fresh session.
 - **`src/shared/components/layout/Shell.tsx`**: Layout envelope anchoring nav-bars, footers, and active content canvas.
 - **`src/shared/components/layout/Navbar.tsx`**: Responsive header syncing client tabs with active URL fragments.
 
 ### Backend Architecture (ADR-0004)
 - **`server/src/features/auth/routes/setup.routes.ts`**: Handles system status checks and initialization forms. Protected by a complete-check middleware that returns 403 Forbidden once the wizard is finalized.
-- **`server/src/features/auth/routes/auth.routes.ts`**: Houses session controllers including secure login, active identity fetching, sign-out invalidation, and recovery email management.
+- **`server/src/features/auth/routes/auth.routes.ts`**: Houses session controllers including secure login, active identity fetching, sign-out invalidation, activation/acceptance, forgot password, and reset password handlers.
+- **`server/src/features/auth/routes/users.routes.ts`**: Implements user creation and administration routes (`POST /api/users/invite`, `POST /api/users/:id/resend-invitation`, and `POST /api/users/:id/admin-reset-password`). All routes are gated by the `requireSuperuser` middleware (temporary RBAC).
 - **`server/src/features/auth/services/setupWizard.service.ts`**: Coordinates transaction boundaries for establishing the system's root superuser and company profile.
+- **`server/src/features/auth/services/userInvitation.service.ts`**: Encapsulates invitation and resend workflows, ensuring proper transactional token generation and delivery.
 - **`server/src/features/auth/services/auth.service.ts`**: Encapsulates credential extraction, validation, and secure cryptographic password matching.
+- **`server/src/shared/token/token.service.ts`**: Offers secure generation, SHA-256 storage, TTL enforcement, and single-use validation of invitation and reset tokens.
 - **`server/src/shared/email/email.service.ts`**: Handles transactional notification delivery as specified in **ADR-0005**.
 
 ---

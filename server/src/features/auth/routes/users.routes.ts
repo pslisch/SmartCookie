@@ -1,0 +1,108 @@
+import { Router, Request, Response } from 'express';
+import { requireSuperuser } from '../../../shared/middleware/session.middleware';
+import { userInvitationService } from '../services/userInvitation.service';
+import { prisma } from '../../../shared/db/prisma';
+import { TokenService } from '../../../shared/token/token.service';
+import { TokenPurpose } from '@prisma/client';
+import { emailService } from '../../../shared/email/email.service';
+import { PASSWORD_RESET_TTL_SECONDS } from '../../../shared/constants';
+
+const router = Router();
+
+/**
+ * POST /api/users/invite -> { email }
+ * Requires superuser session.
+ * Returns the created user's id and status only.
+ */
+router.post('/invite', requireSuperuser, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    const result = await userInvitationService.invite(email);
+
+    // Return the created user's id and status only
+    return res.json({
+      id: result.userId,
+      status: 'PENDING',
+    });
+  } catch (error: any) {
+    // If it's a known domain validation/business rule error, return 400
+    if (error.message === 'user already active' || error.message === 'already invited, use resend') {
+      return res.status(400).json({ error: error.message });
+    }
+    return res.status(500).json({ error: error.message || 'An internal error occurred.' });
+  }
+});
+
+/**
+ * POST /api/users/:id/resend-invitation
+ * Requires superuser session.
+ * Returns the updated user's id and status only.
+ */
+router.post('/:id/resend-invitation', requireSuperuser, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+
+    await userInvitationService.resendInvitation(id);
+
+    // Return the updated user's id and status only
+    return res.json({
+      id,
+      status: 'PENDING',
+    });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/users/:id/admin-reset-password
+ * Requires superuser session.
+ * Same underlying token+email mechanism as forgot-password,
+ * triggered by an admin.
+ */
+router.post('/:id/admin-reset-password', requireSuperuser, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    if (user.status !== 'ACTIVE') {
+      return res.status(400).json({ error: 'Cannot reset password for a non-active user.' });
+    }
+
+    // Issue PASSWORD_RESET token
+    const token = await TokenService.issue(user.id, TokenPurpose.PASSWORD_RESET, PASSWORD_RESET_TTL_SECONDS);
+
+    // Send email
+    await emailService.send(user.email, 'password-reset', {
+      username: user.username || user.email,
+      token,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Password reset email sent successfully.',
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'An internal error occurred.' });
+  }
+});
+
+export default router;
+

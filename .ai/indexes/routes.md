@@ -39,3 +39,22 @@ Every listed visual route should eventually document:
 - **Component**: `src/features/auth/pages/Login.tsx`
 - **Guards**: `AppGate` interceptor (remembers original tab URL for redirect-back on success)
 - **Permissions**: Public access
+
+### 5. Account Activation / Accept Invitation
+- **Path**: Custom action segment (`/activate?token=...` or `/accept-invitation?token=...`)
+- **Component**: `src/features/auth/pages/AcceptInvitation.tsx`
+- **Guards**: Public token verification hook in `AppGate`
+- **Permissions**: Public access with valid single-use token
+
+### 6. Forgot Password Recovery Request
+- **Path**: Triggered via "Forgot Password" toggle from the Sign In view
+- **Component**: `src/features/auth/pages/ForgotPassword.tsx`
+- **Guards**: Local view transition state inside `AppGate`
+- **Permissions**: Public access
+
+### 7. Password Reset
+- **Path**: Custom action segment (`/reset-password?token=...`)
+- **Component**: `src/features/auth/pages/ResetPassword.tsx`
+- **Guards**: Public token verification hook in `AppGate`
+- **Permissions**: Public access with valid password-reset token
+

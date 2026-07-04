@@ -73,3 +73,52 @@ Every documented endpoint logs:
 - **Response**: `{ success: true, newEmail }` (200 OK)
 - **Used By**: Profile/Account controls
 - **Permissions**: Active session cookie required (automatically triggers security notification to the old email address via `EmailService`)
+
+### 8. User Invitation
+- **Endpoint**: `/api/users/invite`
+- **Method**: `POST`
+- **Request**: `{ email }`
+- **Response**: `{ id, status: "PENDING" }` (200 OK)
+- **Used By**: Admin panel / invitation controls
+- **Permissions**: Requires active superuser session cookie (`sid`) via `requireSuperuser` middleware (temporary RBAC mechanism; to be replaced by full RBAC in the future)
+
+### 9. Resend Invitation
+- **Endpoint**: `/api/users/:id/resend-invitation`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ id, status: "PENDING" }` (200 OK)
+- **Used By**: Admin panel / invitation controls
+- **Permissions**: Requires active superuser session cookie (`sid`) via `requireSuperuser` middleware (temporary RBAC mechanism; to be replaced by full RBAC in the future)
+
+### 10. Admin Reset Password
+- **Endpoint**: `/api/users/:id/admin-reset-password`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ success: true, message: "Password reset email sent successfully." }` (200 OK)
+- **Used By**: Admin panel / user controls
+- **Permissions**: Requires active superuser session cookie (`sid`) via `requireSuperuser` middleware (temporary RBAC mechanism; to be replaced by full RBAC in the future)
+
+### 11. Accept Invitation (Activate)
+- **Endpoint**: `/api/auth/activate`
+- **Method**: `POST`
+- **Request**: `{ token, password }`
+- **Response**: `{ success: true, user: { id, username, ... } }` (200 OK)
+- **Used By**: `AcceptInvitation` page
+- **Permissions**: Public access (consumes invitation token, validates password policy, sets session cookie)
+
+### 12. Forgot Password Request
+- **Endpoint**: `/api/auth/forgot-password`
+- **Method**: `POST`
+- **Request**: `{ email }`
+- **Response**: `{ success: true, message: "If the email exists..." }` (200 OK)
+- **Used By**: `ForgotPassword` page
+- **Permissions**: Public access (governed by forgot password rate limiter; always returns generic message to prevent account enumeration)
+
+### 13. Reset Password
+- **Endpoint**: `/api/auth/reset-password`
+- **Method**: `POST`
+- **Request**: `{ token, newPassword }`
+- **Response**: `{ success: true, user: { id, username, ... } }` (200 OK)
+- **Used By**: `ResetPassword` page
+- **Permissions**: Public access (consumes reset token, validates password policy, invalidates all prior sessions, sets session cookie)
+

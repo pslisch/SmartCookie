@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
 import { SetupWizard } from '../../features/auth/pages/SetupWizard';
 import { Login } from '../../features/auth/pages/Login';
+import { AcceptInvitation } from '../../features/auth/pages/AcceptInvitation';
+import { ForgotPassword } from '../../features/auth/pages/ForgotPassword';
+import { ResetPassword } from '../../features/auth/pages/ResetPassword';
 
 interface UserIdentity {
   id: string;
@@ -47,9 +50,19 @@ interface AppGateProps {
 
 export function AppGate({ children }: AppGateProps) {
   const { t } = useTranslation();
-  const [setupStatus, setSetupStatus] = useState<'superuser' | 'company' | 'complete' | null>(null);
+   const [setupStatus, setSetupStatus] = useState<'superuser' | 'company' | 'complete' | null>(null);
   const [user, setUser] = useState<UserIdentity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [publicAction, setPublicAction] = useState<{ action: string; token: string } | null>(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action') || (window.location.pathname === '/activate' || window.location.pathname === '/accept-invitation' ? 'activate' : window.location.pathname === '/reset-password' ? 'reset-password' : null);
+    const token = urlParams.get('token');
+    if (action && (action === 'activate' || action === 'reset-password') && token) {
+      return { action, token };
+    }
+    return null;
+  });
 
   const checkStatusAndSession = async () => {
     try {
@@ -169,6 +182,43 @@ export function AppGate({ children }: AppGateProps) {
     logout: handleLogout,
   };
 
+  if (publicAction) {
+    if (publicAction.action === 'activate') {
+      return (
+        <AuthContext.Provider value={authContextValue}>
+          <AcceptInvitation
+            token={publicAction.token}
+            onSuccess={async () => {
+              setPublicAction(null);
+              await checkStatusAndSession();
+            }}
+          />
+        </AuthContext.Provider>
+      );
+    }
+    if (publicAction.action === 'reset-password') {
+      return (
+        <AuthContext.Provider value={authContextValue}>
+          <ResetPassword
+            token={publicAction.token}
+            onSuccess={async () => {
+              setPublicAction(null);
+              await checkStatusAndSession();
+            }}
+          />
+        </AuthContext.Provider>
+      );
+    }
+  }
+
+  if (showForgotPassword) {
+    return (
+      <AuthContext.Provider value={authContextValue}>
+        <ForgotPassword onBackToLogin={() => setShowForgotPassword(false)} />
+      </AuthContext.Provider>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 text-slate-800" id="appgate-loading-view">
@@ -211,7 +261,10 @@ export function AppGate({ children }: AppGateProps) {
   if (!user) {
     return (
       <AuthContext.Provider value={authContextValue}>
-        <Login onLoginSuccess={checkStatusAndSession} />
+        <Login
+          onLoginSuccess={checkStatusAndSession}
+          onForgotPassword={() => setShowForgotPassword(true)}
+        />
       </AuthContext.Provider>
     );
   }

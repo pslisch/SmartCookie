@@ -124,3 +124,76 @@ export class LoginRateLimiter {
 
 // Instantiate default rate limiter (5 failed attempts per 15-minute window)
 export const loginRateLimiter = new LoginRateLimiter();
+
+export class ForgotPasswordRateLimiter {
+  private store = new Map<string, RateLimitRecord>();
+  private maxAttempts: number;
+  private windowMs: number;
+
+  constructor(maxAttempts = 5, windowMs = 15 * 60 * 1000) {
+    this.maxAttempts = maxAttempts;
+    this.windowMs = windowMs;
+  }
+
+  private incrementAttempt(identifier: string): void {
+    const record = this.store.get(identifier);
+    const now = Date.now();
+
+    if (!record || now >= record.resetTime) {
+      this.store.set(identifier, {
+        attempts: 1,
+        resetTime: now + this.windowMs,
+      });
+    } else {
+      record.attempts += 1;
+    }
+  }
+
+  public get middleware() {
+    return (req: Request, res: Response, next: NextFunction) => {
+      const email = req.body?.email;
+      const ip = req.ip || 'unknown';
+      const ipIdentifier = `ip:${ip}`;
+      const emailIdentifier = email && typeof email === 'string' && email.trim() ? `email:${email.trim().toLowerCase()}` : null;
+      const now = Date.now();
+
+      // Check IP limit
+      const ipRecord = this.store.get(ipIdentifier);
+      if (ipRecord && now < ipRecord.resetTime && ipRecord.attempts >= this.maxAttempts) {
+        const retryAfterSeconds = Math.ceil((ipRecord.resetTime - now) / 1000);
+        res.setHeader('Retry-After', String(retryAfterSeconds));
+        return res.status(429).json({
+          error: 'Too many forgot-password attempts. Please try again later.',
+          retryAfter: retryAfterSeconds,
+        });
+      }
+
+      // Check Email limit
+      if (emailIdentifier) {
+        const emailRecord = this.store.get(emailIdentifier);
+        if (emailRecord && now < emailRecord.resetTime && emailRecord.attempts >= this.maxAttempts) {
+          const retryAfterSeconds = Math.ceil((emailRecord.resetTime - now) / 1000);
+          res.setHeader('Retry-After', String(retryAfterSeconds));
+          return res.status(429).json({
+            error: 'Too many forgot-password attempts. Please try again later.',
+            retryAfter: retryAfterSeconds,
+          });
+        }
+      }
+
+      // Increment both
+      this.incrementAttempt(ipIdentifier);
+      if (emailIdentifier) {
+        this.incrementAttempt(emailIdentifier);
+      }
+
+      next();
+    };
+  }
+
+  public clearAll(): void {
+    this.store.clear();
+  }
+}
+
+export const forgotPasswordRateLimiter = new ForgotPasswordRateLimiter();

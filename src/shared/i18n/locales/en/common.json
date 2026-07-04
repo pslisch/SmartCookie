@@ -18,6 +18,7 @@
     "required": "Login Required",
     "username": "Username",
     "password": "Password",
+    "forgotPassword": "Forgot password?",
     "signIn": "Secure Sign In",
     "placeholderUser": "Enter your username",
     "placeholderPass": "••••••••",
@@ -64,5 +65,53 @@
   },
   "appGate": {
     "verifying": "Verifying security gates..."
+  },
+  "acceptInvitation": {
+    "title": "Activate Your Account",
+    "subtitle": "Set your secure password to activate your invitation",
+    "badge": "One-Time Link",
+    "passwordLabel": "Choose Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Repeat your password",
+    "button": "Set Password & Log In",
+    "success": "Account activated successfully! Logging you in...",
+    "errors": {
+      "required": "Password is required.",
+      "length": "Password must be at least 8 characters long.",
+      "mismatch": "Passwords do not match.",
+      "failed": "Failed to activate account."
+    }
+  },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "subtitle": "Enter your email to request a reset link",
+    "badge": "Password Recovery",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "e.g. user@domain.com",
+    "button": "Send Reset Link",
+    "backToLogin": "Back to Secure Sign In",
+    "success": "If the email exists and is active, a password reset link has been sent.",
+    "errors": {
+      "required": "Email is required.",
+      "failed": "Failed to send reset link."
+    }
+  },
+  "resetPassword": {
+    "title": "Reset Your Password",
+    "subtitle": "Choose a new secure password for your account",
+    "badge": "Security Safe",
+    "passwordLabel": "New Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "confirmPasswordLabel": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Repeat new password",
+    "button": "Reset Password & Log In",
+    "success": "Password updated successfully! Logging you in...",
+    "errors": {
+      "required": "New password is required.",
+      "length": "Password must be at least 8 characters long.",
+      "mismatch": "Passwords do not match.",
+      "failed": "Failed to reset password."
+    }
   }
 }

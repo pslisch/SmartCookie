@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import 'dotenv/config';
 import setupRouter from './features/auth/routes/setup.routes';
 import authRouter from './features/auth/routes/auth.routes';
+import usersRouter from './features/auth/routes/users.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 
 async function startServer() {
@@ -22,6 +23,7 @@ async function startServer() {
   app.use('/api', csrfProtection);
   app.use('/api/setup', setupRouter);
   app.use('/api/auth', authRouter);
+  app.use('/api/users', usersRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

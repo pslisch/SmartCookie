@@ -27,6 +27,9 @@ This document serves as the top-level directory map and semantic index of the **
 ### 5. AI Project Metadata
 - **`.ai/`**: Hidden registry and indexing home containing machine-parsable metadata index lists, architecture decision logs, and standard coding templates.
 
+### 6. Backend Server Core
+- **`server/`**: Full-stack backend layer containing Express + TypeScript server, middleware, and Prisma ORM schema and migrations.
+
 ---
 
 ## 🔗 The Docs and AI Metadata Paradigm

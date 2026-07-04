@@ -93,3 +93,16 @@ Every logged feature should eventually document:
 - **Routes**: Wizard triggers, Login gate, Client state routing with redirect-back persistence
 - **Events**: Account email updates fire notification events via standard SMTP/Email transporters.
 - **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, express-rate-limit, cookie-parser
+
+### 7. Invitation-Based User Creation & Password Reset
+- **Description**: Allows administrators (superusers) to securely invite users via email, resend pending invitations, or trigger administrator-led password resets. Also enables public users to securely request password resets via an email-bound one-time token mechanism, adhering to a strict timing-attack-free and enumeration-free design on both backend and frontend.
+- **Components**: `src/shared/components/AppGate.tsx`
+- **Pages**: `src/features/auth/pages/AcceptInvitation.tsx`, `src/features/auth/pages/ForgotPassword.tsx`, `src/features/auth/pages/ResetPassword.tsx`
+- **Services**: `UserInvitationService` (`server/src/features/auth/services/userInvitation.service.ts`), `TokenService` (`server/src/shared/token/token.service.ts`), `EmailService` (`server/src/shared/email/email.service.ts`)
+- **APIs**: `POST /api/users/invite`, `POST /api/users/:id/resend-invitation`, `POST /api/users/:id/admin-reset-password`, `POST /api/auth/activate`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`
+- **Database**: `users`, `tokens`, `sessions` (Prisma schema)
+- **Permissions**: Requires active superuser session cookie (`sid`) with `requireSuperuser` middleware (noted as temporary/RBAC-pending) for admin endpoints; public access for activation, forgot-password, and reset-password forms.
+- **Routes**: `/accept-invitation?token=...`, `/activate?token=...`, `/reset-password?token=...`, and login-integrated forgot password view.
+- **Events**: Invitation and reset emails are dispatched using transactional transporters via `EmailService`.
+- **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, express-rate-limit, cookie-parser
+

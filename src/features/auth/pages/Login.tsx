@@ -5,6 +5,7 @@ import { Lock, KeyRound, Loader2, AlertCircle } from 'lucide-react';
 
 interface LoginProps {
   onLoginSuccess: () => Promise<void>;
+  onForgotPassword?: () => void;
 }
 
 // Utility to parse cookies safely
@@ -17,7 +18,7 @@ function getCookie(name: string): string {
   return '';
 }
 
-export function Login({ onLoginSuccess }: LoginProps) {
+export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -127,9 +128,20 @@ export function Login({ onLoginSuccess }: LoginProps) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="login-password">
-                {t('login.password')}
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider" htmlFor="login-password">
+                  {t('login.password')}
+                </label>
+                {onForgotPassword && (
+                  <button
+                    type="button"
+                    onClick={onForgotPassword}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    {t('login.forgotPassword')}
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 id="login-password"

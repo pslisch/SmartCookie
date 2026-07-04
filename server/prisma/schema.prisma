@@ -17,7 +17,8 @@ enum UserStatus {
 
 model User {
   id            String     @id @default(uuid())
-  username      String     @unique
+  username      String?    @unique
+  email         String?    @unique
   passwordHash  String
   isSuperuser   Boolean    @default(false)
   isSuperuserUnique Boolean? @map("is_superuser_unique")
@@ -28,9 +29,28 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   sessions      Session[]
+  tokens        Token[]
 
   @@unique([isSuperuserUnique], name: "is_superuser_unique_idx")
   @@map("users")
+}
+
+enum TokenPurpose {
+  INVITATION
+  PASSWORD_RESET
+}
+
+model Token {
+  id         String       @id @default(uuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String       @unique
+  purpose    TokenPurpose
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime     @default(now())
+
+  @@map("tokens")
 }
 
 model Company {

@@ -1,9 +1,11 @@
 import nodemailer from 'nodemailer';
 import { recoveryEmailChangedTemplate, RecoveryEmailChangedData } from './templates/recoveryEmailChanged';
+import { invitationTemplate, InvitationData } from './templates/invitation';
+import { passwordResetTemplate, PasswordResetData } from './templates/passwordReset';
 
-export type EmailTemplateName = 'recovery-email-changed';
+export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset';
 
-export type EmailTemplateData = RecoveryEmailChangedData;
+export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData;
 
 export interface EmailService {
   send(to: string, template: EmailTemplateName, data: EmailTemplateData): Promise<void>;
@@ -46,12 +48,27 @@ class EmailServiceImpl implements EmailService {
     let html = '';
 
     switch (template) {
-      case 'recovery-email-changed':
+      case 'recovery-email-changed': {
         const rendered = recoveryEmailChangedTemplate(data as RecoveryEmailChangedData);
         subject = rendered.subject;
         text = rendered.text;
         html = rendered.html;
         break;
+      }
+      case 'invitation': {
+        const rendered = invitationTemplate(data as InvitationData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
+      case 'password-reset': {
+        const rendered = passwordResetTemplate(data as PasswordResetData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
       default:
         throw new Error(`Unsupported email template: ${template}`);
     }
