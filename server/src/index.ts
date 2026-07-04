@@ -5,11 +5,26 @@ import 'dotenv/config';
 import setupRouter from './features/auth/routes/setup.routes';
 import authRouter from './features/auth/routes/auth.routes';
 import usersRouter from './features/auth/routes/users.routes';
+import rolesRouter from './features/rbac/routes/roles.routes';
+import permissionsRouter from './features/rbac/routes/permissions.routes';
+import companyRouter from './features/rbac/routes/company.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
+import './features/auth/auth.permissions';
+import './features/rbac/rbac.permissions';
+import { syncPermissions } from './shared/permissions/sync';
+import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  // Run permission synchronization and RBAC seeding on startup
+  try {
+    await syncPermissions();
+    await seedSuperuserRoles();
+  } catch (err) {
+    console.error('Failed to sync permissions or seed superuser roles on startup:', err);
+  }
 
   // JSON body parsing and cookie parsing
   app.use(express.json());
@@ -24,6 +39,9 @@ async function startServer() {
   app.use('/api/setup', setupRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
+  app.use('/api/roles', rolesRouter);
+  app.use('/api/permissions', permissionsRouter);
+  app.use('/api/company', companyRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

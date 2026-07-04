@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { requireSuperuser } from '../../../shared/middleware/session.middleware';
+import { requirePermission } from '../../../shared/middleware/permission.middleware';
 import { userInvitationService } from '../services/userInvitation.service';
 import { prisma } from '../../../shared/db/prisma';
 import { TokenService } from '../../../shared/token/token.service';
@@ -11,10 +11,10 @@ const router = Router();
 
 /**
  * POST /api/users/invite -> { email }
- * Requires superuser session.
+ * Requires users:create permission.
  * Returns the created user's id and status only.
  */
-router.post('/invite', requireSuperuser, async (req: Request, res: Response) => {
+router.post('/invite', requirePermission('users', 'create'), async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     if (!email || typeof email !== 'string' || !email.trim()) {
@@ -39,10 +39,10 @@ router.post('/invite', requireSuperuser, async (req: Request, res: Response) => 
 
 /**
  * POST /api/users/:id/resend-invitation
- * Requires superuser session.
+ * Requires users:edit permission.
  * Returns the updated user's id and status only.
  */
-router.post('/:id/resend-invitation', requireSuperuser, async (req: Request, res: Response) => {
+router.post('/:id/resend-invitation', requirePermission('users', 'edit'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -63,11 +63,11 @@ router.post('/:id/resend-invitation', requireSuperuser, async (req: Request, res
 
 /**
  * POST /api/users/:id/admin-reset-password
- * Requires superuser session.
+ * Requires users:edit permission.
  * Same underlying token+email mechanism as forgot-password,
  * triggered by an admin.
  */
-router.post('/:id/admin-reset-password', requireSuperuser, async (req: Request, res: Response) => {
+router.post('/:id/admin-reset-password', requirePermission('users', 'edit'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     if (!id) {

@@ -5,10 +5,11 @@
 
 import React, { useState } from 'react';
 import { Tab } from '../../types';
-import { User, Menu, X, BookOpen, Compass, Languages } from 'lucide-react';
+import { User, Menu, X, BookOpen, Compass, Languages, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { usePermission } from '../../hooks/usePermission';
 
 interface NavbarProps {
   currentTab: Tab;
@@ -23,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
+  const hasSettingsAccess = usePermission('roles', 'manage');
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -89,6 +91,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 />
               )}
             </button>
+
+            {hasSettingsAccess && (
+              <button
+                onClick={() => handleTabSelect(Tab.Settings)}
+                className={`relative flex items-center space-x-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                  currentTab === Tab.Settings ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800'
+                }`}
+                id="tab-settings-desktop"
+              >
+                <Settings className="h-4 w-4" />
+                <span>{t('nav.settings')}</span>
+                {currentTab === Tab.Settings && (
+                  <motion.div
+                    layoutId="active-tab-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
+            )}
           </div>
 
           {/* Right Side: Account button */}
@@ -152,6 +174,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Compass className="h-5 w-5" />
                 <span>{t('nav.catalog')}</span>
               </button>
+
+              {hasSettingsAccess && (
+                <button
+                  onClick={() => handleTabSelect(Tab.Settings)}
+                  className={`flex w-full items-center space-x-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+                    currentTab === Tab.Settings ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  }`}
+                  id="tab-settings-mobile"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>{t('nav.settings')}</span>
+                </button>
+              )}
 
               <div className="border-t border-[#E2E8F0] my-2 pt-2 space-y-1">
                 <div className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-base font-semibold text-slate-500 hover:bg-slate-50 transition-colors" id="mobile-language-row">

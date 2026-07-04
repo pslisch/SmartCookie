@@ -80,7 +80,7 @@ Every documented endpoint logs:
 - **Request**: `{ email }`
 - **Response**: `{ id, status: "PENDING" }` (200 OK)
 - **Used By**: Admin panel / invitation controls
-- **Permissions**: Requires active superuser session cookie (`sid`) via `requireSuperuser` middleware (temporary RBAC mechanism; to be replaced by full RBAC in the future)
+- **Permissions**: Requires authenticated session with `"users:invite"` permission (bypassed if Superuser)
 
 ### 9. Resend Invitation
 - **Endpoint**: `/api/users/:id/resend-invitation`
@@ -88,7 +88,7 @@ Every documented endpoint logs:
 - **Request**: None
 - **Response**: `{ id, status: "PENDING" }` (200 OK)
 - **Used By**: Admin panel / invitation controls
-- **Permissions**: Requires active superuser session cookie (`sid`) via `requireSuperuser` middleware (temporary RBAC mechanism; to be replaced by full RBAC in the future)
+- **Permissions**: Requires authenticated session with `"users:invite"` permission (bypassed if Superuser)
 
 ### 10. Admin Reset Password
 - **Endpoint**: `/api/users/:id/admin-reset-password`
@@ -96,7 +96,7 @@ Every documented endpoint logs:
 - **Request**: None
 - **Response**: `{ success: true, message: "Password reset email sent successfully." }` (200 OK)
 - **Used By**: Admin panel / user controls
-- **Permissions**: Requires active superuser session cookie (`sid`) via `requireSuperuser` middleware (temporary RBAC mechanism; to be replaced by full RBAC in the future)
+- **Permissions**: Requires authenticated session with `"users:reset-password"` permission (bypassed if Superuser)
 
 ### 11. Accept Invitation (Activate)
 - **Endpoint**: `/api/auth/activate`
@@ -121,4 +121,77 @@ Every documented endpoint logs:
 - **Response**: `{ success: true, user: { id, username, ... } }` (200 OK)
 - **Used By**: `ResetPassword` page
 - **Permissions**: Public access (consumes reset token, validates password policy, invalidates all prior sessions, sets session cookie)
+
+### 14. List Roles
+- **Endpoint**: `/api/roles`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `[{ id, name, isProtected, parentRoleId, permissionCount }]` (200 OK)
+- **Used By**: `RoleManagement` page
+- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
+### 15. Create Role
+- **Endpoint**: `/api/roles`
+- **Method**: `POST`
+- **Request**: `{ name }`
+- **Response**: `{ id, name, isProtected, parentRoleId, permissionCount: 0 }` (201 Created)
+- **Used By**: `RoleManagement` page (Create modal)
+- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
+### 16. Delete Role
+- **Endpoint**: `/api/roles/:id`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true, message: "Role deleted successfully." }` (200 OK)
+- **Used By**: `RoleManagement` page (Delete button)
+- **Permissions**: Requires active session with `roles:manage` permission. Fails for protected roles. (Superuser bypasses)
+
+### 17. Duplicate Role
+- **Endpoint**: `/api/roles/:id/duplicate`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ id, name, isProtected, parentRoleId, permissionCount }` (201 Created)
+- **Used By**: `RoleManagement` page (Duplicate button)
+- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
+### 18. Get Role Permissions
+- **Endpoint**: `/api/roles/:id/permissions`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: Grouped permissions object e.g., `{ lessons: [{ id, action, checked }], ... }` (200 OK)
+- **Used By**: `RoleManagement` page (Active configuration details)
+- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
+### 19. Update Role
+- **Endpoint**: `/api/roles/:id`
+- **Method**: `PATCH`
+- **Request**: `{ name?, parentRoleId?, permissionIds? }`
+- **Response**: `{ success: true, message: "Role updated successfully." }` (200 OK)
+- **Used By**: `RoleManagement` page (Rename, save parent, save permissions checklists)
+- **Permissions**: Requires active session with `roles:manage` permission. Fails to rename protected roles, and detects cyclic parent loops. (Superuser bypasses)
+
+### 20. List System Permissions
+- **Endpoint**: `/api/permissions`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `[{ id, module, action }]` (200 OK)
+- **Used By**: Role/Permission editors
+- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
+### 21. Get Company Settings
+- **Endpoint**: `/api/company/settings`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ roleInheritanceEnabled: boolean }` (200 OK)
+- **Used By**: `RoleManagement` page
+- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
+### 22. Update Company Settings
+- **Endpoint**: `/api/company/settings`
+- **Method**: `PATCH`
+- **Request**: `{ roleInheritanceEnabled }`
+- **Response**: `{ success: true, company: { id, roleInheritanceEnabled } }` (200 OK)
+- **Used By**: `RoleManagement` page (Global inheritance toggle)
+- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
 

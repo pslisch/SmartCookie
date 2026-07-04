@@ -49,17 +49,3 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     res.status(500).json({ error: error.message || 'Internal server error validating session.' });
   }
 }
-
-/**
- * Middleware to require a superuser session.
- * TEMPORARY — replace with a proper permission check (e.g. 'can_invite_users') once RBAC ships. Do not extend this check with more hardcoded roles.
- */
-export async function requireSuperuser(req: Request, res: Response, next: NextFunction) {
-  await requireAuth(req, res, () => {
-    // TEMPORARY — replace with a proper permission check (e.g. 'can_invite_users') once RBAC ships. Do not extend this check with more hardcoded roles.
-    if (!req.user || !req.user.isSuperuser) {
-      return res.status(403).json({ error: 'Forbidden: Superuser status required.' });
-    }
-    next();
-  });
-}

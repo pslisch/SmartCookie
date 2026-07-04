@@ -106,3 +106,16 @@ Every logged feature should eventually document:
 - **Events**: Invitation and reset emails are dispatched using transactional transporters via `EmailService`.
 - **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, express-rate-limit, cookie-parser
 
+### 8. Hierarchical Role-Based Access Control (RBAC) & Settings Area
+- **Description**: Introduces a first-class, secure access management framework. Administrators can list, create, duplicate, rename, and delete custom organizational roles (excluding protected system profiles). Features a robust module/action permission mapping matrix, single-parent hierarchical access inheritance, and a company-wide toggle setting to enable/disable hierarchical inheritance globally. Active checks occur securely on the backend via the `requirePermission` middleware, and visually on the frontend using the dynamic `usePermission` hook.
+- **Components**: `src/features/rbac/pages/Settings.tsx`, `src/features/rbac/pages/RoleManagement.tsx`, `src/shared/hooks/usePermission.ts`, `src/shared/components/layout/Navbar.tsx` (Settings Tab insertion)
+- **Pages**: Settings, Role Management Dashboard
+- **Services**: `RoleService` (`server/src/features/rbac/services/role.service.ts`), `PermissionResolverService` (`server/src/features/rbac/services/permissionResolver.service.ts`), `RoleTemplatesService` (`server/src/features/rbac/services/roleTemplates.service.ts`)
+- **APIs**: `GET /api/roles`, `POST /api/roles`, `GET /api/roles/:id/permissions`, `PATCH /api/roles/:id`, `DELETE /api/roles/:id`, `POST /api/roles/:id/duplicate`, `GET /api/permissions`, `GET /api/company/settings`, `PATCH /api/company/settings`
+- **Database**: `roles`, `permissions`, `role_permissions`, `companies` (Prisma & MariaDB schemas)
+- **Permissions**: Gated by `roles:manage` permission, which is automatically bypassed for Superusers.
+- **Routes**: Local navigation tab `#settings`.
+- **Events**: Updates to role hierarchies and configurations immediately invalidate existing permission states across active user session endpoints.
+- **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, cookie-parser
+
+

@@ -22,6 +22,7 @@ export interface AuthUser {
   recoveryEmail: string | null;
   companyId: string | null;
   status: string;
+  roleId?: string | null;
 }
 
 export interface AuthCredentials {
@@ -143,6 +144,7 @@ export class EmailPasswordAuthProvider implements AuthProvider {
       recoveryEmail: user.recoveryEmail,
       companyId: user.companyId,
       status: user.status,
+      roleId: user.roleId,
     };
   }
 }

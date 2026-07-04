@@ -14,11 +14,13 @@ interface UserIdentity {
   recoveryEmail: string;
   companyId: string | null;
   status: string;
+  roleName: string | null;
+  effectivePermissions: string[];
 }
 
 interface AuthContextType {
   user: UserIdentity | null;
-  setupStatus: 'superuser' | 'company' | 'complete' | null;
+  setupStatus: 'superuser' | 'company' | 'role-templates' | 'complete' | null;
   isLoading: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
@@ -50,7 +52,7 @@ interface AppGateProps {
 
 export function AppGate({ children }: AppGateProps) {
   const { t } = useTranslation();
-   const [setupStatus, setSetupStatus] = useState<'superuser' | 'company' | 'complete' | null>(null);
+   const [setupStatus, setSetupStatus] = useState<'superuser' | 'company' | 'role-templates' | 'complete' | null>(null);
   const [user, setUser] = useState<UserIdentity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -158,6 +160,26 @@ export function AppGate({ children }: AppGateProps) {
     await checkStatusAndSession();
   };
 
+  const triggerRoleTemplatesSubmit = async (selectedNames: string[]) => {
+    const res = await fetch('/api/setup/role-templates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCookie('csrfToken'),
+      },
+      body: JSON.stringify({
+        selectedNames,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to complete role templates step.');
+    }
+
+    await checkStatusAndSession();
+  };
+
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', {
@@ -245,13 +267,14 @@ export function AppGate({ children }: AppGateProps) {
   }
 
   // Gate 1: Setup Wizard Required
-  if (setupStatus === 'superuser' || setupStatus === 'company') {
+  if (setupStatus === 'superuser' || setupStatus === 'company' || setupStatus === 'role-templates') {
     return (
       <AuthContext.Provider value={authContextValue}>
         <SetupWizard
           step={setupStatus}
           onSuperuserSubmit={triggerSuperuserSubmit}
           onCompanySubmit={triggerCompanySubmit}
+          onRoleTemplatesSubmit={triggerRoleTemplatesSubmit}
         />
       </AuthContext.Provider>
     );

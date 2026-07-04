@@ -111,6 +111,22 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0009] Hierarchical Role-Based Access Control (RBAC)
+- **Status**: Approved
+- **Date**: 2026-07-04
+- **Authors**: AI Coding Agent
+- **Context**: SmartCookie requires a highly granular, enterprise-grade permissions mechanism. Users are assigned a single primary Role, which grants access to specific features. However, complex organizations demand role hierarchy capabilities (e.g., "Supervisor" inheriting all permissions from "Staff") to minimize manual permission synchronization, alongside a global switch to disable inheritance if absolute isolation is needed.
+- **Decision**:
+  - **Permission-Registry Pattern**: System permissions are strictly defined as composite tuples of `(module, action)` where both fields are case-sensitive strings (e.g., `roles:manage`, `users:invite`, `lessons:view`). The `permissions` and `role_permissions` join-tables track these linkages explicitly.
+  - **Single-Parent Inheritance Chain**: A role can optionally reference exactly one parent role (`parentRoleId`). When active, the system's permission resolution dynamically crawls up this chain, combining the local role's permissions with those of its ancestor nodes. Cyclic parent assignment is prevented by validation checks in the role update/creation pipelines.
+  - **Company-Singleton Global Toggle**: The company settings model is expanded to house a global `roleInheritanceEnabled` boolean flag. This is stored directly on the single root `Company` record, which functions as a singleton for the installation. If disabled, all hierarchical inheritance evaluation is short-circuited.
+  - **Superuser-Bypass Rule**: Any User with `isSuperuser === true` completely bypasses role-based lookup tables and is granted instant, unconditional authorization for all actions.
+- **Consequences**:
+  - **Positives**: Fully database-driven and customizable roles; elegant, cycle-proof inheritance; single-point-of-control global switch; robust security gates across the entire application stack.
+  - **Negatives**: Recursive database crawls during session retrieval have a slight overhead (mitigated by recursive CTE queries or fast lookup paths in the ORM); requires careful maintenance of role-relation assignments to prevent configuration bloat.
+
+---
+
 ## 🔮 Planned ADRs (updated)
 
 - **ADR-0006: Authentication Strategy**: Detailing the Superuser,

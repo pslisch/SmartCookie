@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { UserPlus, Building2, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { UserPlus, Building2, AlertCircle, Loader2, Sparkles, ShieldCheck } from 'lucide-react';
 
 interface SetupWizardProps {
-  step: 'superuser' | 'company';
+  step: 'superuser' | 'company' | 'role-templates';
   onSuperuserSubmit: (username: string, password: string, recoveryEmail: string) => Promise<void>;
   onCompanySubmit: (name: string, contactInfo: string) => Promise<void>;
+  onRoleTemplatesSubmit: (selectedNames: string[]) => Promise<void>;
 }
 
-export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupWizardProps) {
+export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit, onRoleTemplatesSubmit }: SetupWizardProps) {
   const { t } = useTranslation();
 
   // Superuser Form State
@@ -60,6 +61,44 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
       setCoError(err.message || t('setup.errors.unexpected'));
     } finally {
       setCoLoading(false);
+    }
+  };
+
+  // Role Templates State
+  const defaultTemplates = ['LMS Manager', 'Content Creator', 'User Manager', 'Service Desk', 'Learner'];
+  const [checkedTemplates, setCheckedTemplates] = useState<Record<string, boolean>>({
+    'LMS Manager': true,
+    'Content Creator': true,
+    'User Manager': true,
+    'Service Desk': true,
+    'Learner': true,
+  });
+  const [rtLoading, setRtLoading] = useState(false);
+  const [rtError, setRtError] = useState('');
+
+  const toggleTemplate = (name: string) => {
+    setCheckedTemplates((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  };
+
+  const handleRtSubmit = async (e: React.FormEvent | null, skip = false) => {
+    if (e) {
+      e.preventDefault();
+    }
+    setRtError('');
+    setRtLoading(true);
+
+    try {
+      const selectedNames = skip
+        ? []
+        : defaultTemplates.filter((name) => checkedTemplates[name]);
+      await onRoleTemplatesSubmit(selectedNames);
+    } catch (err: any) {
+      setRtError(err.message || t('setup.errors.unexpected'));
+    } finally {
+      setRtLoading(false);
     }
   };
 
@@ -175,7 +214,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
                 </button>
               </form>
             </div>
-          ) : (
+          ) : step === 'company' ? (
             <div id="setup-step-company">
               <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center space-x-2">
@@ -243,6 +282,73 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
                   )}
                   {t('setup.completeLaunch')}
                 </button>
+              </form>
+            </div>
+          ) : (
+            <div id="setup-step-role-templates">
+              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center space-x-2">
+                  <ShieldCheck className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{t('setup.step3')}</span>
+                </div>
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">
+                  {t('setup.roleTemplates')}
+                </span>
+              </div>
+
+              <h2 className="text-lg font-bold text-slate-900">{t('setup.selectTemplates')}</h2>
+              <p className="text-sm text-slate-500 mt-1 mb-6">
+                {t('setup.templatesDesc')}
+              </p>
+
+              {rtError && (
+                <div className="mb-4 flex items-start space-x-2 rounded-lg bg-rose-50 p-3.5 text-sm text-rose-800 border border-rose-100">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                  <span className="font-medium">{rtError}</span>
+                </div>
+              )}
+
+              <form onSubmit={(e) => handleRtSubmit(e, false)} className="space-y-4">
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {defaultTemplates.map((name) => (
+                    <label
+                      key={name}
+                      className="flex items-center space-x-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3 hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!checkedTemplates[name]}
+                        onChange={() => toggleTemplate(name)}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-semibold text-slate-800">{name}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="submit"
+                    disabled={rtLoading}
+                    className="w-full flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                  >
+                    {rtLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                    )}
+                    {t('setup.seedTemplatesBtn')}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRtSubmit(null, true)}
+                    disabled={rtLoading}
+                    className="w-full flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                  >
+                    {t('setup.skipBtn')}
+                  </button>
+                </div>
               </form>
             </div>
           )}

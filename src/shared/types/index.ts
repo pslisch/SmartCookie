@@ -9,4 +9,5 @@
 export enum Tab {
   MyLessons = 'my-lessons',
   Catalog = 'catalog',
+  Settings = 'settings',
 }

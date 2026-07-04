@@ -30,6 +30,8 @@ model User {
   updatedAt     DateTime   @updatedAt
   sessions      Session[]
   tokens        Token[]
+  roleId        String?    @map("role_id")
+  role          Role?      @relation(fields: [roleId], references: [id])
 
   @@unique([isSuperuserUnique], name: "is_superuser_unique_idx")
   @@map("users")
@@ -58,9 +60,48 @@ model Company {
   name             String
   contactInfo      String
   setupCompletedAt DateTime?
+  roleInheritanceEnabled Boolean @default(false) @map("role_inheritance_enabled")
   users            User[]
+  roles            Role[]
 
   @@map("companies")
+}
+
+model Role {
+  id             String           @id @default(uuid())
+  name           String
+  isProtected    Boolean          @default(false) @map("is_protected")
+  parentRoleId   String?          @map("parent_role_id")
+  parentRole     Role?            @relation("RoleInheritance", fields: [parentRoleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  childRoles     Role[]           @relation("RoleInheritance")
+  companyId      String           @map("company_id")
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  users          User[]
+  permissions    RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id             String           @id @default(uuid())
+  module         String
+  action         String
+  roles          RolePermission[]
+
+  @@unique([module, action], name: "module_action_idx")
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
 }
 
 model Session {

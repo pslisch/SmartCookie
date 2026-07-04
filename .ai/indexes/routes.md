@@ -58,3 +58,10 @@ Every listed visual route should eventually document:
 - **Guards**: Public token verification hook in `AppGate`
 - **Permissions**: Public access with valid password-reset token
 
+### 8. System Settings
+- **Path**: Local State Tab & Hash URL (`#settings`)
+- **Component**: `src/features/rbac/pages/Settings.tsx`
+- **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend `usePermission('roles', 'manage')` hook (bounces to `my-lessons` tab if access is unauthorized)
+- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
+

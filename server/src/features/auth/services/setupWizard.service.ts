@@ -1,14 +1,17 @@
 import { prisma } from '../../../shared/db/prisma';
 import { emailPasswordAuthProvider } from './auth.service';
+import { seedSuperuserRoles } from '../../../../prisma/seed/rbacSeed';
+import { roleTemplatesService } from '../../rbac/services/roleTemplates.service';
 
-export type SetupStep = 'superuser' | 'company' | 'complete';
+export type SetupStep = 'superuser' | 'company' | 'role-templates' | 'complete';
 
 export class SetupWizardService {
   /**
    * Returns which step is needed next, inferred from database row state:
    * - no superuser row → step "superuser"
-   * - superuser exists but Company.setupCompletedAt is null → step "company"
-   * - both present → "complete"
+   * - superuser exists but no company is linked/exists → step "company"
+   * - company exists but Company.setupCompletedAt is null → step "role-templates"
+   * - setupCompletedAt is present → "complete"
    */
   async getStatus(): Promise<SetupStep> {
     const superuser = await prisma.user.findFirst({
@@ -18,15 +21,13 @@ export class SetupWizardService {
       return 'superuser';
     }
 
-    const completedCompany = await prisma.company.findFirst({
-      where: {
-        setupCompletedAt: {
-          not: null,
-        },
-      },
-    });
-    if (!completedCompany) {
+    const company = await prisma.company.findFirst();
+    if (!company) {
       return 'company';
+    }
+
+    if (!company.setupCompletedAt) {
+      return 'role-templates';
     }
 
     return 'complete';
@@ -80,8 +81,8 @@ export class SetupWizardService {
   }
 
   /**
-   * Creates the company, sets setupCompletedAt = now(), and links the superuser to it.
-   * This is the permanent completion flag. Once set, further calls are rejected.
+   * Creates the company and links the superuser to it.
+   * setupCompletedAt remains null until the role templates step is completed.
    */
   async completeCompanyStep(name: string, contactInfo: string) {
     const trimmedName = name.trim();
@@ -95,8 +96,8 @@ export class SetupWizardService {
     }
 
     const status = await this.getStatus();
-    if (status === 'complete') {
-      throw new Error('Setup is already complete.');
+    if (status === 'complete' || status === 'role-templates') {
+      throw new Error('Company setup is already complete.');
     }
     if (status === 'superuser') {
       throw new Error('Superuser must be created before completing the company step.');
@@ -110,12 +111,12 @@ export class SetupWizardService {
       throw new Error('Superuser must be created before completing the company step.');
     }
 
-    // Create the company with setupCompletedAt set to now
+    // Create the company with setupCompletedAt set to null initially
     const company = await prisma.company.create({
       data: {
         name: trimmedName,
         contactInfo: trimmedContact,
-        setupCompletedAt: new Date(),
+        setupCompletedAt: null,
       },
     });
 
@@ -123,6 +124,41 @@ export class SetupWizardService {
     await prisma.user.update({
       where: { id: superuser.id },
       data: { companyId: company.id },
+    });
+
+    // Run the RBAC seeding to create the Superuser Role for this company and assign it to this user
+    try {
+      await seedSuperuserRoles();
+    } catch (err) {
+      console.error('Failed to seed superuser role during company setup step:', err);
+    }
+
+    return company;
+  }
+
+  /**
+   * Seeds default role templates for the company, then sets setupCompletedAt to now.
+   * This is the final completion step of the wizard.
+   */
+  async completeRoleTemplatesStep(companyId: string, selectedNames: string[]) {
+    const status = await this.getStatus();
+    if (status === 'complete') {
+      throw new Error('Setup is already complete.');
+    }
+    if (status === 'superuser') {
+      throw new Error('Superuser must be created before completing the role templates step.');
+    }
+    if (status === 'company') {
+      throw new Error('Company must be set up before completing the role templates step.');
+    }
+
+    // Call seedTemplates
+    await roleTemplatesService.seedTemplates(companyId, selectedNames);
+
+    // Set company's setupCompletedAt to now to mark the setup as complete
+    const company = await prisma.company.update({
+      where: { id: companyId },
+      data: { setupCompletedAt: new Date() },
     });
 
     return company;

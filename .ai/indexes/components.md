@@ -74,3 +74,18 @@ Every registered component should include:
   - `onLoginSuccess`: `() => Promise<void>` - Refresh trigger on session creation.
 - **Used By**: `src/shared/components/AppGate.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, Lucide Icons
+
+### 8. `Settings`
+- **Location**: `src/features/rbac/pages/Settings.tsx`
+- **Purpose**: System-wide configuration panel housing administrative subsystems like access control registries and user directories.
+- **Props**: None (Self-contained).
+- **Used By**: `src/App.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `RoleManagement`, Lucide Icons
+
+### 9. `RoleManagement`
+- **Location**: `src/features/rbac/pages/RoleManagement.tsx`
+- **Purpose**: Full-featured interactive administrator interface to view roles, create/duplicate/delete custom roles, map parent inheritance options, and configure modular permission grids.
+- **Props**: None (Self-contained).
+- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Dependencies**: React, `react-i18next`, Lucide Icons, Fetch API, CSRF Token helper
+

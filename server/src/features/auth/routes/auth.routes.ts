@@ -7,6 +7,7 @@ import { requireAuth } from '../../../shared/middleware/session.middleware';
 import { SESSION_DURATION_MS, PASSWORD_RESET_TTL_SECONDS } from '../../../shared/constants';
 import { TokenService } from '../../../shared/token/token.service';
 import { TokenPurpose } from '@prisma/client';
+import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 
 const router = Router();
 
@@ -46,6 +47,20 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
       sameSite: 'lax',
     });
 
+    let roleName: string | null = null;
+    let effectivePermissions: string[] = [];
+
+    if (user.isSuperuser) {
+      roleName = 'Superuser';
+    } else if (user.roleId) {
+      const role = await prisma.role.findUnique({
+        where: { id: user.roleId },
+      });
+      roleName = role ? role.name : null;
+      const permissions = await permissionResolverService.getEffectivePermissions(user.roleId);
+      effectivePermissions = permissions.map((p) => `${p.module}:${p.action}`);
+    }
+
     res.json({
       success: true,
       user: {
@@ -55,6 +70,8 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
         recoveryEmail: user.recoveryEmail,
         companyId: user.companyId,
         status: user.status,
+        roleName,
+        effectivePermissions,
       },
     });
   } catch (error: any) {
@@ -91,6 +108,20 @@ router.post('/logout', async (req: Request, res: Response) => {
  */
 router.get('/session', requireAuth, async (req: Request, res: Response) => {
   try {
+    let roleName: string | null = null;
+    let effectivePermissions: string[] = [];
+
+    if (req.user.isSuperuser) {
+      roleName = 'Superuser';
+    } else if (req.user.roleId) {
+      const role = await prisma.role.findUnique({
+        where: { id: req.user.roleId },
+      });
+      roleName = role ? role.name : null;
+      const permissions = await permissionResolverService.getEffectivePermissions(req.user.roleId);
+      effectivePermissions = permissions.map((p) => `${p.module}:${p.action}`);
+    }
+
     res.json({
       success: true,
       user: {
@@ -100,6 +131,8 @@ router.get('/session', requireAuth, async (req: Request, res: Response) => {
         recoveryEmail: req.user.recoveryEmail,
         companyId: req.user.companyId,
         status: req.user.status,
+        roleName,
+        effectivePermissions,
       },
     });
   } catch (error: any) {
@@ -203,6 +236,20 @@ router.post('/activate', async (req: Request, res: Response) => {
       sameSite: 'lax',
     });
 
+    let roleName: string | null = null;
+    let effectivePermissions: string[] = [];
+
+    if (updatedUser.isSuperuser) {
+      roleName = 'Superuser';
+    } else if (updatedUser.roleId) {
+      const role = await prisma.role.findUnique({
+        where: { id: updatedUser.roleId },
+      });
+      roleName = role ? role.name : null;
+      const permissions = await permissionResolverService.getEffectivePermissions(updatedUser.roleId);
+      effectivePermissions = permissions.map((p) => `${p.module}:${p.action}`);
+    }
+
     return res.json({
       success: true,
       user: {
@@ -212,6 +259,8 @@ router.post('/activate', async (req: Request, res: Response) => {
         recoveryEmail: updatedUser.recoveryEmail,
         companyId: updatedUser.companyId,
         status: updatedUser.status,
+        roleName,
+        effectivePermissions,
       },
     });
   } catch (error: any) {
@@ -335,6 +384,20 @@ router.post('/reset-password', async (req: Request, res: Response) => {
       sameSite: 'lax',
     });
 
+    let roleName: string | null = null;
+    let effectivePermissions: string[] = [];
+
+    if (updatedUser.isSuperuser) {
+      roleName = 'Superuser';
+    } else if (updatedUser.roleId) {
+      const role = await prisma.role.findUnique({
+        where: { id: updatedUser.roleId },
+      });
+      roleName = role ? role.name : null;
+      const permissions = await permissionResolverService.getEffectivePermissions(updatedUser.roleId);
+      effectivePermissions = permissions.map((p) => `${p.module}:${p.action}`);
+    }
+
     return res.json({
       success: true,
       user: {
@@ -344,6 +407,8 @@ router.post('/reset-password', async (req: Request, res: Response) => {
         recoveryEmail: updatedUser.recoveryEmail,
         companyId: updatedUser.companyId,
         status: updatedUser.status,
+        roleName,
+        effectivePermissions,
       },
     });
   } catch (error: any) {
