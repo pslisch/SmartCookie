@@ -20,7 +20,7 @@ model User {
   username      String     @unique
   passwordHash  String
   isSuperuser   Boolean    @default(false)
-  isSuperuserUnique String? @default(dbgenerated()) @map("is_superuser_unique")
+  isSuperuserUnique Boolean? @map("is_superuser_unique")
   recoveryEmail String
   companyId     String?
   company       Company?   @relation(fields: [companyId], references: [id])

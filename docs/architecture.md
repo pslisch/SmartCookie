@@ -116,3 +116,33 @@ SmartCookie includes a fully configured internationalization engine implemented 
 - **Detection & Persistence**: Language selection defaults to browser `navigator` and is cached/retrieved via browser `localStorage` dynamically through `i18next-browser-languagedetector`.
 - **Namespaces**: Localized keys are isolated within functional domains. We use a single global namespace `common` (located in `src/shared/i18n/locales/en/common.json`) to store global UI components (navigation, brand elements, footer labels), which can be scaled per-feature later.
 - **Logical Tailwind Properties**: To facilitate future Right-to-Left (RTL) language extensions without costly layout rewrites, we strongly encourage logical styling classes (e.g., `start-0`, `end-0`, `ms-2`, `pe-4`) instead of absolute physical properties (`left-0`, `right-0`, `ml-2`, `pr-4`) for all new UI elements.
+
+---
+
+## 🚀 Deployment Targets & Installation Goals
+
+These are captured product/infrastructure notes for the future deployment
+phase — not yet implemented, not yet a finalized architectural decision.
+
+### Known future deployment target
+A private Ubuntu server is available for testing, with Apache, Node.js,
+and MariaDB already installed. The intended topology differs from the
+AI Studio / Cloud Run model (Express serving both API and static
+frontend directly): Apache will act as a reverse proxy in front of the
+Node.js process, likely handling TLS and optionally serving the built
+frontend directly while proxying /api/* to Node. This is a deployment
+configuration difference, not an application architecture change —
+no code in src/ or server/src/ should need to differ between the two
+targets.
+
+### Installation goal: single command, wizard-driven config
+The long-term goal is that installing SmartCookie on a server requires
+one command (bundling dependency install, Prisma migration, and build/
+start), with all further, user-facing configuration happening through
+the web-based Setup Wizard — never through manually edited server-side
+config files. This is a hard constraint on every future Setup Wizard
+step: if the original Authentication spec describes something as
+"configurable" (security policy, registration policy, auth providers,
+user profile fields, etc.), the wizard is where it gets configured, not
+a config file or environment variable requiring server access to change.
+

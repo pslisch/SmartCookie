@@ -19,6 +19,8 @@ A modern, scalable Learning Management System (LMS) designed to deliver highly p
 
 ### Prerequisites
 
+Before running, copy `.env.example` to `.env` and set `DATABASE_URL` (pointing to a running MariaDB instance), `SESSION_SECRET`, and `SMTP_*` values — the application requires a database connection to boot.
+
 Ensure you have [Node.js](https://nodejs.org/) (v18+) and [npm](https://www.npmjs.com/) installed.
 
 ### Development Server

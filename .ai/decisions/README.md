@@ -117,6 +117,10 @@ This directory serves as the automated registry of Architecture Decision Records
   Setup Wizard, and Email/Password provider implementation (MVP scope).
 - **ADR-0007: Client Routing**: React Router integration and active
   state triggers.
+- **ADR-0008: Deployment & Installation Strategy**: Apache reverse-proxy
+  topology for self-hosted deployment, single-command installer design,
+  and formalizing the "wizard-only configuration" constraint referenced
+  in docs/architecture.md.
 
 (Previously "ADR-0006: Relational Databases vs Document Stores" removed —
 resolved by ADR-0004.)
