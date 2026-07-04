@@ -42,7 +42,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
     setError('');
 
     if (!username.trim() || !password) {
-      setError(t('All fields are required.'));
+      setError(t('login.errors.fieldsRequired'));
       return;
     }
 
@@ -62,13 +62,13 @@ export function Login({ onLoginSuccess }: LoginProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || t('Invalid credentials.'));
+        throw new Error(data.error || t('login.errors.invalidCredentials'));
       }
 
       // Successful login -> trigger state refresh to establish session
       await onLoginSuccess();
     } catch (err: any) {
-      setError(err.message || t('Authentication failed.'));
+      setError(err.message || t('login.errors.authenticationFailed'));
     } finally {
       setLoading(false);
     }

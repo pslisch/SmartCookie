@@ -24,11 +24,16 @@ export interface AuthUser {
   status: string;
 }
 
+export interface AuthCredentials {
+  username: string;
+  password: string;
+}
+
 export interface AuthProvider {
   readonly id: string;
   readonly displayName: string;
 
-  authenticate(credentials: Record<string, any>): Promise<AuthUser>;
+  authenticate(credentials: AuthCredentials): Promise<AuthUser>;
 }
 
 // Concrete password-based auth helper and provider
@@ -95,7 +100,7 @@ export class EmailPasswordAuthProvider implements AuthProvider {
   /**
    * Authenticates a user with username and password.
    */
-  async authenticate(credentials: Record<string, any>): Promise<AuthUser> {
+  async authenticate(credentials: AuthCredentials): Promise<AuthUser> {
     const { username, password } = credentials;
 
     if (!username || typeof username !== 'string') {
@@ -114,15 +119,15 @@ export class EmailPasswordAuthProvider implements AuthProvider {
       throw new AuthenticationError('Invalid username or password.');
     }
 
-    // Check status
-    if (user.status !== 'ACTIVE') {
-      throw new AuthenticationError(`Account status is ${user.status}. Please contact an administrator.`);
-    }
-
     // Verify password
     const isValid = await this.verifyPassword(password, user.passwordHash);
     if (!isValid) {
       throw new AuthenticationError('Invalid username or password.');
+    }
+
+    // Check status
+    if (user.status !== 'ACTIVE') {
+      throw new AuthenticationError(`Account status is ${user.status}. Please contact an administrator.`);
     }
 
     return {

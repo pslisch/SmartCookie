@@ -30,7 +30,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
     setSuError('');
 
     if (!suUsername.trim() || !suPassword || !suRecoveryEmail.trim()) {
-      setSuError(t('All fields are required.'));
+      setSuError(t('setup.errors.fieldsRequired'));
       return;
     }
 
@@ -38,7 +38,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
     try {
       await onSuperuserSubmit(suUsername.trim(), suPassword, suRecoveryEmail.trim());
     } catch (err: any) {
-      setSuError(err.message || t('An unexpected error occurred.'));
+      setSuError(err.message || t('setup.errors.unexpected'));
     } finally {
       setSuLoading(false);
     }
@@ -49,7 +49,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
     setCoError('');
 
     if (!coName.trim() || !coContactInfo.trim()) {
-      setCoError(t('All fields are required.'));
+      setCoError(t('setup.errors.fieldsRequired'));
       return;
     }
 
@@ -57,7 +57,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
     try {
       await onCompanySubmit(coName.trim(), coContactInfo.trim());
     } catch (err: any) {
-      setCoError(err.message || t('An unexpected error occurred.'));
+      setCoError(err.message || t('setup.errors.unexpected'));
     } finally {
       setCoLoading(false);
     }
@@ -118,7 +118,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
                     value={suUsername}
                     onChange={(e) => setSuUsername(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="e.g. administrator"
+                    placeholder={t('setup.placeholders.admin')}
                   />
                 </div>
 
@@ -133,7 +133,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
                     value={suRecoveryEmail}
                     onChange={(e) => setSuRecoveryEmail(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="e.g. admin@yourdomain.com"
+                    placeholder={t('setup.placeholders.email')}
                   />
                   <p className="text-[11px] text-slate-400 mt-1">{t('setup.recoveryEmailDesc')}</p>
                 </div>
@@ -211,7 +211,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
                     value={coName}
                     onChange={(e) => setCoName(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="e.g. SmartCookie Headquarters"
+                    placeholder={t('setup.placeholders.companyName')}
                   />
                 </div>
 
@@ -226,7 +226,7 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit }: SetupW
                     value={coContactInfo}
                     onChange={(e) => setCoContactInfo(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="e.g. contact@smartcookie.com or +1 555-0199"
+                    placeholder={t('setup.placeholders.contact')}
                   />
                   <p className="text-[11px] text-slate-400 mt-1">{t('setup.contactInfoDesc')}</p>
                 </div>

@@ -59,9 +59,20 @@ export class LoginRateLimiter {
   }
 
   /**
-   * Records a failed login attempt for the identifier.
+   * Records a failed login attempt for both IP and (if provided) username.
    */
-  public recordFailure(identifier: string): void {
+  public recordFailure(req: Request): void {
+    const ipIdentifier = `ip:${req.ip || 'unknown'}`;
+    const username = req.body?.username;
+    const userIdentifier = username && typeof username === 'string' && username.trim() ? `usr:${username.trim().toLowerCase()}` : null;
+
+    this.incrementAttempt(ipIdentifier);
+    if (userIdentifier) {
+      this.incrementAttempt(userIdentifier);
+    }
+  }
+
+  private incrementAttempt(identifier: string): void {
     const record = this.store.get(identifier);
     const now = Date.now();
 
@@ -80,8 +91,15 @@ export class LoginRateLimiter {
   /**
    * Resets/clears the rate limit record for the identifier upon a successful login.
    */
-  public reset(identifier: string): void {
-    this.store.delete(identifier);
+  public reset(req: Request): void {
+    const ipIdentifier = `ip:${req.ip || 'unknown'}`;
+    const username = req.body?.username;
+    const userIdentifier = username && typeof username === 'string' && username.trim() ? `usr:${username.trim().toLowerCase()}` : null;
+    
+    this.store.delete(ipIdentifier);
+    if (userIdentifier) {
+      this.store.delete(userIdentifier);
+    }
   }
 
   /**

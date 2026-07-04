@@ -11,6 +11,22 @@
     "brand": "SmartCookie",
     "version": "Version"
   },
+  "login": {
+    "title": "SmartCookie",
+    "subtitle": "Administrator Control Center",
+    "secureAccess": "Secure Access",
+    "required": "Login Required",
+    "username": "Username",
+    "password": "Password",
+    "signIn": "Secure Sign In",
+    "placeholderUser": "Enter your username",
+    "placeholderPass": "••••••••",
+    "errors": {
+      "fieldsRequired": "All fields are required.",
+      "invalidCredentials": "Invalid username or password.",
+      "authenticationFailed": "Authentication failed."
+    }
+  },
   "setup": {
     "title": "System Setup Wizard",
     "subtitle": "Configure your SmartCookie application instance",
@@ -34,17 +50,19 @@
     "companyName": "Company / Workspace Name",
     "contactInfo": "Contact Information",
     "contactInfoDesc": "Support info associated with this workspace profile.",
-    "completeLaunch": "Complete Configuration & Launch"
+    "completeLaunch": "Complete Configuration & Launch",
+    "placeholders": {
+      "admin": "e.g. administrator",
+      "email": "e.g. admin@yourdomain.com",
+      "companyName": "e.g. SmartCookie Headquarters",
+      "contact": "e.g. contact@smartcookie.com..."
+    },
+    "errors": {
+      "fieldsRequired": "All fields are required.",
+      "unexpected": "An unexpected error occurred."
+    }
   },
-  "login": {
-    "title": "SmartCookie",
-    "subtitle": "Administrator Control Center",
-    "secureAccess": "Secure Access",
-    "required": "Login Required",
-    "username": "Username",
-    "password": "Password",
-    "signIn": "Secure Sign In",
-    "placeholderUser": "Enter your username",
-    "placeholderPass": "••••••••"
+  "appGate": {
+    "verifying": "Verifying security gates..."
   }
 }

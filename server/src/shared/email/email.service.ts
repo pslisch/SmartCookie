@@ -3,8 +3,10 @@ import { recoveryEmailChangedTemplate, RecoveryEmailChangedData } from './templa
 
 export type EmailTemplateName = 'recovery-email-changed';
 
+export type EmailTemplateData = RecoveryEmailChangedData;
+
 export interface EmailService {
-  send(to: string, template: EmailTemplateName, data: any): Promise<void>;
+  send(to: string, template: EmailTemplateName, data: EmailTemplateData): Promise<void>;
 }
 
 class EmailServiceImpl implements EmailService {
@@ -38,7 +40,7 @@ class EmailServiceImpl implements EmailService {
     }
   }
 
-  async send(to: string, template: EmailTemplateName, data: any): Promise<void> {
+  async send(to: string, template: EmailTemplateName, data: EmailTemplateData): Promise<void> {
     let subject = '';
     let text = '';
     let html = '';

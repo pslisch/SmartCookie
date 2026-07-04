@@ -187,7 +187,7 @@ export function AppGate({ children }: AppGateProps) {
           </div>
           <div className="text-center">
             <h1 className="text-xl font-bold tracking-tight text-slate-900">SmartCookie</h1>
-            <p className="text-sm text-slate-500 font-medium">Verifying security gates...</p>
+            <p className="text-sm text-slate-500 font-medium">{t('appGate.verifying')}</p>
           </div>
         </motion.div>
       </div>

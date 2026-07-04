@@ -1,6 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../../shared/db/prisma';
 import { setupWizardService } from '../services/setupWizard.service';
+import { requireAuth } from '../../../shared/middleware/session.middleware';
+import { SESSION_DURATION_MS } from '../../../shared/constants';
 
 const router = Router();
 
@@ -48,7 +50,7 @@ router.post('/superuser', async (req: Request, res: Response) => {
     const superuser = await setupWizardService.createSuperuser(username, password, recoveryEmail);
 
     // Create a database session for the new superuser
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // Session duration: 24 hours
+    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS); // 30 days
     const session = await prisma.session.create({
       data: {
         userId: superuser.id,
@@ -91,33 +93,14 @@ router.post('/superuser', async (req: Request, res: Response) => {
  * POST /api/setup/company -> completes company setup step.
  * Requires an active superuser session.
  */
-router.post('/company', async (req: Request, res: Response) => {
+router.post('/company', requireAuth, async (req: Request, res: Response) => {
   try {
     const { name, contactInfo } = req.body;
     if (!name || !contactInfo) {
       return res.status(400).json({ error: 'Company name and contact info are required.' });
     }
 
-    // Retrieve and validate session ID from cookies (handle both signed and unsigned for testing flexibility)
-    const sessionId = req.signedCookies?.sid || req.cookies?.sid;
-    if (!sessionId) {
-      return res.status(401).json({ error: 'Unauthorized: Requires an active superuser session.' });
-    }
-
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-      include: { user: true },
-    });
-
-    if (!session) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid session.' });
-    }
-
-    if (session.expiresAt < new Date()) {
-      return res.status(401).json({ error: 'Unauthorized: Session has expired.' });
-    }
-
-    const user = session.user;
+    const user = req.user;
     if (!user || !user.isSuperuser || user.status !== 'ACTIVE') {
       return res.status(403).json({ error: 'Forbidden: Requires an active superuser session.' });
     }

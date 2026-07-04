@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../db/prisma';
+import { User, Session } from '@prisma/client';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
-      session?: any;
+      user?: User;
+      session?: Session & { user: User };
     }
   }
 }
@@ -16,7 +17,7 @@ declare global {
  */
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
-    const sessionId = req.signedCookies?.sid || req.cookies?.sid;
+    const sessionId = req.signedCookies?.sid;
     if (!sessionId) {
       return res.status(401).json({ error: 'Unauthorized: No active session.' });
     }

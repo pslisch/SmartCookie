@@ -4,37 +4,9 @@ import { emailPasswordAuthProvider } from '../services/auth.service';
 import { emailService } from '../../../shared/email/email.service';
 import { loginRateLimiter } from '../../../shared/middleware/rateLimit.middleware';
 import { requireAuth } from '../../../shared/middleware/session.middleware';
+import { SESSION_DURATION_MS } from '../../../shared/constants';
 
 const router = Router();
-
-/**
- * Helper to get user and session from request cookies
- */
-async function getAuthenticatedUser(req: Request) {
-  const sessionId = req.signedCookies?.sid || req.cookies?.sid;
-  if (!sessionId) {
-    return null;
-  }
-
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
-    include: { user: true },
-  });
-
-  if (!session) {
-    return null;
-  }
-
-  if (session.expiresAt < new Date()) {
-    return null;
-  }
-
-  if (!session.user || session.user.status !== 'ACTIVE') {
-    return null;
-  }
-
-  return { session, user: session.user };
-}
 
 /**
  * POST /api/auth/login -> { username, password }
@@ -49,11 +21,10 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
     const user = await emailPasswordAuthProvider.authenticate({ username, password });
 
     // Reset rate limiter count for this identifier on successful login
-    const identifier = loginRateLimiter.getIdentifier(req);
-    loginRateLimiter.reset(identifier);
+    loginRateLimiter.reset(req);
 
     // Create session in the DB
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS); // 30 days
     const session = await prisma.session.create({
       data: {
         userId: user.id,
@@ -85,8 +56,7 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
     });
   } catch (error: any) {
     if (error.name === 'AuthenticationError') {
-      const identifier = loginRateLimiter.getIdentifier(req);
-      loginRateLimiter.recordFailure(identifier);
+      loginRateLimiter.recordFailure(req);
       return res.status(401).json({ error: error.message });
     }
     res.status(500).json({ error: error.message || 'An internal error occurred.' });
@@ -98,7 +68,7 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
  */
 router.post('/logout', async (req: Request, res: Response) => {
   try {
-    const sessionId = req.signedCookies?.sid || req.cookies?.sid;
+    const sessionId = req.signedCookies?.sid;
     res.clearCookie('sid');
 
     if (sessionId) {
