@@ -27,6 +27,53 @@ sudo ./deploy/install.sh yourdomain.com
 
 ---
 
+## 🌟 One-Line Bootstrap, Update & Uninstall Commands
+
+In addition to individual setup scripts, SmartCookie LMS includes high-level orchestration commands to manage the full lifecycle of your deployment.
+
+### 📥 1. True One-Line Bootstrap
+For a completely clean, zero-configuration VPS setup, you can initiate the entire installation in one command without manual cloning:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vrsika/smartcookie/main/deploy/bootstrap.sh | sudo bash -s -- yourdomain.com [your-email@example.com]
+```
+
+* **Safeguards:** If `/opt/smartcookie` already exists, this command will immediately halt with a clear error pointing to the update script instead of blindly overwriting any files.
+* **Flow:** Clones the repository to `/opt/smartcookie` and directly hands over execution to `deploy/install.sh`.
+
+### 🔄 2. Safe, Idempotent Updates
+To pull the latest releases, apply migrations, compile frontend assets, and restart the systemd daemon, run the update script inside `/opt/smartcookie`:
+
+```bash
+sudo /opt/smartcookie/deploy/update.sh
+```
+
+* **Fast No-Op Check:** Compares your local HEAD against `origin/main` (after a `git fetch`). If there are no new commits, the script exits immediately with `0` in under a second—skipping database backups, migrations, and compiles entirely.
+* **Robust DB Backup:** Before running any migrations, a timestamped `.sql` backup is created outside the application folder at `/opt/smartcookie-backups/`. If backup fails, the update aborts.
+* **Migration Failure Safety:** If `npx prisma migrate deploy` fails, the script stops immediately to protect the running server, printing the exact recovery path to restore the pre-update backup.
+* **Zero-Downtime Builds:** Frontend compilation and backend bundler processes compile into `dist.new/`. The active `dist/` is atomically swapped only after a 100% successful compilation, ensuring the application is never left in a broken or partial state.
+* **Auto-Diagnosis Health Check:** Pings `http://localhost:3000/api/health` after restarting. If the app is unhealthy, it alerts you with instructions to check `journalctl -u smartcookie.service` for rapid diagnosis.
+
+### 🗑️ 3. Safe, Final-Backup-First Uninstall
+To completely remove the SmartCookie LMS footprint from your server, execute the uninstaller:
+
+```bash
+sudo /opt/smartcookie/deploy/uninstall.sh
+```
+
+* **Anti-Reflexive Confirmation:** Prompts for the exact domain name or confirmation phrase to be typed back. It also supports non-interactive uninstalls using the `--confirm` flag.
+* **Backup First:** Automatically creates a final backup of your SQL database to the invoking user's home directory (e.g. `~/smartcookie-final-backup-<timestamp>.sql` or `/root/`). **If the backup fails, the uninstall process aborts immediately before deleting anything.**
+* **Destructive Scope (What is Cleaned):**
+  - Stops, disables, and removes the `smartcookie.service` unit.
+  - Drops the `smartcookie` database and the application database user.
+  - Disables and removes the Apache `smartcookie.conf` site configuration.
+  - Deletes `/opt/smartcookie` and all temporary files.
+* **Preservation Scope (What is Preserved):**
+  - **Postal Mail Server container stack is left completely untouched**, allowing it to serve as a standalone, persistent mail service.
+  - Shared services like MySQL, Apache, Node.js, Docker, and firewall (ufw) rules remain completely unaffected.
+
+---
+
 ## 🛠️ Step-by-Step Installation Scripts
 
 If you prefer to run each script individually, or need to troubleshoot a specific stage, execute them in the following order:
