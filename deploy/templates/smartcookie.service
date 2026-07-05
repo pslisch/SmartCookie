@@ -1,0 +1,28 @@
+# deploy/templates/smartcookie.service - systemd unit template for SmartCookie LMS
+# Placeholders are replaced dynamically during installation.
+
+[Unit]
+Description=SmartCookie LMS Service
+After=network.target mysql.service mariadb.service
+
+[Service]
+Type=simple
+User=USER_PLACEHOLDER
+WorkingDirectory=WORKING_DIR_PLACEHOLDER
+ExecStart=NODE_PATH_PLACEHOLDER WORKING_DIR_PLACEHOLDER/dist/server.cjs
+
+# Keep-alive and self-healing rules
+Restart=always
+RestartSec=10
+
+# Logging configurations
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=smartcookie
+
+# Environment properties
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target

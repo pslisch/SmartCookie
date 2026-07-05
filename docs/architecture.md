@@ -130,30 +130,58 @@ SmartCookie includes a fully configured internationalization engine implemented 
 
 ---
 
-## 🚀 Deployment Targets & Installation Goals
+## 🚀 Deployment Targets & Production Topology
 
-These are captured product/infrastructure notes for the future deployment
-phase — not yet implemented, not yet a finalized architectural decision.
+The production architecture for SmartCookie has been finalized and implemented as a robust, fully automated, self-healing topology on a dedicated Ubuntu VPS.
 
-### Known future deployment target
-A private Ubuntu server is available for testing, with Apache, Node.js,
-and MariaDB already installed. The intended topology differs from the
-AI Studio / Cloud Run model (Express serving both API and static
-frontend directly): Apache will act as a reverse proxy in front of the
-Node.js process, likely handling TLS and optionally serving the built
-frontend directly while proxying /api/* to Node. This is a deployment
-configuration difference, not an application architecture change —
-no code in src/ or server/src/ should need to differ between the two
-targets.
+```
++---------------------------------------------------------------------------------------------------------+
+|                                           PRODUCTION SERVER (UBUNTU VPS)                                |
+|                                                                                                         |
+|       Incoming Traffic (Port 80/443)                                                                    |
+|                      |                                                                                  |
+|                      v                                                                                  |
+|         +-------------------------+                                                                     |
+|         |    Apache Web Server    | <--- Handles SSL Termination (Let's Encrypt) & security headers     |
+|         +-------------------------+                                                                     |
+|            |                      |                                                                     |
+|            | (Proxy /api/* & static)                  | (SMTP Relay / port 25)                          |
+|            v                                          v                                                 |
+|   +-------------------+                     +-------------------+                                       |
+|   |  Node.js Process  |                     | Postal Containers | <--- Mail delivery daemon               |
+|   | (Local port 3000) |                     |  (Local Port 5000)|                                       |
+|   +-------------------+                     +-------------------+                                       |
+|            |                                          |                                                 |
+|            v                                          v                                                 |
+|   +-------------------+                     +-------------------+                                       |
+|   | Host MariaDB Server|                     | Dedicated MariaDB |                                       |
+|   |    (Port 3306)    |                     |  Docker Container |                                       |
+|   |                   |                     |    (Port 3307)    |                                       |
+|   +-------------------+                     +-------------------+                                       |
+|                                                                                                         |
++---------------------------------------------------------------------------------------------------------+
+```
 
-### Installation goal: single command, wizard-driven config
-The long-term goal is that installing SmartCookie on a server requires
-one command (bundling dependency install, Prisma migration, and build/
-start), with all further, user-facing configuration happening through
-the web-based Setup Wizard — never through manually edited server-side
-config files. This is a hard constraint on every future Setup Wizard
-step: if the original Authentication spec describes something as
-"configurable" (security policy, registration policy, auth providers,
-user profile fields, etc.), the wizard is where it gets configured, not
-a config file or environment variable requiring server access to change.
+### 1. Ingress Layer (Apache Reverse Proxy)
+Apache acts as the public-facing gatekeeper, binding to port 80 and 443 on the public interface.
+* **SSL Termination:** Managed via Let's Encrypt SSL certificates (configured and renewed automatically by Certbot).
+* **Proxy Routing:** Requests are forwarded securely to the downstream application server over the loopback interface on local port `3000`.
+* **Security Headers:** Enforces strict headers (`X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`).
+
+### 2. Application Layer (Systemd Node Service)
+The full-stack Express server runs as a systemd service (`smartcookie.service`) utilizing a compiled ESM/CommonJS bundle:
+* **Entry Point:** Executed via `node dist/server.cjs` on `127.0.0.1:3000`.
+* **Process Management:** Automatic start on system boot and automatic restart with a 10-second delay in case of application failures.
+* **Trust Proxy:** Express is configured with `app.set('trust proxy', 1)` to accurately detect secure TLS connections forwarded from Apache, ensuring session cookies are handled securely.
+
+### 3. Database Layer (Host MariaDB)
+Persistent relational storage is managed via Prisma ORM connecting to the host's native MariaDB server on port `3306`. Connection credentials and secure variables are locked inside `.env` with restricted read permissions (`600`).
+
+### 4. Mail Subsystem (Postal Server Stack)
+To ensure reliable, high-volume transactional email delivery (invitations, password resets, profile security warnings), SmartCookie integrates a private **Postal Mail Server**:
+* **Infrastructure:** Runs as an isolated Docker container stack.
+* **Isolated Database:** Postal runs its own dedicated MariaDB database container. It is mapped to host port **3307** to completely isolate it and prevent port conflicts with SmartCookie's host MariaDB on port 3306.
+* **Authentication:** Integrates SPF, DKIM key signatures derived directly from the database, and strict DMARC rules for exceptional deliverability.
+* **Server PTR (Reverse DNS):** The VPS IP has a custom PTR record pointing back to the mail server hostname (`postal.yourdomain.com`), proving sender validity to major mail providers.
+
 
