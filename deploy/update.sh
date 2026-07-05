@@ -150,7 +150,6 @@ if [ -d "dist" ]; then
     mv dist dist.bak
 fi
 mv dist.new dist
-rm -rf dist.bak
 echo_success "Application build updated successfully."
 
 # 6. Restart systemd background service
@@ -172,6 +171,8 @@ for i in {1..15}; do
 done
 
 if [ "$HEALTH_SUCCESS" = "true" ]; then
+    # Clean up the previous working build backup now that we are confirmed healthy
+    rm -rf dist.bak
     echo "===================================================="
     echo_success "SmartCookie LMS Update Completed Successfully!"
     echo "===================================================="
@@ -181,6 +182,19 @@ if [ "$HEALTH_SUCCESS" = "true" ]; then
     echo "===================================================="
 else
     echo_error "Health check failed after update!"
+    if [ -d "dist.bak" ]; then
+        echo_warning "Automatically rolling back to the previous working build..."
+        rm -rf dist
+        mv dist.bak dist
+        if sudo systemctl restart smartcookie.service; then
+            echo_success "Rollback successful. Previous version is running."
+        else
+            echo_error "Failed to restart service during rollback!"
+        fi
+    else
+        echo_warning "No previous build backup (dist.bak) exists. Cannot roll back."
+    fi
+
     echo "========================================================================="
     echo "                      SERVICE HEALTH CHECK FAILURE                       "
     echo "========================================================================="

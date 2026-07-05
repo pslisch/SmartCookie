@@ -45,7 +45,7 @@ if [ -d "$INSTALL_DIR" ]; then
 fi
 
 # Determine Repository URL - fallback to placeholder or detect from local directory if run locally
-REPO_URL="https://github.com/vrsika/smartcookie.git"
+REPO_URL="https://github.com/pslisch/SmartCookie.git"
 if [ -d ".git" ]; then
     DETECTED_URL=$(git config --get remote.origin.url 2>/dev/null || true)
     if [ -n "$DETECTED_URL" ]; then

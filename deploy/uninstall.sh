@@ -80,14 +80,30 @@ if [ ! -d "$USER_HOME" ]; then
 fi
 BACKUP_FILE="$USER_HOME/smartcookie-final-backup-$TIMESTAMP.sql"
 
+# Extract database name and database user dynamically from .env if it exists
+DROP_DB="smartcookie"
+DROP_USER="smartcookie"
+if [ -f "/opt/smartcookie/.env" ]; then
+    DB_URL_LINE=$(grep "^DATABASE_URL=" /opt/smartcookie/.env | head -n1 | tr -d '"' | tr -d "'")
+    DB_URL_CLEAN="${DB_URL_LINE#DATABASE_URL=}"
+    EXTRACTED_DB=$(echo "$DB_URL_CLEAN" | sed -E -n 's|.*/([^?]+).*|\1|p')
+    EXTRACTED_USER=$(echo "$DB_URL_CLEAN" | sed -n 's|mysql://\([^:]*\):.*|\1|p')
+    if [ -n "$EXTRACTED_DB" ]; then
+        DROP_DB="$EXTRACTED_DB"
+    fi
+    if [ -n "$EXTRACTED_USER" ]; then
+        DROP_USER="$EXTRACTED_USER"
+    fi
+fi
+
 echo_info "Initializing pre-uninstallation checklist..."
 
 # Check if database exists
-DB_EXISTS=$(sudo mysql -N -B -e "SHOW DATABASES LIKE 'smartcookie';" 2>/dev/null || true)
+DB_EXISTS=$(sudo mysql -N -B -e "SHOW DATABASES LIKE '$DROP_DB';" 2>/dev/null || true)
 
 if [ -n "$DB_EXISTS" ]; then
-    echo_info "Database 'smartcookie' detected. Generating final database backup..."
-    if ! sudo mysqldump --single-transaction smartcookie > "$BACKUP_FILE" 2>/dev/null; then
+    echo_info "Database '$DROP_DB' detected. Generating final database backup..."
+    if ! sudo mysqldump --single-transaction "$DROP_DB" > "$BACKUP_FILE" 2>/dev/null; then
         # Try credentials fallback from .env if standard sudo fails
         if [ -f "/opt/smartcookie/.env" ]; then
             DB_URL_LINE=$(grep "^DATABASE_URL=" /opt/smartcookie/.env | head -n1 | tr -d '"' | tr -d "'")
@@ -101,7 +117,7 @@ if [ -n "$DB_EXISTS" ]; then
             DB_HOST=${DB_HOST:-"127.0.0.1"}
             DB_PORT=${DB_PORT:-"3306"}
             
-            if ! mysqldump -u "$DB_USER" -p"$DB_PASS" -h "$DB_HOST" -P "$DB_PORT" smartcookie > "$BACKUP_FILE" 2>/dev/null; then
+            if ! mysqldump -u "$DB_USER" -p"$DB_PASS" -h "$DB_HOST" -P "$DB_PORT" "$DROP_DB" > "$BACKUP_FILE" 2>/dev/null; then
                 echo_error "CRITICAL ERROR: Failed to create database backup! Aborting uninstallation to protect data."
                 exit 1
             fi
@@ -113,7 +129,7 @@ if [ -n "$DB_EXISTS" ]; then
     sudo chmod 600 "$BACKUP_FILE"
     echo_success "Final database backup saved safely at: $BACKUP_FILE"
 else
-    echo_warning "Database 'smartcookie' not found. Skipping backup."
+    echo_warning "Database '$DROP_DB' not found. Skipping backup."
     BACKUP_FILE="None (Database was not present)"
 fi
 
@@ -132,20 +148,11 @@ echo_success "Systemd service clean-up completed."
 
 # 2. Drop the SmartCookie-specific Database and User ONLY
 echo_info "Step 2: Removing database and user..."
-DROP_USER="smartcookie"
-if [ -f "/opt/smartcookie/.env" ]; then
-    DB_URL_LINE=$(grep "^DATABASE_URL=" /opt/smartcookie/.env | head -n1 | tr -d '"' | tr -d "'")
-    DB_URL_CLEAN="${DB_URL_LINE#DATABASE_URL=}"
-    EXTRACTED_USER=$(echo "$DB_URL_CLEAN" | sed -n 's|mysql://\([^:]*\):.*|\1|p')
-    if [ -n "$EXTRACTED_USER" ]; then
-        DROP_USER="$EXTRACTED_USER"
-    fi
-fi
 
-sudo mysql -e "DROP DATABASE IF EXISTS \`smartcookie\`;" || echo_warning "Could not drop database 'smartcookie'"
+sudo mysql -e "DROP DATABASE IF EXISTS \`$DROP_DB\`;" || echo_warning "Could not drop database '$DROP_DB'"
 sudo mysql -e "DROP USER IF EXISTS '$DROP_USER'@'localhost';" || echo_warning "Could not drop database user '$DROP_USER'"
 sudo mysql -e "FLUSH PRIVILEGES;"
-echo_success "Database 'smartcookie' and DB user '$DROP_USER' removed successfully."
+echo_success "Database '$DROP_DB' and DB user '$DROP_USER' removed successfully."
 
 # 3. Remove Apache VirtualHost config only, reload Apache (Skip gracefully if missing)
 echo_info "Step 3: Removing Apache proxy configuration..."
@@ -176,7 +183,7 @@ echo "========================================================================="
 echo "The following resources have been completely REMOVED:"
 echo "  [✓] /opt/smartcookie (Application files, builds, and node_modules)"
 echo "  [✓] /etc/systemd/system/smartcookie.service (Systemd background daemon)"
-echo "  [✓] MySQL database 'smartcookie' and local user '$DROP_USER'"
+echo "  [✓] MySQL database '$DROP_DB' and local user '$DROP_USER'"
 echo "  [✓] Apache VirtualHost configuration 'smartcookie.conf' (site disabled)"
 echo ""
 echo "FINAL DATABASE BACKUP:"
