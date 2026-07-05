@@ -73,8 +73,22 @@ if [ "$MAIL_MODE" = "existing" ]; then
     
     while true; do
         if [ "$FAST_MODE" = "false" ]; then
-            echo "----------------------------------------------------"
-            echo "Existing SMTP Server Credentials Configuration"
+            echo "===================================================="
+            echo "   Existing SMTP Server Credentials Configuration   "
+            echo "===================================================="
+            echo ""
+            echo "💡 WHAT IS AN SMTP HOST?"
+            echo "   A mail server address (SMTP Host) is the URL of the service that will send"
+            echo "   emails for your SmartCookie LMS (such as verification or password reset emails)."
+            echo ""
+            echo "   🔍 WHERE TO FIND THIS:"
+            echo "   • Self-Hosted Postal: Log in to your Postal admin UI, navigate to:"
+            echo "     Organization -> Mail Server -> Credentials."
+            echo "   • Commercial Providers: Look in your SendGrid, Mailgun, or AWS SES dashboard"
+            echo "     under 'SMTP Settings' or 'API & Integration'."
+            echo "   • Personal Accounts:"
+            echo "     - Gmail: smtp.gmail.com"
+            echo "     - Outlook / Office 365: smtp.office365.com"
             echo "----------------------------------------------------"
         fi
         read -p "Enter SMTP Host: " SMTP_HOST
@@ -83,15 +97,49 @@ if [ "$MAIL_MODE" = "existing" ]; then
             read -p "Enter SMTP Host: " SMTP_HOST
         done
 
+        if [ "$FAST_MODE" = "false" ]; then
+            echo ""
+            echo "💡 WHAT IS AN SMTP PORT?"
+            echo "   A port is a specific gateway channel used to securely transfer email data."
+            echo ""
+            echo "   📋 WHICH ONE TO CHOOSE?"
+            echo "   • 587: Recommended default. Works for almost everyone (secure TLS)."
+            echo "   • 465: Used by some providers (SSL encryption)."
+            echo "   • 25 : Almost never correct here. Port 25 is for servers talking directly"
+            echo "          to each other, not for client authentication like this."
+            echo "----------------------------------------------------"
+        fi
         read -p "Enter SMTP Port [default: 587]: " SMTP_PORT
         SMTP_PORT=${SMTP_PORT:-"587"}
 
+        if [ "$FAST_MODE" = "false" ]; then
+            echo ""
+            echo "💡 WHAT IS AN SMTP USERNAME?"
+            echo "   This identifies your account/server to the mail server for authentication."
+            echo ""
+            echo "   📋 COMMON FORMATS:"
+            echo "   • This is often your full email address (e.g., mailer@yourdomain.com)."
+            echo "   • For some commercial services (like SendGrid), this might be a static"
+            echo "     API user ID (e.g., 'apikey')."
+            echo "----------------------------------------------------"
+        fi
         read -p "Enter SMTP Username: " SMTP_USER
         while [ -z "$SMTP_USER" ]; do
             echo_warning "SMTP Username cannot be empty."
             read -p "Enter SMTP Username: " SMTP_USER
         done
 
+        if [ "$FAST_MODE" = "false" ]; then
+            echo ""
+            echo "💡 WHAT IS AN SMTP PASSWORD?"
+            echo "   The password or secure key required to authenticate with the mail server."
+            echo ""
+            echo "   ⚠️  CRITICAL SECURITY NOTE:"
+            echo "   • Most providers require a generated 'App Password' or 'API Key' here."
+            echo "     Do NOT use your normal primary account login password."
+            echo "   • For safety, your typing will be hidden as you enter this password."
+            echo "----------------------------------------------------"
+        fi
         read -s -p "Enter SMTP Password: " SMTP_PASS
         echo ""
         while [ -z "$SMTP_PASS" ]; do
@@ -100,6 +148,18 @@ if [ "$MAIL_MODE" = "existing" ]; then
             echo ""
         done
 
+        if [ "$FAST_MODE" = "false" ]; then
+            echo ""
+            echo "💡 WHAT IS AN SMTP FROM-ADDRESS?"
+            echo "   This is the sender email address that recipients will see in their inbox"
+            echo "   (e.g., 'no-reply@yourdomain.com')."
+            echo ""
+            echo "   ⚠️  IMPORTANT AUTHORIZATION RULES:"
+            echo "   • This address should match a domain that your mail server is authorized"
+            echo "     to send on behalf of. If they don't match, your emails may be rejected"
+            echo "     by receivers (like Gmail or Yahoo) or land directly in spam."
+            echo "----------------------------------------------------"
+        fi
         read -p "Enter SMTP From-Address [default: no-reply@$DOMAIN]: " SMTP_FROM
         SMTP_FROM=${SMTP_FROM:-"no-reply@$DOMAIN"}
 
