@@ -21,9 +21,10 @@ echo "          SmartCookie LMS Full Deployment Pipeline  "
 echo "===================================================="
 
 DOMAIN="$1"
+EMAIL="$2"
 if [ -z "$DOMAIN" ]; then
     echo_error "No domain name provided."
-    echo "Usage: sudo $0 <domain-name>"
+    echo "Usage: sudo $0 <domain-name> [email-address]"
     exit 1
 fi
 
@@ -81,7 +82,7 @@ echo_success "Stage 3: Application built successfully."
 
 echo "----------------------------------------------------"
 echo_info "STAGE 4: Setting up Apache Reverse Proxy & SSL..."
-if ! "$SCRIPT_DIR/03-setup-apache.sh" "$DOMAIN"; then
+if ! "$SCRIPT_DIR/03-setup-apache.sh" "$DOMAIN" "$EMAIL"; then
     echo_error "Apache configuration or SSL certificate retrieval failed! Halted."
     exit 1
 fi

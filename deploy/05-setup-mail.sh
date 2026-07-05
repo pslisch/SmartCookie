@@ -91,7 +91,7 @@ import nodemailer from 'nodemailer';
 const host = process.argv[2];
 const port = parseInt(process.argv[3], 10);
 const user = process.argv[4];
-const pass = process.argv[5];
+const pass = process.env.SMTP_PASS;
 
 const transporter = nodemailer.createTransport({
   host,
@@ -113,7 +113,7 @@ EOF
 
         # Run SMTP validation using node from the project root (where nodemailer is installed)
         cd "$PROJECT_ROOT"
-        SMTP_ERR_MSG=$(node test-smtp.js "$SMTP_HOST" "$SMTP_PORT" "$SMTP_USER" "$SMTP_PASS" 2>&1 || true)
+        SMTP_ERR_MSG=$(SMTP_PASS="$SMTP_PASS" node test-smtp.js "$SMTP_HOST" "$SMTP_PORT" "$SMTP_USER" 2>&1 || true)
         rm -f "$PROJECT_ROOT/test-smtp.js"
         
         if [ -z "$SMTP_ERR_MSG" ]; then
@@ -170,6 +170,16 @@ else
         sudo ln -s /opt/postal/install/bin/postal /usr/bin/postal
     fi
 
+    # Retrieve existing password if possible (TASK B & TASK C)
+    MARIADB_ROOT_PASS=""
+    if [ -f "/opt/postal/.mariadb_root_pass" ]; then
+        MARIADB_ROOT_PASS=$(sudo cat "/opt/postal/.mariadb_root_pass" | tr -d '"' | tr -d "'" | tr -d '[:space:]')
+        echo_info "Successfully retrieved MariaDB root password from /opt/postal/.mariadb_root_pass"
+    elif [ -f "/opt/postal/config/postal.yml" ]; then
+        MARIADB_ROOT_PASS=$(sudo grep -A 5 "main_db:" "/opt/postal/config/postal.yml" | grep "password:" | head -n1 | awk '{print $2}' | tr -d '"' | tr -d "'" | tr -d '[:space:]' || echo "")
+        echo_info "Retrieved MariaDB root password from /opt/postal/config/postal.yml"
+    fi
+
     # 2. Runs Postal's own dedicated MariaDB container with a randomly generated root password
     # Maps to port 3307 to prevent conflicts with host's MariaDB (used for SmartCookie) on port 3306.
     if docker ps -a --format '{{.Names}}' | grep -Eq "^postal-mariadb$"; then
@@ -181,13 +191,27 @@ else
             sudo docker start postal-mariadb >/dev/null
         fi
         
-        # Retrieve existing password if possible
-        if [ -f "/opt/postal/config/postal.yml" ]; then
-            MARIADB_ROOT_PASS=$(grep -A 5 "main_db:" "/opt/postal/config/postal.yml" | grep "password:" | head -n1 | awk '{print $2}' | tr -d '"'\' || echo "")
+        # If password is still empty for some reason, generate a new one
+        if [ -z "$MARIADB_ROOT_PASS" ]; then
+            MARIADB_ROOT_PASS=$(openssl rand -hex 16)
+            echo_info "Writing newly generated MariaDB root password to /opt/postal/.mariadb_root_pass..."
+            sudo mkdir -p /opt/postal
+            echo "$MARIADB_ROOT_PASS" | sudo tee /opt/postal/.mariadb_root_pass >/dev/null
+            sudo chmod 600 /opt/postal/.mariadb_root_pass
         fi
     else
-        MARIADB_ROOT_PASS=$(openssl rand -hex 16)
-        echo_info "Starting dedicated Postal MariaDB container on local port 3307 (password generated)..."
+        # If password is still empty (neither file nor config existed), generate it now
+        if [ -z "$MARIADB_ROOT_PASS" ]; then
+            MARIADB_ROOT_PASS=$(openssl rand -hex 16)
+        fi
+        
+        # IMMEDIATELY write the password to /opt/postal/.mariadb_root_pass with chmod 600 (TASK B)
+        echo_info "Persisting generated MariaDB root password to /opt/postal/.mariadb_root_pass..."
+        sudo mkdir -p /opt/postal
+        echo "$MARIADB_ROOT_PASS" | sudo tee /opt/postal/.mariadb_root_pass >/dev/null
+        sudo chmod 600 /opt/postal/.mariadb_root_pass
+        
+        echo_info "Starting dedicated Postal MariaDB container on local port 3307..."
         sudo docker run -d \
            --name postal-mariadb \
            -p 127.0.0.1:3307:3306 \
@@ -249,5 +273,4 @@ else
     echo "  7. Once the domain has been added to Postal, run '06-generate-dns-guide.sh'"
     echo "     to generate your production DNS records guide!"
     echo "===================================================="
-    export MARIADB_ROOT_PASS
 fi

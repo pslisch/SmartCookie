@@ -17,9 +17,10 @@ echo "          SmartCookie Apache & SSL Setup            "
 echo "===================================================="
 
 DOMAIN="$1"
+EMAIL="$2"
 if [ -z "$DOMAIN" ]; then
     echo_error "No domain name provided."
-    echo "Usage: $0 <domain-name>"
+    echo "Usage: $0 <domain-name> [email-address]"
     exit 1
 fi
 
@@ -90,10 +91,18 @@ echo_info "This may take a minute. Certbot will automatically rewrite your vhost
 # Run certbot non-interactively using the Apache plugin
 # --register-unsafely-without-email is used if no email is supplied; we also agree to Terms of Service.
 # --redirect configures automatic HTTP to HTTPS redirecting in Apache.
-if ! sudo certbot --apache -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --redirect; then
-    echo_warning "Certbot was unable to automatically provision SSL for '$DOMAIN'."
-    echo_warning "Ensure that your domain is pointing to this server's public IP address and port 80 is open."
-    echo_warning "You can run 'sudo certbot --apache -d $DOMAIN' manually later once DNS propagates."
+CERTBOT_ARGS=("--apache" "-d" "$DOMAIN" "--non-interactive" "--agree-tos" "--redirect")
+if [ -n "$EMAIL" ]; then
+    CERTBOT_ARGS+=("--email" "$EMAIL")
+else
+    CERTBOT_ARGS+=("--register-unsafely-without-email")
+fi
+
+if ! sudo certbot "${CERTBOT_ARGS[@]}"; then
+    echo_error "Certbot was unable to automatically provision SSL for '$DOMAIN'!"
+    echo_error "Ensure that your domain is pointing to this server's public IP address, port 80 is open, and there is no firewall blocking Let's Encrypt validation."
+    echo_error "Aborting installation as SSL setup failed (Strict Certbot Mode)."
+    exit 1
 else
     echo_success "Let's Encrypt SSL certificate successfully installed and configured for '$DOMAIN'!"
 fi

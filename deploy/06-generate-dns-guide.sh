@@ -37,9 +37,13 @@ POSTAL_CONF="/opt/postal/config/postal.yml"
 MARIADB_ROOT_PASS=""
 DKIM_PUBLIC_KEY=""
 
-if [ -f "$POSTAL_CONF" ]; then
+if [ -f "/opt/postal/.mariadb_root_pass" ]; then
+    MARIADB_ROOT_PASS=$(sudo cat "/opt/postal/.mariadb_root_pass" | tr -d '"' | tr -d "'" | tr -d '[:space:]')
+    echo_info "Successfully retrieved MariaDB root password from /opt/postal/.mariadb_root_pass"
+elif [ -f "$POSTAL_CONF" ]; then
     # Extract the MariaDB root password
-    MARIADB_ROOT_PASS=$(sudo grep -A 5 "main_db:" "$POSTAL_CONF" | grep "password:" | head -n1 | awk '{print $2}' | tr -d '"'\'' || echo "")
+    MARIADB_ROOT_PASS=$(sudo grep -A 5 "main_db:" "$POSTAL_CONF" | grep "password:" | head -n1 | awk '{print $2}' | tr -d '"' | tr -d "'" | tr -d '[:space:]' || echo "")
+    echo_info "Retrieved MariaDB root password from $POSTAL_CONF"
 fi
 
 if [ -n "$MARIADB_ROOT_PASS" ]; then
