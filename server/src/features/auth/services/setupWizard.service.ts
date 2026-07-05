@@ -111,12 +111,20 @@ export class SetupWizardService {
       throw new Error('Superuser must be created before completing the company step.');
     }
 
+    let appUrl = process.env.APP_URL || 'localhost';
+    let domain = appUrl;
+    if (domain.includes('://')) {
+      domain = domain.split('://')[1];
+    }
+    domain = domain.split('/')[0].split(':')[0];
+
     // Create the company with setupCompletedAt set to null initially
     const company = await prisma.company.create({
       data: {
         name: trimmedName,
         contactInfo: trimmedContact,
         setupCompletedAt: null,
+        domain,
       },
     });
 

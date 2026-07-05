@@ -90,6 +90,16 @@ if ! "$SCRIPT_DIR/01-setup-database.sh"; then
 fi
 echo_success "Stage 2: Database and user set up successfully."
 
+# Write the actual domain into .env as APP_URL
+echo_info "Persisting real domain to .env as APP_URL..."
+if [ -f ".env" ]; then
+    if grep -q "^APP_URL=" .env; then
+        sed -i "s|^APP_URL=.*|APP_URL=\"https://$DOMAIN\"|g" .env
+    else
+        echo "APP_URL=\"https://$DOMAIN\"" >> .env
+    fi
+fi
+
 echo "----------------------------------------------------"
 echo_info "STAGE 3: Installing dependencies and building app..."
 if ! "$SCRIPT_DIR/02-install-app.sh"; then

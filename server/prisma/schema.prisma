@@ -32,6 +32,8 @@ model User {
   tokens        Token[]
   roleId        String?    @map("role_id")
   role          Role?      @relation(fields: [roleId], references: [id])
+  memberships        Membership[] @relation("UserMemberships")
+  createdMemberships Membership[] @relation("MembershipCreator")
 
   @@unique([isSuperuserUnique], name: "is_superuser_unique_idx")
   @@map("users")
@@ -63,6 +65,10 @@ model Company {
   roleInheritanceEnabled Boolean @default(false) @map("role_inheritance_enabled")
   users            User[]
   roles            Role[]
+  domain           String    @default("")
+  settings         Json?
+  organizationUnits OrganizationUnit[]
+  learningGroups   LearningGroup[]
 
   @@map("companies")
 }
@@ -114,4 +120,88 @@ model Session {
   userAgent String?
 
   @@map("sessions")
+}
+
+model OrganizationUnit {
+  id                String             @id @default(uuid())
+  name              String
+  companyId         String             @map("company_id")
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parentId          String?            @map("parent_id")
+  parent            OrganizationUnit?  @relation("OUHierarchy", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  children          OrganizationUnit[] @relation("OUHierarchy")
+  deletedAt         DateTime?          @map("deleted_at")
+  permanentDeleteAt DateTime?          @map("permanent_delete_at")
+  deletionBatchId   String?            @map("deletion_batch_id")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  memberships       Membership[]
+
+  @@map("organization_units")
+}
+
+enum GroupType {
+  STATIC
+  DYNAMIC
+}
+
+model LearningGroup {
+  id                String             @id @default(uuid())
+  name              String
+  companyId         String             @map("company_id")
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parentGroupId     String?            @map("parent_group_id")
+  parentGroup       LearningGroup?     @relation("GroupHierarchy", fields: [parentGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  childGroups       LearningGroup[]    @relation("GroupHierarchy")
+  type              GroupType          @default(STATIC)
+  isTemporary       Boolean            @default(false) @map("is_temporary")
+  expiresAt         DateTime?          @map("expires_at")
+  reminderSentAt    DateTime?          @map("reminder_sent_at")
+  deletedAt         DateTime?          @map("deleted_at")
+  permanentDeleteAt DateTime?          @map("permanent_delete_at")
+  deletionBatchId   String?            @map("deletion_batch_id")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  memberships       Membership[]
+
+  @@map("learning_groups")
+}
+
+enum MembershipType {
+  MEMBER
+  MANAGER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  PENDING
+  ARCHIVED
+}
+
+enum MembershipSource {
+  MANUAL
+  AZURE_AD
+  LDAP
+  HR_IMPORT
+  API
+}
+
+model Membership {
+  id                  String             @id @default(uuid())
+  userId              String             @map("user_id")
+  user                User               @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  organizationUnitId  String?            @map("organization_unit_id")
+  organizationUnit    OrganizationUnit?  @relation(fields: [organizationUnitId], references: [id], onDelete: Cascade)
+  learningGroupId     String?            @map("learning_group_id")
+  learningGroup       LearningGroup?     @relation(fields: [learningGroupId], references: [id], onDelete: Cascade)
+  membershipType      MembershipType     @map("membership_type")
+  status              MembershipStatus   @default(ACTIVE)
+  source              MembershipSource   @default(MANUAL)
+  createdById         String             @map("created_by_id")
+  createdBy           User               @relation("MembershipCreator", fields: [createdById], references: [id])
+  deletedAt           DateTime?          @map("deleted_at")
+  deletionBatchId     String?            @map("deletion_batch_id")
+  createdAt           DateTime           @default(now()) @map("created_at")
+
+  @@map("memberships")
 }

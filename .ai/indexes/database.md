@@ -38,9 +38,74 @@ This index describes the data models, entity relationships, and schemas supporti
   - `contactInfo` (String)
   - `setupCompletedAt` (DateTime, Nullable, set when setup wizard completes)
   - `roleInheritanceEnabled` (Boolean, Default: `false`, enables inheritance hierarchies)
+  - `domain` (String, automatically populated from APP_URL on setup)
+  - `settings` (Json, Nullable, placeholder for future customizations/integrations)
 - **Relations**:
   - Has many `User`s (via `users`)
   - Has many `Role`s (via `roles`)
+  - Has many `OrganizationUnit`s (via `organizationUnits`)
+  - Has many `LearningGroup`s (via `learningGroups`)
+
+### Organization Units (`organization_units`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `name` (String)
+  - `parentId` (String, Nullable, Foreign Key self-relation)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `deletedAt` (DateTime, Nullable, soft-deletion timestamp)
+  - `permanentDeleteAt` (DateTime, Nullable, timestamp for permanent purging after 14 days)
+  - `deletionBatchId` (String, UUID, Nullable, tracks multi-node batch soft-deletes)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`)
+  - Belongs to parent `OrganizationUnit` (optional, via `parentId`)
+  - Has many child `OrganizationUnit`s (via self-relation)
+  - Has many `Membership`s (via `memberships`)
+
+### Learning Groups (`learning_groups`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `name` (String)
+  - `parentGroupId` (String, Nullable, Foreign Key self-relation)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `isTemporary` (Boolean, Default: `false`)
+  - `expiresAt` (DateTime, Nullable)
+  - `reminderSentAt` (DateTime, Nullable)
+  - `deletedAt` (DateTime, Nullable, soft-deletion timestamp)
+  - `permanentDeleteAt` (DateTime, Nullable, timestamp for permanent purging after 14 days)
+  - `deletionBatchId` (String, UUID, Nullable)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`)
+  - Belongs to parent `LearningGroup` (optional, via `parentGroupId`)
+  - Has many child `LearningGroup`s (via self-relation)
+  - Has many `Membership`s (via `memberships`)
+
+### Memberships (`memberships`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `userId` (String, Foreign Key to `users.id`)
+  - `organizationUnitId` (String, Nullable, Foreign Key to `organization_units.id`)
+  - `learningGroupId` (String, Nullable, Foreign Key to `learning_groups.id`)
+  - `membershipType` (Enum: `MEMBER`, `MANAGER`)
+  - `status` (Enum: `PENDING`, `ACTIVE`, `DISABLED`)
+  - `source` (Enum: `MANUAL`, `SYSTEM`, `IMPORT`)
+  - `createdById` (String, Foreign Key to `users.id`)
+  - `deletedAt` (DateTime, Nullable, soft-deletion timestamp)
+  - `deletionBatchId` (String, UUID, Nullable)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Indexes & Constraints**:
+  - Unique index on `userId` + `organizationUnitId` where `deletedAt` is null
+  - Unique index on `userId` + `learningGroupId` where `deletedAt` is null
+  - Raw SQL CHECK constraint: `(organizationUnitId IS NOT NULL AND learningGroupId IS NULL) OR (organizationUnitId IS NULL AND learningGroupId IS NOT NULL)` (enforces exclusive FK pair)
+- **Relations**:
+  - Belongs to `User` as member (via `userId`)
+  - Belongs to `User` as creator (via `createdById`)
+  - Belongs to `OrganizationUnit` (optional, via `organizationUnitId`, cascade on delete)
+  - Belongs to `LearningGroup` (optional, via `learningGroupId`, cascade on delete)
 
 ### Roles (`roles`)
 - **Fields**:
@@ -101,11 +166,12 @@ This index describes the data models, entity relationships, and schemas supporti
 
 ---
 
-## 🟢 Schema Registry (v1.5.0)
+## 🟢 Schema Registry (v1.6.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
 - **v1.3.0**: Made `passwordHash` and `recoveryEmail` fields nullable for pending invited users and superuser-specific isolation respectively. Added raw SQL CHECK constraint enforcing `passwordHash` presence for active users.
 - **v1.4.0**: Added Role, Permission, and RolePermission tables to establish first-class role-based access control (RBAC). Linked Users to Roles and added inheritance control to Companies.
-- **v1.5.0 (Current)**: Synchronized company-level settings toggles (`roleInheritanceEnabled`) and mapped permission relationships across all session and page lifecycles.
+- **v1.5.0**: Synchronized company-level settings toggles (`roleInheritanceEnabled`) and mapped permission relationships across all session and page lifecycles.
+- **v1.6.0 (Current)**: Multi-Tenant Organization Model MVP. Added `OrganizationUnit`, `LearningGroup`, and `Membership` models. Extended `Company` with `domain` and `settings`. Included strict CHECK constraints and cascading soft-delete triggers.
 

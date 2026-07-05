@@ -2,10 +2,11 @@ import nodemailer from 'nodemailer';
 import { recoveryEmailChangedTemplate, RecoveryEmailChangedData } from './templates/recoveryEmailChanged';
 import { invitationTemplate, InvitationData } from './templates/invitation';
 import { passwordResetTemplate, PasswordResetData } from './templates/passwordReset';
+import { groupExpirationTemplate, GroupExpirationData } from './templates/groupExpiration';
 
-export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset';
+export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration';
 
-export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData;
+export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData;
 
 export interface EmailService {
   send(to: string, template: EmailTemplateName, data: EmailTemplateData): Promise<void>;
@@ -64,6 +65,13 @@ class EmailServiceImpl implements EmailService {
       }
       case 'password-reset': {
         const rendered = passwordResetTemplate(data as PasswordResetData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
+      case 'group-expiration': {
+        const rendered = groupExpirationTemplate(data as GroupExpirationData);
         subject = rendered.subject;
         text = rendered.text;
         html = rendered.html;

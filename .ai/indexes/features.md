@@ -118,4 +118,16 @@ Every logged feature should eventually document:
 - **Events**: Updates to role hierarchies and configurations immediately invalidate existing permission states across active user session endpoints.
 - **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, cookie-parser
 
+### 9. Multi-Tenant Organization Model MVP
+- **Description**: Implements a highly scalable and resilient multi-tenant organization structure. This includes hierarchical Organization Units (OU) for formal company division with soft-delete/restore lifecycles, child reassignments, and manager roles, and nested Learning Groups for temporary/permanent student cohort grouping. Standard cycle-prevention algorithms protect hierarchies at the service layer, and unique checkout constraint checks protect polymorphic membership assignments securely in database tables.
+- **Components**: Backend Services and API routes (frontend UI pending)
+- **Pages**: None
+- **Services**: `OrganizationUnitService` (`server/src/features/organization/services/organizationUnit.service.ts`), `LearningGroupService` (`server/src/features/organization/services/learningGroup.service.ts`), `ScheduledTasksService` (`server/src/shared/scheduler/scheduledTasks.service.ts`)
+- **APIs**: `GET /api/organization-units`, `POST /api/organization-units`, `PUT /api/organization-units/:id`, `POST /api/organization-units/:id/move`, `GET /api/organization-units/:id/deletion-preview`, `DELETE /api/organization-units/:id`, `POST /api/organization-units/:id/restore`, `POST /api/organization-units/:id/managers`, `DELETE /api/organization-units/:id/managers/:userId`, `GET /api/learning-groups`, `POST /api/learning-groups`, `PUT /api/learning-groups/:id`, `POST /api/learning-groups/:id/move`, `DELETE /api/learning-groups/:id`, `POST /api/learning-groups/:id/restore`, `POST /api/learning-groups/:id/members`, `DELETE /api/learning-groups/:id/members/:userId`
+- **Database**: `organization_units`, `learning_groups`, `memberships` (Prisma & MariaDB schemas)
+- **Permissions**: Gated by `organization:view`, `organization:create`, `organization:edit`, `organization:delete`, `organization:manage-members`, and `organization:manage-groups` permissions, registered under the "organization" module.
+- **Routes**: `/api/organization-units/*`, `/api/learning-groups/*`
+- **Events**: Background scheduler tasks run periodically (every hour) to purge expired units, auto-expire temporary groups, and dispatch email reminders via `EmailService`.
+- **Dependencies**: Express, Prisma ORM, crypto, Node.js
+
 

@@ -8,13 +8,20 @@ import usersRouter from './features/auth/routes/users.routes';
 import rolesRouter from './features/rbac/routes/roles.routes';
 import permissionsRouter from './features/rbac/routes/permissions.routes';
 import companyRouter from './features/rbac/routes/company.routes';
+import organizationUnitsRouter from './features/organization/routes/organizationUnits.routes';
+import learningGroupsRouter from './features/organization/routes/learningGroups.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
+import './features/organization/organization.permissions';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
+import { scheduledTasksService } from './shared/scheduler/scheduledTasks.service';
 
 async function startServer() {
+  // Start periodic background task runner
+  scheduledTasksService.start();
+
   const app = express();
   const PORT = 3000;
 
@@ -46,6 +53,8 @@ async function startServer() {
   app.use('/api/roles', rolesRouter);
   app.use('/api/permissions', permissionsRouter);
   app.use('/api/company', companyRouter);
+  app.use('/api/organization-units', organizationUnitsRouter);
+  app.use('/api/learning-groups', learningGroupsRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

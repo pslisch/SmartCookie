@@ -16,7 +16,7 @@ Every documented endpoint logs:
 
 ---
 
-## 🟢 Active Rest Routes (v1.1.0)
+## 🟢 Active Rest Routes (v1.6.0)
 
 ### 1. Setup Status Check
 - **Endpoint**: `/api/setup/status`
@@ -193,5 +193,157 @@ Every documented endpoint logs:
 - **Response**: `{ success: true, company: { id, roleInheritanceEnabled } }` (200 OK)
 - **Used By**: `RoleManagement` page (Global inheritance toggle)
 - **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+
+### 23. List Organization Units
+- **Endpoint**: `/api/organization-units`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `[{ id, name, parentId, companyId, createdAt, updatedAt }]` (200 OK)
+- **Used By**: Administrative panels / dashboards
+- **Permissions**: Requires active session with `"organization:view"` permission (Superuser bypasses)
+
+### 24. Get Organization Unit
+- **Endpoint**: `/api/organization-units/:id`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ id, name, parentId, companyId, createdAt, updatedAt }` (200 OK)
+- **Used By**: Administrative panels / details page
+- **Permissions**: Requires active session with `"organization:view"` permission (Superuser bypasses)
+
+### 25. Create Organization Unit
+- **Endpoint**: `/api/organization-units`
+- **Method**: `POST`
+- **Request**: `{ name, parentId }`
+- **Response**: `{ id, name, parentId, companyId, createdAt, updatedAt }` (201 Created)
+- **Used By**: Create OU dialogs
+- **Permissions**: Requires active session with `"organization:create"` permission (Superuser bypasses)
+
+### 26. Rename Organization Unit
+- **Endpoint**: `/api/organization-units/:id`
+- **Method**: `PUT`
+- **Request**: `{ name }`
+- **Response**: `{ id, name, parentId, companyId, createdAt, updatedAt }` (200 OK)
+- **Used By**: Edit OU dialogs
+- **Permissions**: Requires active session with `"organization:edit"` permission (Superuser bypasses)
+
+### 27. Move Organization Unit
+- **Endpoint**: `/api/organization-units/:id/move`
+- **Method**: `POST`
+- **Request**: `{ parentId }`
+- **Response**: `{ id, name, parentId, companyId, createdAt, updatedAt }` (200 OK)
+- **Used By**: OU tree drag-and-drop / move selectors
+- **Permissions**: Requires active session with `"organization:edit"` permission. Prevents cyclical loop structures. (Superuser bypasses)
+
+### 28. Get Deletion Preview
+- **Endpoint**: `/api/organization-units/:id/deletion-preview`
+- **Method**: `GET`
+- **Request**: Query parameter `option: "REASSIGN" | "SUBTREE"`
+- **Response**: `[{ id, username, email }]` (200 OK)
+- **Used By**: OU deletion confirmation modal (Task 7/11)
+- **Permissions**: Requires active session with `"organization:view"` permission (Superuser bypasses)
+
+### 29. Soft Delete Organization Unit
+- **Endpoint**: `/api/organization-units/:id`
+- **Method**: `DELETE`
+- **Request**: Query parameter `option: "REASSIGN" | "SUBTREE"`
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: Delete OU action
+- **Permissions**: Requires active session with `"organization:delete"` permission (Superuser bypasses)
+
+### 30. Restore Organization Unit
+- **Endpoint**: `/api/organization-units/:id/restore`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: Trash bin / recovery actions
+- **Permissions**: Requires active session with `"organization:delete"` permission (Superuser bypasses)
+
+### 31. Assign OU Manager
+- **Endpoint**: `/api/organization-units/:id/managers`
+- **Method**: `POST`
+- **Request**: `{ userId }`
+- **Response**: `{ id, userId, organizationUnitId, membershipType: "MANAGER", status: "ACTIVE", ... }` (201 Created)
+- **Used By**: Manager assign dialogs
+- **Permissions**: Requires active session with `"organization:manage-members"` permission (Superuser bypasses)
+
+### 32. Remove OU Manager
+- **Endpoint**: `/api/organization-units/:id/managers/:userId`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: Manager list removal action
+- **Permissions**: Requires active session with `"organization:manage-members"` permission (Superuser bypasses)
+
+### 33. List Learning Groups
+- **Endpoint**: `/api/learning-groups`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `[{ id, name, parentGroupId, companyId, isTemporary, expiresAt, ... }]` (200 OK)
+- **Used By**: Learning Group panels / selectors
+- **Permissions**: Requires active session with `"organization:view"` permission (Superuser bypasses)
+
+### 34. Get Learning Group
+- **Endpoint**: `/api/learning-groups/:id`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ id, name, parentGroupId, companyId, isTemporary, expiresAt, ... }` (200 OK)
+- **Used By**: Group details view
+- **Permissions**: Requires active session with `"organization:view"` permission (Superuser bypasses)
+
+### 35. Create Learning Group
+- **Endpoint**: `/api/learning-groups`
+- **Method**: `POST`
+- **Request**: `{ name, parentGroupId, isTemporary, expiresAt }`
+- **Response**: `{ id, name, parentGroupId, companyId, isTemporary, expiresAt, ... }` (201 Created)
+- **Used By**: Create group modal
+- **Permissions**: Requires active session with `"organization:create"` permission (Superuser bypasses)
+
+### 36. Update Learning Group
+- **Endpoint**: `/api/learning-groups/:id`
+- **Method**: `PUT`
+- **Request**: `{ name }`
+- **Response**: `{ id, name, ... }` (200 OK)
+- **Used By**: Group edit forms
+- **Permissions**: Requires active session with `"organization:edit"` permission (Superuser bypasses)
+
+### 37. Move Learning Group
+- **Endpoint**: `/api/learning-groups/:id/move`
+- **Method**: `POST`
+- **Request**: `{ parentGroupId }`
+- **Response**: `{ id, name, parentGroupId, ... }` (200 OK)
+- **Used By**: Group tree reorganizer
+- **Permissions**: Requires active session with `"organization:edit"` permission. Prevents cyclical loop structures. (Superuser bypasses)
+
+### 38. Soft Delete Learning Group
+- **Endpoint**: `/api/learning-groups/:id`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: Group delete action (un-nests child groups automatically)
+- **Permissions**: Requires active session with `"organization:delete"` permission (Superuser bypasses)
+
+### 39. Restore Learning Group
+- **Endpoint**: `/api/learning-groups/:id/restore`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: Trash bin / recovery actions
+- **Permissions**: Requires active session with `"organization:delete"` permission (Superuser bypasses)
+
+### 40. Add Group Member
+- **Endpoint**: `/api/learning-groups/:id/members`
+- **Method**: `POST`
+- **Request**: `{ userId }`
+- **Response**: `{ id, userId, learningGroupId, membershipType: "MEMBER", status: "ACTIVE", ... }` (201 Created)
+- **Used By**: Group member additions
+- **Permissions**: Requires active session with `"organization:manage-members"` permission. Rejects MANAGER role targets. (Superuser bypasses)
+
+### 41. Remove Group Member
+- **Endpoint**: `/api/learning-groups/:id/members/:userId`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: Group member list removal action
+- **Permissions**: Requires active session with `"organization:manage-members"` permission (Superuser bypasses)
 
 
