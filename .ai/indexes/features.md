@@ -118,8 +118,8 @@ Every logged feature should eventually document:
 - **Events**: Updates to role hierarchies and configurations immediately invalidate existing permission states across active user session endpoints.
 - **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, cookie-parser
 
-### 9. Multi-Tenant Organization Model MVP
-- **Description**: Implements a highly scalable and resilient multi-tenant organization structure. This includes hierarchical Organization Units (OU) for formal company division with soft-delete/restore lifecycles, child reassignments, and manager roles, and nested Learning Groups for temporary/permanent student cohort grouping. Standard cycle-prevention algorithms protect hierarchies at the service layer, and unique checkout constraint checks protect polymorphic membership assignments securely in database tables.
+### 9. Hierarchical Organization Model MVP
+- **Description**: Implements a highly scalable and resilient company hierarchical organization structure. This includes hierarchical Organization Units (OU) for formal company division with soft-delete/restore lifecycles, child reassignments, and manager roles, and nested Learning Groups for temporary/permanent student cohort grouping. Standard cycle-prevention algorithms protect hierarchies at the service layer, and unique constraint checks protect polymorphic membership assignments securely in database tables.
 - **Components**: Backend Services and API routes (frontend UI pending)
 - **Pages**: None
 - **Services**: `OrganizationUnitService` (`server/src/features/organization/services/organizationUnit.service.ts`), `LearningGroupService` (`server/src/features/organization/services/learningGroup.service.ts`), `ScheduledTasksService` (`server/src/shared/scheduler/scheduledTasks.service.ts`)

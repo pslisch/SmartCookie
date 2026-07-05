@@ -1,4 +1,5 @@
 import { prisma } from '../../../shared/db/prisma';
+import crypto from 'crypto';
 
 export class LearningGroupService {
   async create(
@@ -28,7 +29,7 @@ export class LearningGroupService {
         where: { id: parentGroupId, deletedAt: null }
       });
       if (!parent) {
-        throw new Error(`Parent learning group with ID ${parentGroupId} not found.`);
+        throw new Error(`Parent learning group with ID ${parentGroupId} not found or has been soft-deleted.`);
       }
     }
 
@@ -43,12 +44,31 @@ export class LearningGroupService {
     });
   }
 
-  async move(id: string, newParentGroupId: string | null) {
-    const group = await prisma.learningGroup.findUnique({
-      where: { id }
+  async rename(id: string, newName: string) {
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+      throw new Error('New name is required.');
+    }
+
+    const group = await prisma.learningGroup.findFirst({
+      where: { id, deletedAt: null }
     });
     if (!group) {
-      throw new Error(`Learning group with ID ${id} not found.`);
+      throw new Error(`Learning group with ID ${id} not found or has been soft-deleted.`);
+    }
+
+    return await prisma.learningGroup.update({
+      where: { id },
+      data: { name: trimmedName }
+    });
+  }
+
+  async move(id: string, newParentGroupId: string | null) {
+    const group = await prisma.learningGroup.findFirst({
+      where: { id, deletedAt: null }
+    });
+    if (!group) {
+      throw new Error(`Learning group with ID ${id} not found or has been soft-deleted.`);
     }
 
     if (newParentGroupId !== null) {
@@ -71,11 +91,11 @@ export class LearningGroupService {
         }
         visited.add(currentId);
 
-        const parentGroup = await prisma.learningGroup.findUnique({
-          where: { id: currentId }
+        const parentGroup = await prisma.learningGroup.findFirst({
+          where: { id: currentId, deletedAt: null }
         });
         if (!parentGroup) {
-          throw new Error(`Parent learning group with ID ${currentId} not found.`);
+          throw new Error(`Parent learning group with ID ${currentId} not found or has been soft-deleted.`);
         }
         currentId = parentGroup.parentGroupId;
       }
@@ -139,10 +159,14 @@ export class LearningGroupService {
   }
 
   async removeMember(userId: string, learningGroupId: string) {
-    await prisma.membership.deleteMany({
+    await prisma.membership.updateMany({
       where: {
         userId,
-        learningGroupId
+        learningGroupId,
+        deletedAt: null
+      },
+      data: {
+        deletedAt: new Date()
       }
     });
     return { success: true };
@@ -158,6 +182,7 @@ export class LearningGroupService {
 
     const deletedAt = new Date();
     const permanentDeleteAt = new Date(deletedAt.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days
+    const deletionBatchId = crypto.randomUUID();
 
     // Child groups simply become top-level groups (parentGroupId = null)
     await prisma.learningGroup.updateMany({
@@ -171,12 +196,15 @@ export class LearningGroupService {
         data: {
           deletedAt,
           permanentDeleteAt,
-          deletionBatchId: null
+          deletionBatchId
         }
       }),
       prisma.membership.updateMany({
         where: { learningGroupId: id, deletedAt: null },
-        data: { deletedAt }
+        data: {
+          deletedAt,
+          deletionBatchId
+        }
       })
     ]);
 
@@ -195,11 +223,14 @@ export class LearningGroupService {
       throw new Error('The 14-day restoration window has expired.');
     }
 
-    const { deletedAt } = target;
+    const { deletionBatchId } = target;
+    if (!deletionBatchId) {
+      throw new Error('Deletion batch ID missing on the deleted learning group.');
+    }
 
     await prisma.$transaction([
-      prisma.learningGroup.update({
-        where: { id },
+      prisma.learningGroup.updateMany({
+        where: { deletionBatchId },
         data: {
           deletedAt: null,
           permanentDeleteAt: null,
@@ -207,13 +238,10 @@ export class LearningGroupService {
         }
       }),
       prisma.membership.updateMany({
-        where: {
-          learningGroupId: id,
-          deletedAt,
-          deletionBatchId: null
-        },
+        where: { deletionBatchId },
         data: {
-          deletedAt: null
+          deletedAt: null,
+          deletionBatchId: null
         }
       })
     ]);

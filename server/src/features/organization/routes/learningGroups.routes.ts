@@ -65,11 +65,7 @@ router.put('/:id', requirePermission('organization', 'edit'), async (req: Reques
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ error: 'New name is required.' });
     }
-    // Update name
-    const updated = await prisma.learningGroup.update({
-      where: { id: req.params.id },
-      data: { name: name.trim() }
-    });
+    const updated = await learningGroupService.rename(req.params.id, name);
     return res.json(updated);
   } catch (error: any) {
     return res.status(400).json({ error: error.message || 'Failed to update learning group.' });

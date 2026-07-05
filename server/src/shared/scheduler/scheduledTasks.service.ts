@@ -1,5 +1,7 @@
 import { prisma } from '../db/prisma';
 import { emailService } from '../email/email.service';
+import { permissionResolverService } from '../../features/rbac/services/permissionResolver.service';
+import crypto from 'crypto';
 
 export class ScheduledTasksService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -54,6 +56,7 @@ export class ScheduledTasksService {
     for (const group of groupsToExpire) {
       const deletedAt = new Date();
       const permanentDeleteAt = new Date(deletedAt.getTime() + 14 * 24 * 60 * 60 * 1000);
+      const deletionBatchId = crypto.randomUUID();
 
       // Child groups parentGroupId set to null
       await prisma.learningGroup.updateMany({
@@ -68,12 +71,15 @@ export class ScheduledTasksService {
           data: {
             deletedAt,
             permanentDeleteAt,
-            deletionBatchId: null
+            deletionBatchId
           }
         }),
         prisma.membership.updateMany({
           where: { learningGroupId: group.id, deletedAt: null },
-          data: { deletedAt }
+          data: {
+            deletedAt,
+            deletionBatchId
+          }
         })
       ]);
 
@@ -119,19 +125,41 @@ export class ScheduledTasksService {
     for (const group of groupsExpiring) {
       const recipientEmails = new Set<string>();
 
-      // Add company contact info if it looks like an email
+      // 1. Resolve users holding the "organization:manage-groups" permission
+      try {
+        const potentialManagers = await prisma.user.findMany({
+          where: {
+            status: 'ACTIVE',
+            OR: [
+              { companyId: group.companyId },
+              { isSuperuser: true }
+            ]
+          }
+        });
+
+        for (const user of potentialManagers) {
+          const hasPerm = await permissionResolverService.hasPermission(user.id, 'organization', 'manage-groups');
+          if (hasPerm && user.email) {
+            recipientEmails.add(user.email.trim());
+          }
+        }
+      } catch (err) {
+        console.error(`[Scheduler] Failed to resolve HR/LMS managers with organization:manage-groups permission for group "${group.name}":`, err);
+      }
+
+      // 2. Add company contact info if it looks like an email
       if (group.company && group.company.contactInfo && group.company.contactInfo.includes('@')) {
         recipientEmails.add(group.company.contactInfo.trim());
       }
 
-      // Add all active members of the group
+      // 3. Add all active members of the group
       for (const m of group.memberships) {
         if (m.user && m.user.email) {
           recipientEmails.add(m.user.email.trim());
         }
       }
 
-      // Fallback to superuser if no recipients
+      // 4. Fallback to superuser if no recipients resolved
       if (recipientEmails.size === 0) {
         const superuser = await prisma.user.findFirst({
           where: { isSuperuser: true }

@@ -42,11 +42,11 @@ export class OrganizationUnitService {
       throw new Error('New name is required.');
     }
 
-    const ou = await prisma.organizationUnit.findUnique({
-      where: { id }
+    const ou = await prisma.organizationUnit.findFirst({
+      where: { id, deletedAt: null }
     });
     if (!ou) {
-      throw new Error(`Organization unit with ID ${id} not found.`);
+      throw new Error(`Organization unit with ID ${id} not found or has been soft-deleted.`);
     }
 
     return await prisma.organizationUnit.update({
@@ -56,11 +56,11 @@ export class OrganizationUnitService {
   }
 
   async move(id: string, newParentId: string | null) {
-    const ou = await prisma.organizationUnit.findUnique({
-      where: { id }
+    const ou = await prisma.organizationUnit.findFirst({
+      where: { id, deletedAt: null }
     });
     if (!ou) {
-      throw new Error(`Organization unit with ID ${id} not found.`);
+      throw new Error(`Organization unit with ID ${id} not found or has been soft-deleted.`);
     }
 
     if (newParentId !== null) {
@@ -83,11 +83,11 @@ export class OrganizationUnitService {
         }
         visited.add(currentId);
 
-        const parentOU = await prisma.organizationUnit.findUnique({
-          where: { id: currentId }
+        const parentOU = await prisma.organizationUnit.findFirst({
+          where: { id: currentId, deletedAt: null }
         });
         if (!parentOU) {
-          throw new Error(`Parent organization unit with ID ${currentId} not found.`);
+          throw new Error(`Parent organization unit with ID ${currentId} not found or has been soft-deleted.`);
         }
         currentId = parentOU.parentId;
       }
@@ -109,6 +109,7 @@ export class OrganizationUnitService {
 
     const deletedAt = new Date();
     const permanentDeleteAt = new Date(deletedAt.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days
+    const deletionBatchId = crypto.randomUUID();
 
     if (option === 'REASSIGN') {
       // Move direct children to target's parent (grandparent)
@@ -117,25 +118,27 @@ export class OrganizationUnitService {
         data: { parentId: target.parentId }
       });
 
-      // Soft-delete target and its memberships (no deletionBatchId)
+      // Soft-delete target and its memberships with deletionBatchId
       await prisma.$transaction([
         prisma.organizationUnit.update({
           where: { id },
           data: {
             deletedAt,
             permanentDeleteAt,
-            deletionBatchId: null
+            deletionBatchId
           }
         }),
         prisma.membership.updateMany({
           where: { organizationUnitId: id, deletedAt: null },
-          data: { deletedAt }
+          data: {
+            deletedAt,
+            deletionBatchId
+          }
         })
       ]);
     } else {
       // SUBTREE delete - get target + all descendants
       const idsToDelete = [id, ...await this.getDescendants(id)];
-      const deletionBatchId = crypto.randomUUID();
 
       await prisma.$transaction([
         prisma.organizationUnit.updateMany({
@@ -206,50 +209,30 @@ export class OrganizationUnitService {
       throw new Error('The 14-day restoration window has expired.');
     }
 
-    const { deletedAt, deletionBatchId } = target;
+    const { deletionBatchId } = target;
 
     if (!deletionBatchId) {
-      // REASSIGN style deletion restore: single node + its memberships
-      await prisma.$transaction([
-        prisma.organizationUnit.update({
-          where: { id },
-          data: {
-            deletedAt: null,
-            permanentDeleteAt: null,
-            deletionBatchId: null
-          }
-        }),
-        prisma.membership.updateMany({
-          where: {
-            organizationUnitId: id,
-            deletedAt,
-            deletionBatchId: null
-          },
-          data: {
-            deletedAt: null
-          }
-        })
-      ]);
-    } else {
-      // SUBTREE style deletion restore: all sharing deletionBatchId
-      await prisma.$transaction([
-        prisma.organizationUnit.updateMany({
-          where: { deletionBatchId },
-          data: {
-            deletedAt: null,
-            permanentDeleteAt: null,
-            deletionBatchId: null
-          }
-        }),
-        prisma.membership.updateMany({
-          where: { deletionBatchId },
-          data: {
-            deletedAt: null,
-            deletionBatchId: null
-          }
-        })
-      ]);
+      throw new Error('Deletion batch ID missing on the deleted organization unit.');
     }
+
+    // Restore all sharing deletionBatchId
+    await prisma.$transaction([
+      prisma.organizationUnit.updateMany({
+        where: { deletionBatchId },
+        data: {
+          deletedAt: null,
+          permanentDeleteAt: null,
+          deletionBatchId: null
+        }
+      }),
+      prisma.membership.updateMany({
+        where: { deletionBatchId },
+        data: {
+          deletedAt: null,
+          deletionBatchId: null
+        }
+      })
+    ]);
 
     return { success: true };
   }
@@ -307,11 +290,15 @@ export class OrganizationUnitService {
   }
 
   async removeManager(userId: string, organizationUnitId: string) {
-    await prisma.membership.deleteMany({
+    await prisma.membership.updateMany({
       where: {
         userId,
         organizationUnitId,
-        membershipType: 'MANAGER'
+        membershipType: 'MANAGER',
+        deletedAt: null
+      },
+      data: {
+        deletedAt: new Date()
       }
     });
     return { success: true };
