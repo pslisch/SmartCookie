@@ -17,13 +17,30 @@ echo "===================================================="
 echo "          SmartCookie LMS Mail Setup Configurator   "
 echo "===================================================="
 
-DOMAIN="$1"
-MAIL_MODE="$2"
+DOMAIN=""
+MAIL_MODE=""
+FAST_MODE=false
+
+for arg in "$@"; do
+    if [ "$arg" = "--fast" ]; then
+        FAST_MODE=true
+    elif [ -z "$DOMAIN" ]; then
+        DOMAIN="$arg"
+    elif [ -z "$MAIL_MODE" ]; then
+        MAIL_MODE="$arg"
+    fi
+done
 
 if [ -z "$DOMAIN" ]; then
     echo_error "No domain name provided."
-    echo "Usage: $0 <domain-name> [new|existing]"
+    echo "Usage: $0 <domain-name> [new|existing] [--fast]"
     exit 1
+fi
+
+if [ "$FAST_MODE" = "true" ]; then
+    echo_info "Running in fast mode - guidance skipped"
+else
+    echo_info "Running in guided mode - use --fast next time to skip explanations"
 fi
 
 # Ensure running with sudo access
@@ -50,12 +67,16 @@ if [ -z "$MAIL_MODE" ]; then
 fi
 
 if [ "$MAIL_MODE" = "existing" ]; then
-    echo_info "Configuring connection to an existing external mail server..."
+    if [ "$FAST_MODE" = "false" ]; then
+        echo_info "Configuring connection to an existing external mail server..."
+    fi
     
     while true; do
-        echo "----------------------------------------------------"
-        echo "Existing SMTP Server Credentials Configuration"
-        echo "----------------------------------------------------"
+        if [ "$FAST_MODE" = "false" ]; then
+            echo "----------------------------------------------------"
+            echo "Existing SMTP Server Credentials Configuration"
+            echo "----------------------------------------------------"
+        fi
         read -p "Enter SMTP Host: " SMTP_HOST
         while [ -z "$SMTP_HOST" ]; do
             echo_warning "SMTP Host cannot be empty."

@@ -29,3 +29,9 @@ This document defines the core principles, engineering rules, and operational gu
 
 ### 7. Update Documentation Continuously
 - Upon completion of a task, immediately update the relevant metadata indexes in `/.ai/indexes/*` and the AI project map in `/.ai/project-map.md` to keep the AI-maintained knowledge base accurate.
+
+### 8. Guided by Default, Fast-Path for Experienced Users
+- Any interactive setup, installation, or configuration step - CLI or web UI - must default to explaining what it's asking for and why, assuming no prior expertise.
+- Every such step must also offer an explicit, opt-in way to skip explanations for users who already know what they're doing (e.g. a --fast CLI flag, or a dismissible/collapsed 'what's this?' affordance in a web UI).
+- The default must always be the friendly one; brevity is opt-in, never the reverse. This applies to every future installation script, setup wizard step, and admin-facing configuration screen - not just mail server setup.
+

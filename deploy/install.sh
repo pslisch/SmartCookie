@@ -20,12 +20,30 @@ echo "===================================================="
 echo "          SmartCookie LMS Full Deployment Pipeline  "
 echo "===================================================="
 
-DOMAIN="$1"
-EMAIL="$2"
+DOMAIN=""
+EMAIL=""
+FAST_MODE=false
+
+for arg in "$@"; do
+    if [ "$arg" = "--fast" ]; then
+        FAST_MODE=true
+    elif [ -z "$DOMAIN" ]; then
+        DOMAIN="$arg"
+    elif [ -z "$EMAIL" ]; then
+        EMAIL="$arg"
+    fi
+done
+
 if [ -z "$DOMAIN" ]; then
     echo_error "No domain name provided."
-    echo "Usage: sudo $0 <domain-name> [email-address]"
+    echo "Usage: sudo $0 <domain-name> [email-address] [--fast]"
     exit 1
+fi
+
+if [ "$FAST_MODE" = "true" ]; then
+    echo_info "Running in fast mode - guidance skipped"
+else
+    echo_info "Running in guided mode - use --fast next time to skip explanations"
 fi
 
 # Ensure running with sudo access
@@ -99,7 +117,11 @@ echo_success "Stage 5: systemd background service launched."
 if [ "$MAIL_MODE" = "new" ]; then
     echo "----------------------------------------------------"
     echo_info "STAGE 6: Setting up Postal Mail Server..."
-    if ! "$SCRIPT_DIR/05-setup-mail.sh" "$DOMAIN" "new"; then
+    MAIL_ARGS=("$DOMAIN" "new")
+    if [ "$FAST_MODE" = "true" ]; then
+        MAIL_ARGS+=("--fast")
+    fi
+    if ! "$SCRIPT_DIR/05-setup-mail.sh" "${MAIL_ARGS[@]}"; then
         echo_error "Postal mail server installation failed! Halted."
         exit 1
     fi
@@ -197,7 +219,11 @@ else
     # Path B: Connect existing
     echo "----------------------------------------------------"
     echo_info "STAGE 6: Configuring Connection to Existing Mail Server..."
-    if ! "$SCRIPT_DIR/05-setup-mail.sh" "$DOMAIN" "existing"; then
+    MAIL_ARGS=("$DOMAIN" "existing")
+    if [ "$FAST_MODE" = "true" ]; then
+        MAIL_ARGS+=("--fast")
+    fi
+    if ! "$SCRIPT_DIR/05-setup-mail.sh" "${MAIL_ARGS[@]}"; then
         echo_error "SMTP configuration and validation failed! Halted."
         exit 1
     fi
