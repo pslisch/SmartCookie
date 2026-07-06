@@ -73,7 +73,7 @@ export const OrganizationStructureTab: React.FC = () => {
     try {
       // 1. Fetch active OUs
       const resActive = await fetch('/api/organization-units');
-      if (!resActive.ok) throw new Error('Failed to fetch organization units');
+      if (!resActive.ok) throw new Error(t('organization.structure.errors.failedToFetchActive'));
       const dataActive = await resActive.json();
       setActiveOUs(dataActive);
 
@@ -91,7 +91,7 @@ export const OrganizationStructureTab: React.FC = () => {
         setUsers(dataUsers);
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred while fetching organization data.');
+      setError(err.message || t('organization.structure.errors.unexpectedFetch'));
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export const OrganizationStructureTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to create organization unit.');
+        throw new Error(data.error || t('organization.structure.errors.failedToCreate'));
       }
 
       setNewOUName('');
@@ -171,7 +171,7 @@ export const OrganizationStructureTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to rename organization unit.');
+        throw new Error(data.error || t('organization.structure.errors.failedToRename'));
       }
 
       setEditingOUId(null);
@@ -200,7 +200,7 @@ export const OrganizationStructureTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to assign user to organization unit.');
+        throw new Error(data.error || t('organization.structure.errors.failedToAssignUser'));
       }
 
       setSelectedUserToMove('');
@@ -228,7 +228,7 @@ export const OrganizationStructureTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to assign manager.');
+        throw new Error(data.error || t('organization.structure.errors.failedToAssignManager'));
       }
 
       setSelectedUserToManager('');
@@ -251,7 +251,7 @@ export const OrganizationStructureTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to remove manager.');
+        throw new Error(data.error || t('organization.structure.errors.failedToRemoveManager'));
       }
 
       fetchAllData();
@@ -275,7 +275,7 @@ export const OrganizationStructureTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to delete organization unit.');
+        throw new Error(data.error || t('organization.structure.errors.failedToDelete'));
       }
 
       setDeletingOU(null);
@@ -298,7 +298,7 @@ export const OrganizationStructureTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to restore organization unit.');
+        throw new Error(data.error || t('organization.structure.errors.failedToRestore'));
       }
 
       fetchAllData();
@@ -387,14 +387,14 @@ export const OrganizationStructureTab: React.FC = () => {
                 <button
                   onClick={() => handleRenameOU(node.id)}
                   className="rounded-lg bg-emerald-50 p-1 text-emerald-600 hover:bg-emerald-100 transition-colors"
-                  title="Save Name"
+                  title={t('organization.structure.saveNameTooltip')}
                 >
                   <Check className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setEditingOUId(null)}
                   className="rounded-lg bg-rose-50 p-1 text-rose-600 hover:bg-rose-100 transition-colors"
-                  title="Cancel"
+                  title={t('organization.structure.cancelTooltip')}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -408,7 +408,7 @@ export const OrganizationStructureTab: React.FC = () => {
                     setEditingOUName(node.name);
                   }}
                   className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-600 rounded transition-opacity"
-                  title="Rename Unit"
+                  title={t('organization.structure.renameTooltip')}
                 >
                   <Edit2 className="h-3.5 w-3.5" />
                 </button>
@@ -420,14 +420,14 @@ export const OrganizationStructureTab: React.FC = () => {
           <div className="mt-2 flex flex-wrap gap-2 text-xs pl-6">
             {managers.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Managers</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">{t('organization.structure.managersLabel')}</span>
                 {managers.map((m) => (
                   <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-amber-100 bg-amber-50/30 px-2 py-0.5 text-[11px] text-amber-800 font-medium">
-                    <span>{m.user?.username || m.user?.email || 'Anonymous'}</span>
+                    <span>{m.user?.username || m.user?.email || t('organization.structure.anonymousUser')}</span>
                     <button
                       onClick={() => handleRemoveManager(node.id, m.userId)}
                       className="text-amber-500 hover:text-amber-700 ml-1 rounded-full hover:bg-amber-100/50 p-0.5 shrink-0"
-                      title="Remove Manager"
+                      title={t('organization.structure.removeManagerTooltip')}
                     >
                       <UserX className="h-3 w-3" />
                     </button>
@@ -438,17 +438,17 @@ export const OrganizationStructureTab: React.FC = () => {
 
             {members.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">Members</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{t('organization.structure.membersLabel')}</span>
                 {members.map((m) => (
                   <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-700 font-medium">
-                    <span>{m.user?.username || m.user?.email || 'Anonymous'}</span>
+                    <span>{m.user?.username || m.user?.email || t('organization.structure.anonymousUser')}</span>
                   </span>
                 ))}
               </div>
             )}
 
             {managers.length === 0 && members.length === 0 && (
-              <span className="text-slate-400 italic">No assigned members or managers</span>
+              <span className="text-slate-400 italic">{t('organization.structure.noMembersOrManagers')}</span>
             )}
           </div>
         </div>
@@ -461,10 +461,10 @@ export const OrganizationStructureTab: React.FC = () => {
               setSelectedUserToMove('');
             }}
             className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50/50 px-2.5 py-1 rounded-lg border border-blue-100 transition-all font-semibold"
-            title="Move/Assign user to this unit"
+            title={t('organization.structure.assignUserTooltip')}
           >
             <UserPlus className="h-3.5 w-3.5" />
-            <span>Assign User</span>
+            <span>{t('organization.structure.assignUserBtn')}</span>
           </button>
 
           <button
@@ -473,16 +473,16 @@ export const OrganizationStructureTab: React.FC = () => {
               setSelectedUserToManager('');
             }}
             className="flex items-center space-x-1 text-xs text-amber-600 hover:text-amber-800 hover:bg-amber-50/50 px-2.5 py-1 rounded-lg border border-amber-100 transition-all font-semibold"
-            title="Assign manager to this unit"
+            title={t('organization.structure.assignManagerTooltip')}
           >
             <ShieldCheck className="h-3.5 w-3.5" />
-            <span>Assign Mgr</span>
+            <span>{t('organization.structure.assignManagerBtn')}</span>
           </button>
 
           <button
             onClick={() => setDeletingOU(node)}
             className="flex items-center justify-center p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100"
-            title="Delete Organization Unit"
+            title={t('organization.structure.deleteTooltip')}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -498,8 +498,8 @@ export const OrganizationStructureTab: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-900">Organizational Tree</h3>
-              <p className="text-xs text-slate-500 mt-1">Hierarchical visualization of your corporate organization divisions.</p>
+              <h3 className="text-base font-bold text-slate-900">{t('organization.structure.treeTitle')}</h3>
+              <p className="text-xs text-slate-500 mt-1">{t('organization.structure.treeSubtitle')}</p>
             </div>
             {loading && <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />}
           </div>
@@ -514,8 +514,8 @@ export const OrganizationStructureTab: React.FC = () => {
           {activeOUs.length === 0 ? (
             <div className="text-center py-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
               <FolderSync className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-500">No organization units defined</p>
-              <p className="text-xs text-slate-400 mt-1">Create your first top-level unit using the form on the right.</p>
+              <p className="text-sm font-semibold text-slate-500">{t('organization.structure.noUnitsTitle')}</p>
+              <p className="text-xs text-slate-400 mt-1">{t('organization.structure.noUnitsDesc')}</p>
             </div>
           ) : (
             <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto pr-2">
@@ -529,10 +529,10 @@ export const OrganizationStructureTab: React.FC = () => {
           <div className="bg-slate-50/70 rounded-2xl border border-slate-200 p-6">
             <h4 className="text-sm font-bold text-slate-800 flex items-center space-x-2">
               <RotateCcw className="h-4 w-4 text-slate-600" />
-              <span>Recently Deleted (14-day Restoration Window)</span>
+              <span>{t('organization.structure.recentlyDeletedTitle')}</span>
             </h4>
             <p className="text-xs text-slate-500 mt-1">
-              Organization units soft-deleted within the last 14 days can be recovered with all historical memberships.
+              {t('organization.structure.recentlyDeletedDesc')}
             </p>
 
             <div className="mt-4 space-y-2.5">
@@ -546,7 +546,7 @@ export const OrganizationStructureTab: React.FC = () => {
                     <div className="min-w-0 pr-4">
                       <p className="text-sm font-bold text-slate-800 truncate">{ou.name}</p>
                       <p className="text-[11px] text-rose-600 font-semibold mt-0.5">
-                        {daysLeft} days remaining before permanent purge
+                        {t('organization.structure.daysRemaining', { count: daysLeft })}
                       </p>
                     </div>
                     <button
@@ -554,7 +554,7 @@ export const OrganizationStructureTab: React.FC = () => {
                       className="flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
                     >
                       <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
-                      <span>Restore</span>
+                      <span>{t('organization.structure.restoreBtn')}</span>
                     </button>
                   </div>
                 );
@@ -570,29 +570,29 @@ export const OrganizationStructureTab: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
           <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2 pb-3 border-b border-slate-100">
             <Plus className="h-4 w-4 text-blue-600" />
-            <span>Create Organization Unit</span>
+            <span>{t('organization.structure.createTitle')}</span>
           </h3>
           <form onSubmit={handleCreateOU} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Unit Name</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.structure.unitNameLabel')}</label>
               <input
                 type="text"
                 value={newOUName}
                 onChange={(e) => setNewOUName(e.target.value)}
-                placeholder="e.g. Sales Division, Engineering"
+                placeholder={t('organization.structure.unitNamePlaceholder')}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm focus:border-blue-500 focus:outline-none placeholder:text-slate-400 font-medium"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Parent Unit (Optional)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.structure.parentUnitLabel')}</label>
               <select
                 value={newOUParentId}
                 onChange={(e) => setNewOUParentId(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none font-semibold text-slate-700"
               >
-                <option value="">None (Top-Level Unit)</option>
+                <option value="">{t('organization.structure.noneTopLevel')}</option>
                 {activeOUs.map((ou) => (
                   <option key={ou.id} value={ou.id}>{ou.name}</option>
                 ))}
@@ -604,7 +604,7 @@ export const OrganizationStructureTab: React.FC = () => {
               disabled={!newOUName.trim()}
               className="w-full rounded-xl bg-blue-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              Add Unit
+              {t('organization.structure.addUnitBtn')}
             </button>
           </form>
         </div>
@@ -619,25 +619,26 @@ export const OrganizationStructureTab: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-blue-100">
               <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
                 <UserPlus className="h-4 w-4 text-blue-600" />
-                <span>Move User to Unit</span>
+                <span>{t('organization.structure.moveUserTitle')}</span>
               </h3>
               <button onClick={() => setSelectedOUForUser('')} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              Move a user to <strong>{activeOUs.find(o => o.id === selectedOUForUser)?.name}</strong>. Moving the user automatically terminates any of their existing primary corporate Division memberships.
+              {t('organization.structure.moveUserText', { name: activeOUs.find(o => o.id === selectedOUForUser)?.name })}
+              {t('organization.structure.moveUserTextSuffix')}
             </p>
             <form onSubmit={handleMoveUser} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select User</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.structure.selectUserLabel')}</label>
                 <select
                   value={selectedUserToMove}
                   onChange={(e) => setSelectedUserToMove(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none font-semibold text-slate-700"
                   required
                 >
-                  <option value="">-- Choose Active User --</option>
+                  <option value="">{t('organization.structure.chooseUserPlaceholder')}</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.username || u.email}
@@ -651,7 +652,7 @@ export const OrganizationStructureTab: React.FC = () => {
                 disabled={!selectedUserToMove}
                 className="w-full rounded-xl bg-blue-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                Confirm Move User
+                {t('organization.structure.confirmMoveUserBtn')}
               </button>
             </form>
           </motion.div>
@@ -667,25 +668,25 @@ export const OrganizationStructureTab: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-amber-100">
               <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
                 <ShieldCheck className="h-4 w-4 text-amber-600" />
-                <span>Assign Unit Manager</span>
+                <span>{t('organization.structure.assignManagerTitle')}</span>
               </h3>
               <button onClick={() => setSelectedOUForManager('')} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              Assign a manager to govern the unit <strong>{activeOUs.find(o => o.id === selectedOUForManager)?.name}</strong>.
+              {t('organization.structure.assignManagerText', { name: activeOUs.find(o => o.id === selectedOUForManager)?.name })}
             </p>
             <form onSubmit={handleAssignManager} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select User</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.structure.selectUserLabel')}</label>
                 <select
                   value={selectedUserToManager}
                   onChange={(e) => setSelectedUserToManager(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none font-semibold text-slate-700"
                   required
                 >
-                  <option value="">-- Choose User --</option>
+                  <option value="">{t('organization.structure.chooseUserToAssignPlaceholder')}</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.username || u.email}
@@ -699,7 +700,7 @@ export const OrganizationStructureTab: React.FC = () => {
                 disabled={!selectedUserToManager}
                 className="w-full rounded-xl bg-amber-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-amber-700 transition-colors disabled:opacity-50"
               >
-                Assign Manager
+                {t('organization.structure.assignManagerBtn')}
               </button>
             </form>
           </motion.div>
@@ -720,9 +721,11 @@ export const OrganizationStructureTab: React.FC = () => {
               <div className="flex items-start space-x-3 text-rose-600">
                 <ShieldAlert className="h-6 w-6 shrink-0 mt-0.5 animate-pulse" />
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Delete Organization Unit: {deletingOU.name}</h3>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {t('organization.structure.deleteModalTitle', { name: deletingOU.name })}
+                  </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Configure deletion style behavior and review the real-time affected users list.
+                    {t('organization.structure.deleteModalSubtitle')}
                   </p>
                 </div>
               </div>
@@ -731,7 +734,7 @@ export const OrganizationStructureTab: React.FC = () => {
                 {/* Deletion Behavior Radio Option Choice */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                    Deletion Strategy Option
+                    {t('organization.structure.deleteStrategyLabel')}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <label className={`flex flex-col p-3 rounded-xl border text-left cursor-pointer transition-all ${
@@ -748,10 +751,10 @@ export const OrganizationStructureTab: React.FC = () => {
                           onChange={() => setDeleteOption('REASSIGN')}
                           className="text-blue-600 focus:ring-blue-500 h-4 w-4"
                         />
-                        <span className="text-xs font-bold">REASSIGN</span>
+                        <span className="text-xs font-bold">{t('organization.structure.reassignOption')}</span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
-                        Reassign direct child units to the parent unit. Soft-delete only this target node.
+                        {t('organization.structure.reassignOptionDesc')}
                       </p>
                     </label>
 
@@ -769,10 +772,10 @@ export const OrganizationStructureTab: React.FC = () => {
                           onChange={() => setDeleteOption('SUBTREE')}
                           className="text-rose-600 focus:ring-rose-500 h-4 w-4"
                         />
-                        <span className="text-xs font-bold text-rose-700">SUBTREE</span>
+                        <span className="text-xs font-bold text-rose-700">{t('organization.structure.subtreeOption')}</span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
-                        Soft-delete this unit and all of its nested child units together in a single cascade.
+                        {t('organization.structure.subtreeOptionDesc')}
                       </p>
                     </label>
                   </div>
@@ -781,13 +784,13 @@ export const OrganizationStructureTab: React.FC = () => {
                 {/* Real Affected-Users List Preview Box */}
                 <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                   <h4 className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                    <span>Affected Memberships ({loadingPreview ? '...' : affectedUsers.length})</span>
+                    <span>{t('organization.structure.affectedMembershipsLabel', { count: loadingPreview ? '...' : affectedUsers.length })}</span>
                     {loadingPreview && <Loader2 className="h-3.5 w-3.5 text-blue-600 animate-spin" />}
                   </h4>
                   
                   {!loadingPreview && affectedUsers.length === 0 ? (
                     <p className="text-[11px] text-slate-400 italic mt-2">
-                      No active users or manager memberships will be affected by this deletion.
+                      {t('organization.structure.noAffectedMembers')}
                     </p>
                   ) : (
                     <div className="mt-2.5 max-h-[120px] overflow-y-auto space-y-1.5 pr-1">
@@ -808,14 +811,15 @@ export const OrganizationStructureTab: React.FC = () => {
                   onClick={() => setDeletingOU(null)}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {t('organization.structure.cancelBtn')}
                 </button>
                 <button
                   onClick={handleConfirmDelete}
-                  className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-700 transition-colors flex items-center space-x-1.5"
+                  disabled={loadingPreview}
+                  className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-700 transition-colors flex items-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash className="h-4 w-4" />
-                  <span>Confirm Deletion</span>
+                  <span>{t('organization.structure.confirmDeletionBtn')}</span>
                 </button>
               </div>
             </motion.div>

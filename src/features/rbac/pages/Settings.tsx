@@ -46,7 +46,7 @@ export const Settings: React.FC = () => {
               onClick={() => setView('hub')}
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50"
               id="back-to-hub-btn"
-              title="Back to Settings Hub"
+              title={t('settings.backBtn')}
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -54,17 +54,17 @@ export const Settings: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl font-sans">
               {view === 'hub'
-                ? t('settings.title', 'Settings Hub')
+                ? t('settings.titleHub')
                 : view === 'roles'
-                ? t('settings.roles', 'Role Management')
-                : t('settings.userGroupManagement', 'User & Group Management')}
+                ? t('settings.roles')
+                : t('settings.userGroupManagement')}
             </h1>
             <p className="mt-1.5 text-sm text-slate-500 max-w-2xl font-sans">
               {view === 'hub'
-                ? 'Customize and manage your system environment settings, user permissions, and directory controls.'
+                ? t('settings.hubSubtitle')
                 : view === 'roles'
-                ? 'Configure role-based access control (RBAC), system permissions, and company settings.'
-                : 'Manage your company department structure, organization units, and learning group cohorts.'}
+                ? t('settings.rolesSubtitle')
+                : t('settings.userGroupManagementSubtitle')}
             </p>
           </div>
         </div>
@@ -76,7 +76,7 @@ export const Settings: React.FC = () => {
               {user.username.charAt(0).toUpperCase()}
             </div>
             <div className="text-xs">
-              <p className="text-slate-400 font-medium leading-none">{t('settings.activeUser', 'Active Session')}</p>
+              <p className="text-slate-400 font-medium leading-none">{t('settings.activeSession')}</p>
               <p className="text-slate-800 font-bold mt-0.5 leading-none">{user.username}</p>
             </div>
           </div>
@@ -98,13 +98,13 @@ export const Settings: React.FC = () => {
                 <ShieldAlert className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 font-sans">
-                {t('settings.roles', 'Role Management')}
+                {t('settings.roles')}
               </h3>
               <p className="text-sm text-slate-500 mt-2 font-sans">
-                {t('settings.rolesDesc', 'Configure role-based access control, parent hierarchies, and system permission levels.')}
+                {t('settings.rolesDesc')}
               </p>
               <span className="text-xs text-blue-600 font-semibold mt-4 inline-flex items-center space-x-1">
-                <span>Manage Permissions</span>
+                <span>{t('settings.managePermissionsBtn')}</span>
                 <span>&rarr;</span>
               </span>
             </motion.button>
@@ -122,13 +122,13 @@ export const Settings: React.FC = () => {
                 <Users2 className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 font-sans">
-                {t('settings.userGroupManagement', 'User & Group Management')}
+                {t('settings.userGroupManagement')}
               </h3>
               <p className="text-sm text-slate-500 mt-2 font-sans">
-                Manage organization units, hierarchy, learning groups, and memberships for corporate structural organization.
+                {t('settings.userGroupManagementDesc')}
               </p>
               <span className="text-xs text-indigo-600 font-semibold mt-4 inline-flex items-center space-x-1">
-                <span>Manage Directory</span>
+                <span>{t('settings.manageDirectoryBtn')}</span>
                 <span>&rarr;</span>
               </span>
             </motion.button>

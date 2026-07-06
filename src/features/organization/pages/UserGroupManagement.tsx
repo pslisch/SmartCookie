@@ -25,7 +25,7 @@ export const UserGroupManagement: React.FC = () => {
             id="tab-btn-structure"
           >
             <Layers className="h-4 w-4" />
-            <span>{t('org.structureTab', 'Organization Structure')}</span>
+            <span>{t('organization.structureTab')}</span>
           </button>
 
           <button
@@ -38,7 +38,7 @@ export const UserGroupManagement: React.FC = () => {
             id="tab-btn-groups"
           >
             <Users className="h-4 w-4" />
-            <span>{t('org.learningGroupsTab', 'Learning Groups')}</span>
+            <span>{t('organization.learningGroupsTab')}</span>
           </button>
 
           <button
@@ -51,7 +51,7 @@ export const UserGroupManagement: React.FC = () => {
             id="tab-btn-expiring"
           >
             <AlertTriangle className="h-4 w-4" />
-            <span>{t('org.expiringGroupsTab', 'Expiring Groups')}</span>
+            <span>{t('organization.expiringGroupsTab')}</span>
           </button>
         </nav>
       </div>

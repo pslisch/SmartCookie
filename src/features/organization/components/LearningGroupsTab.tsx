@@ -71,7 +71,7 @@ export const LearningGroupsTab: React.FC = () => {
     try {
       // 1. Fetch active groups
       const resActive = await fetch('/api/learning-groups');
-      if (!resActive.ok) throw new Error('Failed to fetch learning groups.');
+      if (!resActive.ok) throw new Error(t('organization.groups.errors.failedToFetch'));
       const dataActive = await resActive.json();
       setActiveGroups(dataActive);
 
@@ -89,7 +89,7 @@ export const LearningGroupsTab: React.FC = () => {
         setUsers(dataUsers);
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred while fetching learning groups data.');
+      setError(err.message || t('organization.groups.errors.unexpectedFetch'));
     } finally {
       setLoading(false);
     }
@@ -122,7 +122,7 @@ export const LearningGroupsTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to create learning group.');
+        throw new Error(data.error || t('organization.groups.errors.failedToCreate'));
       }
 
       setNewGroupName('');
@@ -152,7 +152,7 @@ export const LearningGroupsTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to rename learning group.');
+        throw new Error(data.error || t('organization.groups.errors.failedToRename'));
       }
 
       setEditingGroupId(null);
@@ -181,7 +181,7 @@ export const LearningGroupsTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to move learning group.');
+        throw new Error(data.error || t('organization.groups.errors.failedToMove'));
       }
 
       setMovingGroup(null);
@@ -210,7 +210,7 @@ export const LearningGroupsTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to add member to group.');
+        throw new Error(data.error || t('organization.groups.errors.failedToAddMember'));
       }
 
       setSelectedUserToAdd('');
@@ -233,7 +233,7 @@ export const LearningGroupsTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to remove member.');
+        throw new Error(data.error || t('organization.groups.errors.failedToRemoveMember'));
       }
 
       fetchAllData();
@@ -255,7 +255,7 @@ export const LearningGroupsTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to delete learning group.');
+        throw new Error(data.error || t('organization.groups.errors.failedToDelete'));
       }
 
       fetchAllData();
@@ -277,7 +277,7 @@ export const LearningGroupsTab: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to restore learning group.');
+        throw new Error(data.error || t('organization.groups.errors.failedToRestore'));
       }
 
       fetchAllData();
@@ -379,7 +379,7 @@ export const LearningGroupsTab: React.FC = () => {
                     setEditingGroupName(node.name);
                   }}
                   className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-600 rounded transition-opacity"
-                  title="Rename Group"
+                  title={t('organization.groups.renameTooltip')}
                 >
                   <Edit2 className="h-3.5 w-3.5" />
                 </button>
@@ -390,7 +390,11 @@ export const LearningGroupsTab: React.FC = () => {
             {node.isTemporary && (
               <span className="inline-flex items-center space-x-1 rounded-md bg-amber-50 border border-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5">
                 <Clock className="h-3 w-3 shrink-0" />
-                <span>Expires {node.expiresAt ? new Date(node.expiresAt).toLocaleDateString() : 'Never'}</span>
+                <span>
+                  {node.expiresAt 
+                    ? t('organization.groups.expires', { date: new Date(node.expiresAt).toLocaleDateString() }) 
+                    : t('organization.groups.expiresNever')}
+                </span>
               </span>
             )}
           </div>
@@ -399,14 +403,16 @@ export const LearningGroupsTab: React.FC = () => {
           <div className="mt-2 flex flex-wrap gap-2 text-xs pl-6">
             {members.length > 0 ? (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">Members ({members.length})</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
+                  {t('organization.groups.membersCount', { count: members.length })}
+                </span>
                 {members.map((m) => (
                   <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-700 font-medium">
-                    <span>{m.user?.username || m.user?.email || 'Anonymous'}</span>
+                    <span>{m.user?.username || m.user?.email || t('organization.groups.anonymousUser')}</span>
                     <button
                       onClick={() => handleRemoveMember(node.id, m.userId)}
                       className="text-slate-400 hover:text-rose-600 ml-1 rounded-full hover:bg-rose-50 p-0.5 shrink-0"
-                      title="Remove Member"
+                      title={t('organization.groups.removeMemberTooltip')}
                     >
                       <UserMinus className="h-3 w-3" />
                     </button>
@@ -414,7 +420,7 @@ export const LearningGroupsTab: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <span className="text-slate-400 italic">No assigned members</span>
+              <span className="text-slate-400 italic">{t('organization.groups.noMembers')}</span>
             )}
           </div>
         </div>
@@ -429,7 +435,7 @@ export const LearningGroupsTab: React.FC = () => {
             className="flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50/50 px-2.5 py-1 rounded-lg border border-indigo-100 transition-all font-semibold"
           >
             <UserPlus className="h-3.5 w-3.5" />
-            <span>Add Member</span>
+            <span>{t('organization.groups.addMemberBtn')}</span>
           </button>
 
           <button
@@ -438,15 +444,15 @@ export const LearningGroupsTab: React.FC = () => {
               setTargetParentId(node.parentGroupId || '');
             }}
             className="flex items-center space-x-1 text-xs text-slate-600 hover:text-slate-800 hover:bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 transition-all font-semibold"
-            title="Nesting / Move Cohort"
+            title={t('organization.groups.nestTooltip')}
           >
-            <span>Nest Group</span>
+            <span>{t('organization.groups.nestGroupBtn')}</span>
           </button>
 
           <button
             onClick={() => handleDeleteGroup(node.id)}
             className="flex items-center justify-center p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100"
-            title="Delete Cohort Group"
+            title={t('organization.groups.deleteTooltip')}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -462,8 +468,8 @@ export const LearningGroupsTab: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-900">Learning Cohorts & Groups</h3>
-              <p className="text-xs text-slate-500 mt-1">Nestable cohorts, project teams, and training class assignments.</p>
+              <h3 className="text-base font-bold text-slate-900">{t('organization.groups.title')}</h3>
+              <p className="text-xs text-slate-500 mt-1">{t('organization.groups.subtitle')}</p>
             </div>
             {loading && <Loader2 className="h-5 w-5 text-indigo-600 animate-spin" />}
           </div>
@@ -478,8 +484,8 @@ export const LearningGroupsTab: React.FC = () => {
           {activeGroups.length === 0 ? (
             <div className="text-center py-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
               <FolderOpen className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-500">No learning cohorts defined</p>
-              <p className="text-xs text-slate-400 mt-1">Create your first learning cohort using the form on the right.</p>
+              <p className="text-sm font-semibold text-slate-500">{t('organization.groups.noCohortsTitle')}</p>
+              <p className="text-xs text-slate-400 mt-1">{t('organization.groups.noCohortsDesc')}</p>
             </div>
           ) : (
             <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto pr-2">
@@ -493,10 +499,10 @@ export const LearningGroupsTab: React.FC = () => {
           <div className="bg-slate-50/70 rounded-2xl border border-slate-200 p-6">
             <h4 className="text-sm font-bold text-slate-800 flex items-center space-x-2">
               <RotateCcw className="h-4 w-4 text-slate-600" />
-              <span>Recently Deleted Groups (14-day Restoration Window)</span>
+              <span>{t('organization.groups.deletedTitle')}</span>
             </h4>
             <p className="text-xs text-slate-500 mt-1">
-              Deleted cohort groups can be fully restored along with all user training tracking records.
+              {t('organization.groups.deletedDesc')}
             </p>
 
             <div className="mt-4 space-y-2.5">
@@ -510,7 +516,7 @@ export const LearningGroupsTab: React.FC = () => {
                     <div className="min-w-0 pr-4">
                       <p className="text-sm font-bold text-slate-800 truncate">{group.name}</p>
                       <p className="text-[11px] text-rose-600 font-semibold mt-0.5">
-                        {daysLeft} days remaining before permanent purge
+                        {t('organization.groups.daysLeftPurge', { count: daysLeft })}
                       </p>
                     </div>
                     <button
@@ -518,7 +524,7 @@ export const LearningGroupsTab: React.FC = () => {
                       className="flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
                     >
                       <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
-                      <span>Restore</span>
+                      <span>{t('organization.groups.restoreBtn')}</span>
                     </button>
                   </div>
                 );
@@ -534,33 +540,36 @@ export const LearningGroupsTab: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
           <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2 pb-3 border-b border-slate-100">
             <Plus className="h-4 w-4 text-indigo-600" />
-            <span>Create Learning Group</span>
+            <span>{t('organization.groups.createTitle')}</span>
           </h3>
           <form onSubmit={handleCreateGroup} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Cohort Name</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.groups.cohortNameLabel')}</label>
               <input
                 type="text"
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
-                placeholder="e.g. Q3 New Grads, Sales Camp"
+                placeholder={t('organization.groups.cohortNamePlaceholder')}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm focus:border-blue-500 focus:outline-none placeholder:text-slate-400 font-medium"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Parent Cohort (Optional)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.groups.parentCohortLabel')}</label>
               <select
                 value={newGroupParentId}
                 onChange={(e) => setNewGroupParentId(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none font-semibold text-slate-700"
               >
-                <option value="">None (Top-Level Group)</option>
+                <option value="">{t('organization.groups.noneTopLevel')}</option>
                 {activeGroups.map((g) => (
                   <option key={g.id} value={g.id}>{g.name}</option>
                 ))}
               </select>
+              <p className="mt-1.5 text-[11px] text-indigo-600 leading-normal font-medium bg-indigo-50/40 p-2 rounded-lg border border-indigo-100/30">
+                {t('organization.groups.parentNote')}
+              </p>
             </div>
 
             {/* Temporary Group Expiration Toggles */}
@@ -572,7 +581,7 @@ export const LearningGroupsTab: React.FC = () => {
                   onChange={(e) => setIsTemporary(e.target.checked)}
                   className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
                 />
-                <span className="text-xs font-bold text-slate-700">Temporary Training cohort</span>
+                <span className="text-xs font-bold text-slate-700">{t('organization.groups.tempCohortCheckbox')}</span>
               </label>
 
               {isTemporary && (
@@ -581,7 +590,7 @@ export const LearningGroupsTab: React.FC = () => {
                   animate={{ opacity: 1, height: 'auto' }}
                   className="space-y-1.5"
                 >
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Expiration Date</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('organization.groups.expirationDateLabel')}</label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                     <input
@@ -601,7 +610,7 @@ export const LearningGroupsTab: React.FC = () => {
               disabled={!newGroupName.trim() || (isTemporary && !expiresAt)}
               className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-50"
             >
-              Add Group
+              {t('organization.groups.addGroupBtn')}
             </button>
           </form>
         </div>
@@ -616,25 +625,25 @@ export const LearningGroupsTab: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
               <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
                 <UserPlus className="h-4 w-4 text-indigo-600" />
-                <span>Add Member to Cohort</span>
+                <span>{t('organization.groups.addMemberTitle')}</span>
               </h3>
               <button onClick={() => setSelectedGroupForMember('')} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              Assign user to training cohort <strong>{activeGroups.find(g => g.id === selectedGroupForMember)?.name}</strong>.
+              {t('organization.groups.assignUserText', { name: activeGroups.find(g => g.id === selectedGroupForMember)?.name })}
             </p>
             <form onSubmit={handleAddMember} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select User</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.groups.selectUserLabel')}</label>
                 <select
                   value={selectedUserToAdd}
                   onChange={(e) => setSelectedUserToAdd(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none font-semibold text-slate-700"
                   required
                 >
-                  <option value="">-- Choose Active User --</option>
+                  <option value="">{t('organization.groups.chooseUserPlaceholder')}</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.username || u.email}
@@ -648,7 +657,7 @@ export const LearningGroupsTab: React.FC = () => {
                 disabled={!selectedUserToAdd}
                 className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-50"
               >
-                Confirm Add Member
+                {t('organization.groups.confirmAddMemberBtn')}
               </button>
             </form>
           </motion.div>
@@ -662,23 +671,23 @@ export const LearningGroupsTab: React.FC = () => {
             className="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm"
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <h3 className="text-sm font-bold text-slate-900">Nest Cohort Hierarchy</h3>
+              <h3 className="text-sm font-bold text-slate-900">{t('organization.groups.nestTitle')}</h3>
               <button onClick={() => setMovingGroup(null)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <p className="text-xs text-slate-500 mt-2">
-              Move <strong>{movingGroup.name}</strong> to a different position in the learning group tree hierarchy.
+              {t('organization.groups.moveText', { name: movingGroup.name })}
             </p>
             <form onSubmit={handleMoveGroup} className="mt-4 space-y-4 font-sans">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Parent Cohort</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.groups.parentCohortLabel')}</label>
                 <select
                   value={targetParentId}
                   onChange={(e) => setTargetParentId(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none font-semibold text-slate-700"
                 >
-                  <option value="">None (Top-Level Group)</option>
+                  <option value="">{t('organization.groups.noneTopLevel')}</option>
                   {activeGroups
                     .filter((g) => g.id !== movingGroup.id) // Cannot parent to itself
                     .map((g) => (
@@ -691,7 +700,7 @@ export const LearningGroupsTab: React.FC = () => {
                 type="submit"
                 className="w-full rounded-xl bg-slate-800 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-950 transition-colors"
               >
-                Confirm Nesting Move
+                {t('organization.groups.confirmNestMoveBtn')}
               </button>
             </form>
           </motion.div>
