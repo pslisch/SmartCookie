@@ -694,6 +694,9 @@ export const LearningGroupsTab: React.FC = () => {
                       <option key={g.id} value={g.id}>{g.name}</option>
                     ))}
                 </select>
+                <p className="mt-1.5 text-[11px] text-indigo-600 leading-normal font-medium bg-indigo-50/40 p-2 rounded-lg border border-indigo-100/30">
+                  {t('organization.groups.nestingClarityNote')}
+                </p>
               </div>
 
               <button

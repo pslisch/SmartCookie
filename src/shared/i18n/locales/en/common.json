@@ -199,6 +199,7 @@
       "parentCohortLabel": "Parent Cohort (Optional)",
       "noneTopLevel": "None (Top-Level Group)",
       "parentNote": "Nesting is for organizational grouping only. A member of a child group is not automatically a member of the parent.",
+      "nestingClarityNote": "Nesting groups is for organizational grouping only: a member of a child group is not automatically considered a member of the parent group.",
       "tempCohortCheckbox": "Temporary Training cohort",
       "expirationDateLabel": "Expiration Date",
       "addGroupBtn": "Add Group",
