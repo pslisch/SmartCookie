@@ -22,6 +22,10 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Resolve dynamic project directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # Require explicit confirmation before doing anything (TASK 3 Requirement)
 CONFIRMED=false
 for arg in "$@"; do
@@ -83,8 +87,8 @@ BACKUP_FILE="$USER_HOME/smartcookie-final-backup-$TIMESTAMP.sql"
 # Extract database name and database user dynamically from .env if it exists
 DROP_DB="smartcookie"
 DROP_USER="smartcookie"
-if [ -f "/opt/smartcookie/.env" ]; then
-    DB_URL_LINE=$(grep "^DATABASE_URL=" /opt/smartcookie/.env | head -n1 | tr -d '"' | tr -d "'")
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    DB_URL_LINE=$(grep "^DATABASE_URL=" "$PROJECT_ROOT/.env" | head -n1 | tr -d '"' | tr -d "'")
     DB_URL_CLEAN="${DB_URL_LINE#DATABASE_URL=}"
     EXTRACTED_DB=$(echo "$DB_URL_CLEAN" | sed -E -n 's|.*/([^?]+).*|\1|p')
     EXTRACTED_USER=$(echo "$DB_URL_CLEAN" | sed -n 's|mysql://\([^:]*\):.*|\1|p')
@@ -105,8 +109,8 @@ if [ -n "$DB_EXISTS" ]; then
     echo_info "Database '$DROP_DB' detected. Generating final database backup..."
     if ! sudo mysqldump --single-transaction "$DROP_DB" > "$BACKUP_FILE" 2>/dev/null; then
         # Try credentials fallback from .env if standard sudo fails
-        if [ -f "/opt/smartcookie/.env" ]; then
-            DB_URL_LINE=$(grep "^DATABASE_URL=" /opt/smartcookie/.env | head -n1 | tr -d '"' | tr -d "'")
+        if [ -f "$PROJECT_ROOT/.env" ]; then
+            DB_URL_LINE=$(grep "^DATABASE_URL=" "$PROJECT_ROOT/.env" | head -n1 | tr -d '"' | tr -d "'")
             DB_URL_CLEAN="${DB_URL_LINE#DATABASE_URL=}"
             DB_USER=$(echo "$DB_URL_CLEAN" | sed -n 's|mysql://\([^:]*\):.*|\1|p')
             DB_PASS=$(echo "$DB_URL_CLEAN" | sed -n 's|mysql://[^:]*:\([^@]*\)@.*|\1|p')
@@ -166,13 +170,13 @@ else
     echo_warning "Apache configuration 'smartcookie.conf' not found. Skipping."
 fi
 
-# 4. Remove application directory (/opt/smartcookie)
+# 4. Remove application directory
 echo_info "Step 4: Deleting application directories..."
-if [ -d "/opt/smartcookie" ]; then
-    sudo rm -rf /opt/smartcookie
-    echo_success "Application directory /opt/smartcookie successfully deleted."
+if [ -d "$PROJECT_ROOT" ]; then
+    sudo rm -rf "$PROJECT_ROOT"
+    echo_success "Application directory $PROJECT_ROOT successfully deleted."
 else
-    echo_warning "Application directory /opt/smartcookie not found. Skipping."
+    echo_warning "Application directory $PROJECT_ROOT not found. Skipping."
 fi
 
 # Final Summary Output (TASK 3 transparency requirement)
@@ -181,7 +185,7 @@ echo "========================================================================="
 echo "                SMARTCOOKIE LMS UNINSTALL COMPLETED                      "
 echo "========================================================================="
 echo "The following resources have been completely REMOVED:"
-echo "  [✓] /opt/smartcookie (Application files, builds, and node_modules)"
+echo "  [✓] $PROJECT_ROOT (Application files, builds, and node_modules)"
 echo "  [✓] /etc/systemd/system/smartcookie.service (Systemd background daemon)"
 echo "  [✓] MySQL database '$DROP_DB' and local user '$DROP_USER'"
 echo "  [✓] Apache VirtualHost configuration 'smartcookie.conf' (site disabled)"

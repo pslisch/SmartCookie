@@ -109,12 +109,16 @@ fi
 echo_success "Stage 3: Application built successfully."
 
 echo "----------------------------------------------------"
-echo_info "STAGE 4: Setting up Apache Reverse Proxy & SSL..."
-if ! "$SCRIPT_DIR/03-setup-apache.sh" "$DOMAIN" "$EMAIL"; then
-    echo_error "Apache configuration or SSL certificate retrieval failed! Halted."
-    exit 1
+if [ "$SETUP_APACHE" = "false" ]; then
+    echo_info "STAGE 4: Skipping Apache Reverse Proxy & SSL (disabled via installation preferences)..."
+else
+    echo_info "STAGE 4: Setting up Apache Reverse Proxy & SSL..."
+    if ! "$SCRIPT_DIR/03-setup-apache.sh" "$DOMAIN" "$EMAIL"; then
+        echo_error "Apache configuration or SSL certificate retrieval failed! Halted."
+        exit 1
+    fi
+    echo_success "Stage 4: Apache reverse proxy and SSL established."
 fi
-echo_success "Stage 4: Apache reverse proxy and SSL established."
 
 echo "----------------------------------------------------"
 echo_info "STAGE 5: Registering systemd Service..."
