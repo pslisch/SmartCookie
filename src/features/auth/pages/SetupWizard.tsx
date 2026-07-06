@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { UserPlus, Building2, AlertCircle, Loader2, Sparkles, ShieldCheck } from 'lucide-react';
+import { UserPlus, Building2, AlertCircle, Loader2, Sparkles, ShieldCheck, Layers, Plus, X } from 'lucide-react';
 
 interface SetupWizardProps {
-  step: 'superuser' | 'company' | 'role-templates';
+  step: 'superuser' | 'company' | 'org-structure' | 'role-templates';
   onSuperuserSubmit: (username: string, password: string, recoveryEmail: string) => Promise<void>;
   onCompanySubmit: (name: string, contactInfo: string) => Promise<void>;
+  onOrgStructureSubmit: (ouNames: string[]) => Promise<void>;
   onRoleTemplatesSubmit: (selectedNames: string[]) => Promise<void>;
 }
 
-export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit, onRoleTemplatesSubmit }: SetupWizardProps) {
+export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit, onOrgStructureSubmit, onRoleTemplatesSubmit }: SetupWizardProps) {
   const { t } = useTranslation();
 
   // Superuser Form State
@@ -61,6 +62,47 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit, onRoleTe
       setCoError(err.message || t('setup.errors.unexpected'));
     } finally {
       setCoLoading(false);
+    }
+  };
+
+  // Org Structure Step State
+  const [ouList, setOuList] = useState<string[]>(['Engineering', 'Sales', 'Human Resources', 'Operations']);
+  const [newOuInput, setNewOuInput] = useState('');
+  const [orgLoading, setOrgLoading] = useState(false);
+  const [orgError, setOrgError] = useState('');
+
+  const addOuToList = () => {
+    const trimmed = newOuInput.trim();
+    if (!trimmed) return;
+    if (ouList.some(item => item.toLowerCase() === trimmed.toLowerCase())) {
+      setOrgError('That organizational unit is already in the list.');
+      return;
+    }
+    setOrgError('');
+    setOuList(prev => [...prev, trimmed]);
+    setNewOuInput('');
+  };
+
+  const removeOuFromList = (indexToRemove: number) => {
+    setOuList(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const handleOrgSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOrgError('');
+
+    if (ouList.length === 0) {
+      setOrgError('Please define at least one top-level organizational unit to continue.');
+      return;
+    }
+
+    setOrgLoading(true);
+    try {
+      await onOrgStructureSubmit(ouList);
+    } catch (err: any) {
+      setOrgError(err.message || t('setup.errors.unexpected'));
+    } finally {
+      setOrgLoading(false);
     }
   };
 
@@ -283,6 +325,95 @@ export function SetupWizard({ step, onSuperuserSubmit, onCompanySubmit, onRoleTe
                   {t('setup.completeLaunch')}
                 </button>
               </form>
+            </div>
+          ) : step === 'org-structure' ? (
+            <div id="setup-step-org-structure">
+              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center space-x-2">
+                  <Layers className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">Step 3 of 4</span>
+                </div>
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">
+                  Org Structure
+                </span>
+              </div>
+
+              <h2 className="text-lg font-bold text-slate-900">Configure Divisions & Units</h2>
+              <p className="text-sm text-slate-500 mt-1 mb-6">
+                Create top-level organizational units (e.g. Sales, HR, Engineering) to organize learners and managers.
+              </p>
+
+              {orgError && (
+                <div className="mb-4 flex items-start space-x-2 rounded-lg bg-rose-50 p-3.5 text-sm text-rose-800 border border-rose-100">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                  <span className="font-medium">{orgError}</span>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {/* Input box to add custom OUs */}
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={newOuInput}
+                    onChange={(e) => setNewOuInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addOuToList();
+                      }
+                    }}
+                    className="flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                    placeholder="e.g. Finance, Marketing, Support"
+                  />
+                  <button
+                    type="button"
+                    onClick={addOuToList}
+                    className="inline-flex items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 px-4 text-white text-xs font-bold transition-colors"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </button>
+                </div>
+
+                {/* List of currently added OUs */}
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {ouList.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic py-4 text-center">No units added yet. Add at least one to continue.</p>
+                  ) : (
+                    ouList.map((name, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-3"
+                      >
+                        <span className="text-sm font-semibold text-slate-700">{name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeOuFromList(idx)}
+                          className="text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Remove"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleOrgSubmit}
+                  disabled={orgLoading || ouList.length === 0}
+                  className="w-full flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none disabled:opacity-50 mt-4"
+                >
+                  {orgLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  Save & Continue
+                </button>
+              </div>
             </div>
           ) : (
             <div id="setup-step-role-templates">

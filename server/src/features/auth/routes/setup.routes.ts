@@ -123,6 +123,43 @@ router.post('/company', requireAuth, async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/setup/org-structure -> completes organizational structure setup step.
+ * Requires an active superuser session.
+ */
+router.post('/org-structure', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { ouNames } = req.body;
+    if (!ouNames || !Array.isArray(ouNames)) {
+      return res.status(400).json({ error: 'ouNames must be an array of strings.' });
+    }
+
+    const user = req.user;
+    if (!user || !user.isSuperuser || user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Forbidden: Requires an active superuser session.' });
+    }
+
+    if (!user.companyId) {
+      return res.status(400).json({ error: 'User is not associated with any company yet.' });
+    }
+
+    const company = await setupWizardService.completeOrgStructureStep(user.companyId, ouNames);
+
+    res.status(200).json({
+      success: true,
+      company: {
+        id: company.id,
+        name: company.name,
+        contactInfo: company.contactInfo,
+        setupCompletedAt: company.setupCompletedAt,
+      },
+    });
+  } catch (error: any) {
+    const isValidationError = error.message.includes('required') || error.message.includes('before completing');
+    res.status(isValidationError ? 400 : 500).json({ error: error.message || 'Failed to complete organization structure step.' });
+  }
+});
+
+/**
  * POST /api/setup/role-templates -> completes role template selection step.
  * Requires an active superuser session.
  */

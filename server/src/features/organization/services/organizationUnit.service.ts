@@ -304,6 +304,59 @@ export class OrganizationUnitService {
     return { success: true };
   }
 
+  async moveUser(userId: string, organizationUnitId: string, createdById?: string) {
+    // Verify OU exists and is active
+    const ou = await prisma.organizationUnit.findFirst({
+      where: { id: organizationUnitId, deletedAt: null }
+    });
+    if (!ou) {
+      throw new Error('Active organization unit not found.');
+    }
+
+    // Verify User exists and is active
+    const user = await prisma.user.findFirst({
+      where: { id: userId, status: 'ACTIVE' }
+    });
+    if (!user) {
+      throw new Error('Active user not found.');
+    }
+
+    // Resolve creator ID
+    let creatorId = createdById;
+    if (!creatorId) {
+      const superuser = await prisma.user.findFirst({ where: { isSuperuser: true } });
+      if (!superuser) {
+        throw new Error('No creator user available.');
+      }
+      creatorId = superuser.id;
+    }
+
+    // Soft-delete existing MEMBER memberships of this user in any OU (moving them out)
+    await prisma.membership.updateMany({
+      where: {
+        userId,
+        membershipType: 'MEMBER',
+        organizationUnitId: { not: null },
+        deletedAt: null
+      },
+      data: {
+        deletedAt: new Date()
+      }
+    });
+
+    // Create new MEMBER membership
+    return await prisma.membership.create({
+      data: {
+        userId,
+        organizationUnitId,
+        membershipType: 'MEMBER',
+        status: 'ACTIVE',
+        source: 'MANUAL',
+        createdById: creatorId
+      }
+    });
+  }
+
   // Internal helper to walk descendants
   private async getDescendants(nodeId: string): Promise<string[]> {
     const children = await prisma.organizationUnit.findMany({

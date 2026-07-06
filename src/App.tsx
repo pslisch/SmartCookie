@@ -50,7 +50,15 @@ const getInitialTab = (): Tab => {
 
 function AppContent({ appName }: { appName: string }) {
   const [currentTab, setCurrentTab] = useState<Tab>(getInitialTab);
-  const hasSettingsAccess = usePermission('roles', 'manage');
+  
+  const hasRolesManage = usePermission('roles', 'manage');
+  const hasOrgView = usePermission('organization', 'view');
+  const hasOrgCreate = usePermission('organization', 'create');
+  const hasOrgEdit = usePermission('organization', 'edit');
+  const hasOrgDelete = usePermission('organization', 'delete');
+  const hasOrgManageMembers = usePermission('organization', 'manage-members');
+  const hasOrgManageGroups = usePermission('organization', 'manage-groups');
+  const hasSettingsAccess = hasRolesManage || hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups;
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {

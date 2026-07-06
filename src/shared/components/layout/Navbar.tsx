@@ -24,7 +24,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
-  const hasSettingsAccess = usePermission('roles', 'manage');
+  
+  const hasRolesManage = usePermission('roles', 'manage');
+  const hasOrgView = usePermission('organization', 'view');
+  const hasOrgCreate = usePermission('organization', 'create');
+  const hasOrgEdit = usePermission('organization', 'edit');
+  const hasOrgDelete = usePermission('organization', 'delete');
+  const hasOrgManageMembers = usePermission('organization', 'manage-members');
+  const hasOrgManageGroups = usePermission('organization', 'manage-groups');
+  const hasSettingsAccess = hasRolesManage || hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups;
 
   const toggleMenu = () => setIsOpen(!isOpen);
 

@@ -5,13 +5,30 @@ import { prisma } from '../../../shared/db/prisma';
 
 const router = Router();
 
-// GET /api/organization-units - List all active organization units for the company
+// GET /api/organization-units - List active or soft-deleted organization units for the company
 router.get('/', requirePermission('organization', 'view'), async (req: Request, res: Response) => {
   try {
+    const showDeleted = req.query.showDeleted === 'true';
     const ous = await prisma.organizationUnit.findMany({
       where: {
         companyId: req.user!.companyId!,
-        deletedAt: null
+        deletedAt: showDeleted ? { not: null } : null
+      },
+      include: {
+        memberships: {
+          where: {
+            deletedAt: null
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true
+              }
+            }
+          }
+        }
       }
     });
     return res.json(ous);
@@ -120,6 +137,20 @@ router.post('/:id/managers', requirePermission('organization', 'manage-members')
     return res.status(201).json(membership);
   } catch (error: any) {
     return res.status(400).json({ error: error.message || 'Failed to assign manager.' });
+  }
+});
+
+// POST /api/organization-units/:id/members - Move a user to this organization unit as a member
+router.post('/:id/members', requirePermission('organization', 'manage-members'), async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    if (!userId || typeof userId !== 'string') {
+      return res.status(400).json({ error: 'userId is required.' });
+    }
+    const membership = await organizationUnitService.moveUser(userId, req.params.id, req.user!.id);
+    return res.status(201).json(membership);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to move user.' });
   }
 });
 

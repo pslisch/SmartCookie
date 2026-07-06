@@ -118,16 +118,16 @@ Every logged feature should eventually document:
 - **Events**: Updates to role hierarchies and configurations immediately invalidate existing permission states across active user session endpoints.
 - **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, cookie-parser
 
-### 9. Hierarchical Organization Model MVP
-- **Description**: Implements a highly scalable and resilient company hierarchical organization structure. This includes hierarchical Organization Units (OU) for formal company division with soft-delete/restore lifecycles, child reassignments, and manager roles, and nested Learning Groups for temporary/permanent student cohort grouping. Standard cycle-prevention algorithms protect hierarchies at the service layer, and unique constraint checks protect polymorphic membership assignments securely in database tables.
-- **Components**: Backend Services and API routes (frontend UI pending)
-- **Pages**: None
-- **Services**: `OrganizationUnitService` (`server/src/features/organization/services/organizationUnit.service.ts`), `LearningGroupService` (`server/src/features/organization/services/learningGroup.service.ts`), `ScheduledTasksService` (`server/src/shared/scheduler/scheduledTasks.service.ts`)
-- **APIs**: `GET /api/organization-units`, `POST /api/organization-units`, `PUT /api/organization-units/:id`, `POST /api/organization-units/:id/move`, `GET /api/organization-units/:id/deletion-preview`, `DELETE /api/organization-units/:id`, `POST /api/organization-units/:id/restore`, `POST /api/organization-units/:id/managers`, `DELETE /api/organization-units/:id/managers/:userId`, `GET /api/learning-groups`, `POST /api/learning-groups`, `PUT /api/learning-groups/:id`, `POST /api/learning-groups/:id/move`, `DELETE /api/learning-groups/:id`, `POST /api/learning-groups/:id/restore`, `POST /api/learning-groups/:id/members`, `DELETE /api/learning-groups/:id/members/:userId`
-- **Database**: `organization_units`, `learning_groups`, `memberships` (Prisma & MariaDB schemas)
+### 9. Hierarchical Organization Model MVP & Visual Management Suite
+- **Description**: Implements a highly scalable and resilient company hierarchical organization structure. This includes hierarchical Organization Units (OU) for formal company division with soft-delete/restore lifecycles, child reassignments, and manager roles, and nested Learning Groups for temporary/permanent student cohort grouping. Features a fully-interactive visual tree manager, child node nesting controls, dynamic user assignment dialogs, expiring temporary cohort alerts, and a dedicated Step in the Setup Wizard for top-level division configuration.
+- **Components**: `src/features/organization/components/OrganizationStructureTab.tsx`, `src/features/organization/components/LearningGroupsTab.tsx`, `src/features/organization/components/ExpiringGroupsTab.tsx`
+- **Pages**: `src/features/organization/pages/UserGroupManagement.tsx`, `src/features/auth/pages/SetupWizard.tsx` (Step 3: Configure Divisions & Units)
+- **Services**: `OrganizationUnitService` (`server/src/features/organization/services/organizationUnit.service.ts`), `LearningGroupService` (`server/src/features/organization/services/learningGroup.service.ts`), `ScheduledTasksService` (`server/src/shared/scheduler/scheduledTasks.service.ts`), `SetupWizardService` (`server/src/features/auth/services/setupWizard.service.ts`)
+- **APIs**: `GET /api/organization-units`, `POST /api/organization-units`, `PUT /api/organization-units/:id`, `POST /api/organization-units/:id/move`, `GET /api/organization-units/:id/deletion-preview`, `DELETE /api/organization-units/:id`, `POST /api/organization-units/:id/restore`, `POST /api/organization-units/:id/members`, `POST /api/organization-units/:id/managers`, `DELETE /api/organization-units/:id/managers/:userId`, `GET /api/learning-groups`, `POST /api/learning-groups`, `PUT /api/learning-groups/:id`, `POST /api/learning-groups/:id/move`, `DELETE /api/learning-groups/:id`, `POST /api/learning-groups/:id/restore`, `POST /api/learning-groups/:id/members`, `DELETE /api/learning-groups/:id/members/:userId`, `GET /api/learning-groups/expiring`, `PATCH /api/learning-groups/:id/extend`, `POST /api/setup/org-structure`
+- **Database**: `organization_units`, `learning_groups`, `memberships`, `companies.settings` (Prisma & MariaDB schemas)
 - **Permissions**: Gated by `organization:view`, `organization:create`, `organization:edit`, `organization:delete`, `organization:manage-members`, and `organization:manage-groups` permissions, registered under the "organization" module.
-- **Routes**: `/api/organization-units/*`, `/api/learning-groups/*`
+- **Routes**: `/settings` (User & Group Management card link), Setup Wizard `/status` step `'org-structure'`.
 - **Events**: Background scheduler tasks run periodically (every hour) to purge expired units, auto-expire temporary groups, and dispatch email reminders via `EmailService`.
-- **Dependencies**: Express, Prisma ORM, crypto, Node.js
+- **Dependencies**: Express, Prisma ORM, Node.js, React, i18next, motion/react, lucide-react
 
 

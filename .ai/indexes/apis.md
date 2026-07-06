@@ -346,4 +346,28 @@ Every documented endpoint logs:
 - **Used By**: Group member list removal action
 - **Permissions**: Requires active session with `"organization:manage-members"` permission (Superuser bypasses)
 
+### 42. Get Expiring Learning Groups
+- **Endpoint**: `/api/learning-groups/expiring`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `[{ id, name, isTemporary, expiresAt, reminderSentAt }]` (200 OK)
+- **Used By**: `ExpiringGroupsTab` component
+- **Permissions**: Requires active session with `"organization:view"` permission (Superuser bypasses)
+
+### 43. Extend Learning Group Expiration
+- **Endpoint**: `/api/learning-groups/:id/extend`
+- **Method**: `PATCH`
+- **Request**: `{ newExpiresAt }`
+- **Response**: `{ id, name, expiresAt, ... }` (200 OK)
+- **Used By**: `ExpiringGroupsTab` component (Extend button)
+- **Permissions**: Requires active session with `"organization:manage-groups"` permission (Superuser bypasses)
+
+### 44. Create Setup Org Structure
+- **Endpoint**: `/api/setup/org-structure`
+- **Method**: `POST`
+- **Request**: `{ ouNames }`
+- **Response**: `{ success: true, company: { id, name, ... } }` (200 OK)
+- **Used By**: `SetupWizard` (Step 3: Org Structure)
+- **Permissions**: Requires active superuser session cookie (`sid`) (reaches 403 Forbidden if setup status is already `complete`)
+
 

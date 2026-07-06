@@ -3,13 +3,14 @@ import { emailPasswordAuthProvider } from './auth.service';
 import { seedSuperuserRoles } from '../../../../prisma/seed/rbacSeed';
 import { roleTemplatesService } from '../../rbac/services/roleTemplates.service';
 
-export type SetupStep = 'superuser' | 'company' | 'role-templates' | 'complete';
+export type SetupStep = 'superuser' | 'company' | 'org-structure' | 'role-templates' | 'complete';
 
 export class SetupWizardService {
   /**
    * Returns which step is needed next, inferred from database row state:
    * - no superuser row → step "superuser"
    * - superuser exists but no company is linked/exists → step "company"
+   * - company exists but org-structure is not completed → step "org-structure"
    * - company exists but Company.setupCompletedAt is null → step "role-templates"
    * - setupCompletedAt is present → "complete"
    */
@@ -24,6 +25,13 @@ export class SetupWizardService {
     const company = await prisma.company.findFirst();
     if (!company) {
       return 'company';
+    }
+
+    // Check if org-structure step is complete
+    const settings = company.settings as any;
+    const orgCompleted = settings?.orgStructureStepCompleted === true;
+    if (!orgCompleted) {
+      return 'org-structure';
     }
 
     if (!company.setupCompletedAt) {
@@ -142,6 +150,45 @@ export class SetupWizardService {
     }
 
     return company;
+  }
+
+  async completeOrgStructureStep(companyId: string, ouNames: string[]) {
+    const status = await this.getStatus();
+    if (status === 'complete' || status === 'role-templates') {
+      throw new Error('Organization setup is already complete.');
+    }
+    if (status === 'superuser') {
+      throw new Error('Superuser must be created before completing organization setup.');
+    }
+    if (status === 'company') {
+      throw new Error('Company must be set up before completing organization setup.');
+    }
+
+    // Create the top-level OUs
+    for (const name of ouNames) {
+      const trimmed = name.trim();
+      if (trimmed) {
+        await prisma.organizationUnit.create({
+          data: {
+            name: trimmed,
+            companyId,
+            parentId: null
+          }
+        });
+      }
+    }
+
+    // Save the completion flag in company settings
+    const company = await prisma.company.findUnique({ where: { id: companyId } });
+    const currentSettings = (company?.settings as any) || {};
+    const updatedSettings = { ...currentSettings, orgStructureStepCompleted: true };
+
+    return await prisma.company.update({
+      where: { id: companyId },
+      data: {
+        settings: updatedSettings
+      }
+    });
   }
 
   /**

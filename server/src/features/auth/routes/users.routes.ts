@@ -10,6 +10,30 @@ import { PASSWORD_RESET_TTL_SECONDS } from '../../../shared/constants';
 const router = Router();
 
 /**
+ * GET /api/users
+ * Returns a list of active users for the current company.
+ */
+router.get('/', requirePermission('organization', 'view'), async (req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        companyId: req.user!.companyId!,
+        status: 'ACTIVE'
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        status: true
+      }
+    });
+    return res.json(users);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to list users.' });
+  }
+});
+
+/**
  * POST /api/users/invite -> { email }
  * Requires users:create permission.
  * Returns the created user's id and status only.

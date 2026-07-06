@@ -20,7 +20,7 @@ interface UserIdentity {
 
 interface AuthContextType {
   user: UserIdentity | null;
-  setupStatus: 'superuser' | 'company' | 'role-templates' | 'complete' | null;
+  setupStatus: 'superuser' | 'company' | 'org-structure' | 'role-templates' | 'complete' | null;
   isLoading: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
@@ -52,7 +52,7 @@ interface AppGateProps {
 
 export function AppGate({ children }: AppGateProps) {
   const { t } = useTranslation();
-   const [setupStatus, setSetupStatus] = useState<'superuser' | 'company' | 'role-templates' | 'complete' | null>(null);
+   const [setupStatus, setSetupStatus] = useState<'superuser' | 'company' | 'org-structure' | 'role-templates' | 'complete' | null>(null);
   const [user, setUser] = useState<UserIdentity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -155,6 +155,26 @@ export function AppGate({ children }: AppGateProps) {
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data.error || 'Failed to complete company step.');
+    }
+
+    await checkStatusAndSession();
+  };
+
+  const triggerOrgStructureSubmit = async (ouNames: string[]) => {
+    const res = await fetch('/api/setup/org-structure', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCookie('csrfToken'),
+      },
+      body: JSON.stringify({
+        ouNames,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to complete organization structure step.');
     }
 
     await checkStatusAndSession();
@@ -267,13 +287,14 @@ export function AppGate({ children }: AppGateProps) {
   }
 
   // Gate 1: Setup Wizard Required
-  if (setupStatus === 'superuser' || setupStatus === 'company' || setupStatus === 'role-templates') {
+  if (setupStatus === 'superuser' || setupStatus === 'company' || setupStatus === 'org-structure' || setupStatus === 'role-templates') {
     return (
       <AuthContext.Provider value={authContextValue}>
         <SetupWizard
           step={setupStatus}
           onSuperuserSubmit={triggerSuperuserSubmit}
           onCompanySubmit={triggerCompanySubmit}
+          onOrgStructureSubmit={triggerOrgStructureSubmit}
           onRoleTemplatesSubmit={triggerRoleTemplatesSubmit}
         />
       </AuthContext.Provider>
