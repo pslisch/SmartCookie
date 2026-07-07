@@ -61,7 +61,7 @@ if [ "$CONFIRMED" = "false" ]; then
         echo "To confirm, please type the confirmation phrase 'DELETE-ALL-SMARTCOOKIE-DATA':"
     fi
     
-    read -p "Confirmation input: " CONFIRM_INPUT
+    read -p "Confirmation input: " CONFIRM_INPUT < /dev/tty
     
     if [ -n "$DETECTED_DOMAIN" ]; then
         if [ "$CONFIRM_INPUT" != "$DETECTED_DOMAIN" ] && [ "$CONFIRM_INPUT" != "DELETE-ALL-SMARTCOOKIE-DATA" ]; then

@@ -52,28 +52,28 @@ INSTALL_DIR="/opt/smartcookie" # default fallback
 if [ "$SETUP_APACHE" = "true" ]; then
     echo "----------------------------------------------------"
     echo "Configure installation directory path:"
-    echo "  1) Default: /var/www/"
-    echo "  2) Subpath: /var/www/{path extension}"
-    echo "  3) Custom:  Enter full absolute path"
+    echo "  1) Leave default: /opt/smartcookie"
+    echo "  2) /var/www/"
+    echo "  3) /var/www/{path extension}"
+    echo "  4) Custom: Enter full absolute path"
     echo "----------------------------------------------------"
-    read -p "Select path option [1, 2, or 3, default: 1]: " PATH_OPTION < /dev/tty
+    read -p "Select path option [1-4, default: 1]: " PATH_OPTION < /dev/tty
     PATH_OPTION=${PATH_OPTION:-"1"}
 
     if [ "$PATH_OPTION" = "1" ]; then
-        # If option 1: default "/var/www/" (which clones directly under /var/www/smartcookie or /var/www/)
-        # Since cloning directly into /var/www/ could cause issues if it is non-empty, let's use /var/www/
-        # but check if they want to use /var/www/smartcookie or literal /var/www/
-        INSTALL_DIR="/var/www/"
+        INSTALL_DIR="/opt/smartcookie"
     elif [ "$PATH_OPTION" = "2" ]; then
-        # If option 2: to subpath "/var/www/{path extension entered by user}"
+        INSTALL_DIR="/var/www/"
+    elif [ "$PATH_OPTION" = "3" ]; then
+        # If option 3: to subpath "/var/www/{path extension entered by user}"
         read -p "Enter path extension (creating /var/www/{extension}): " PATH_EXT < /dev/tty
         while [ -z "$PATH_EXT" ]; do
             echo_warning "Path extension cannot be empty."
             read -p "Enter path extension (creating /var/www/{extension}): " PATH_EXT < /dev/tty
         done
         INSTALL_DIR="/var/www/$PATH_EXT"
-    elif [ "$PATH_OPTION" = "3" ]; then
-        # If option 3: custom (User writes the full path)
+    elif [ "$PATH_OPTION" = "4" ]; then
+        # If option 4: custom (User writes the full path)
         read -p "Enter full absolute path for installation: " CUSTOM_PATH < /dev/tty
         while [ -z "$CUSTOM_PATH" ] || [[ ! "$CUSTOM_PATH" =~ ^/ ]]; do
             echo_warning "A valid absolute path starting with / is required."
@@ -81,7 +81,7 @@ if [ "$SETUP_APACHE" = "true" ]; then
         done
         INSTALL_DIR="$CUSTOM_PATH"
     else
-        INSTALL_DIR="/var/www/"
+        INSTALL_DIR="/opt/smartcookie"  # new default fallback, was /var/www/
     fi
 else
     # If SETUP_APACHE is false, we can prompt for custom path or use default /opt/smartcookie
@@ -127,6 +127,8 @@ if ! git clone "$REPO_URL" "$INSTALL_DIR"; then
 fi
 
 echo_success "Repository successfully cloned to $INSTALL_DIR."
+
+chmod +x "$INSTALL_DIR"/deploy/*.sh
 
 # Change directory and transfer execution to install.sh
 cd "$INSTALL_DIR"

@@ -59,7 +59,7 @@ echo "or should this set up a new self-hosted one (Postal)?"
 echo "  1) Set up a new self-hosted mail server (Postal)"
 echo "  2) Connect to an existing external mail server"
 echo "===================================================="
-read -p "Select option [1 or 2, default: 1]: " MAIL_OPTION
+read -p "Select option [1 or 2, default: 1]: " MAIL_OPTION < /dev/tty
 if [ "$MAIL_OPTION" = "2" ]; then
     MAIL_MODE="existing"
     echo_info "Selected Path B: Connect to an existing mail server."
@@ -170,7 +170,7 @@ if [ "$MAIL_MODE" = "new" ]; then
     echo "       Create an SMTP credential and note the Username and Password."
     echo "========================================================================="
     echo ""
-    read -p "Press [ENTER] once you have generated SMTP credentials in Postal to continue..."
+    read -p "Press [ENTER] once you have generated SMTP credentials in Postal to continue..." < /dev/tty
 
     # 8. Gathers SMTP details and wires them directly into .env (Task 9)
     echo ""
@@ -178,23 +178,23 @@ if [ "$MAIL_MODE" = "new" ]; then
     echo_info "STAGE 8: Wiring Postal SMTP into SmartCookie..."
     echo "----------------------------------------------------"
 
-    read -p "Enter Postal SMTP Host [default: 127.0.0.1]: " SMTP_HOST
+    read -p "Enter Postal SMTP Host [default: 127.0.0.1]: " SMTP_HOST < /dev/tty
     SMTP_HOST=${SMTP_HOST:-"127.0.0.1"}
 
-    read -p "Enter Postal SMTP Port [default: 25]: " SMTP_PORT
+    read -p "Enter Postal SMTP Port [default: 25]: " SMTP_PORT < /dev/tty
     SMTP_PORT=${SMTP_PORT:-"25"}
 
-    read -p "Enter Postal SMTP Username: " SMTP_USER
+    read -p "Enter Postal SMTP Username: " SMTP_USER < /dev/tty
     while [ -z "$SMTP_USER" ]; do
         echo_warning "SMTP Username cannot be empty."
-        read -p "Enter Postal SMTP Username: " SMTP_USER
+        read -p "Enter Postal SMTP Username: " SMTP_USER < /dev/tty
     done
 
-    read -s -p "Enter Postal SMTP Password: " SMTP_PASS
+    read -s -p "Enter Postal SMTP Password: " SMTP_PASS < /dev/tty
     echo ""
     while [ -z "$SMTP_PASS" ]; do
         echo_warning "SMTP Password cannot be empty."
-        read -s -p "Enter Postal SMTP Password: " SMTP_PASS
+        read -s -p "Enter Postal SMTP Password: " SMTP_PASS < /dev/tty
         echo ""
     done
 

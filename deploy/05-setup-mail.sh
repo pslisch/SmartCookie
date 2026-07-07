@@ -58,7 +58,7 @@ if [ -z "$MAIL_MODE" ]; then
     echo "Do you already have a mail server to connect to, or should this set up a new self-hosted one (Postal)?"
     echo "  1) Set up a new self-hosted mail server (Postal)"
     echo "  2) Connect to an existing external mail server"
-    read -p "Select option [1 or 2, default: 1]: " MAIL_OPTION
+    read -p "Select option [1 or 2, default: 1]: " MAIL_OPTION < /dev/tty
     if [ "$MAIL_OPTION" = "2" ]; then
         MAIL_MODE="existing"
     else
@@ -91,10 +91,10 @@ if [ "$MAIL_MODE" = "existing" ]; then
             echo "     - Outlook / Office 365: smtp.office365.com"
             echo "----------------------------------------------------"
         fi
-        read -p "Enter SMTP Host: " SMTP_HOST
+        read -p "Enter SMTP Host: " SMTP_HOST < /dev/tty
         while [ -z "$SMTP_HOST" ]; do
             echo_warning "SMTP Host cannot be empty."
-            read -p "Enter SMTP Host: " SMTP_HOST
+            read -p "Enter SMTP Host: " SMTP_HOST < /dev/tty
         done
 
         if [ "$FAST_MODE" = "false" ]; then
@@ -109,7 +109,7 @@ if [ "$MAIL_MODE" = "existing" ]; then
             echo "          to each other, not for client authentication like this."
             echo "----------------------------------------------------"
         fi
-        read -p "Enter SMTP Port [default: 587]: " SMTP_PORT
+        read -p "Enter SMTP Port [default: 587]: " SMTP_PORT < /dev/tty
         SMTP_PORT=${SMTP_PORT:-"587"}
 
         if [ "$FAST_MODE" = "false" ]; then
@@ -123,10 +123,10 @@ if [ "$MAIL_MODE" = "existing" ]; then
             echo "     API user ID (e.g., 'apikey')."
             echo "----------------------------------------------------"
         fi
-        read -p "Enter SMTP Username: " SMTP_USER
+        read -p "Enter SMTP Username: " SMTP_USER < /dev/tty
         while [ -z "$SMTP_USER" ]; do
             echo_warning "SMTP Username cannot be empty."
-            read -p "Enter SMTP Username: " SMTP_USER
+            read -p "Enter SMTP Username: " SMTP_USER < /dev/tty
         done
 
         if [ "$FAST_MODE" = "false" ]; then
@@ -140,11 +140,11 @@ if [ "$MAIL_MODE" = "existing" ]; then
             echo "   • For safety, your typing will be hidden as you enter this password."
             echo "----------------------------------------------------"
         fi
-        read -s -p "Enter SMTP Password: " SMTP_PASS
+        read -s -p "Enter SMTP Password: " SMTP_PASS < /dev/tty
         echo ""
         while [ -z "$SMTP_PASS" ]; do
             echo_warning "SMTP Password cannot be empty."
-            read -s -p "Enter SMTP Password: " SMTP_PASS
+            read -s -p "Enter SMTP Password: " SMTP_PASS < /dev/tty
             echo ""
         done
 
@@ -160,7 +160,7 @@ if [ "$MAIL_MODE" = "existing" ]; then
             echo "     by receivers (like Gmail or Yahoo) or land directly in spam."
             echo "----------------------------------------------------"
         fi
-        read -p "Enter SMTP From-Address [default: no-reply@$DOMAIN]: " SMTP_FROM
+        read -p "Enter SMTP From-Address [default: no-reply@$DOMAIN]: " SMTP_FROM < /dev/tty
         SMTP_FROM=${SMTP_FROM:-"no-reply@$DOMAIN"}
 
         echo_info "Testing SMTP connection and authentication to $SMTP_HOST:$SMTP_PORT..."
@@ -218,7 +218,7 @@ EOF
             echo_error "SMTP Connection test FAILED!"
             echo "Error details: $SMTP_ERR_MSG"
             echo "----------------------------------------------------"
-            read -p "Would you like to try configuring SMTP credentials again? [Y/n]: " TRY_AGAIN
+            read -p "Would you like to try configuring SMTP credentials again? [Y/n]: " TRY_AGAIN < /dev/tty
             TRY_AGAIN=${TRY_AGAIN:-"y"}
             if [[ "$TRY_AGAIN" =~ ^[Nn] ]]; then
                 echo_error "SMTP verification failed. Aborting installation."
@@ -327,7 +327,7 @@ else
     echo "Creating the Postal Admin User. Please enter details:"
     echo "----------------------------------------------------"
     # postal make-user is interactive, we call it directly
-    if ! sudo postal make-user; then
+    if ! sudo postal make-user < /dev/tty; then
         echo_warning "Admin user creation prompt was closed or failed."
         echo "You can create users manually later via: sudo postal make-user"
     fi

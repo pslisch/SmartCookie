@@ -91,6 +91,8 @@ if ! git reset --hard origin/main; then
     exit 1
 fi
 
+chmod +x deploy/*.sh
+
 # 3. Update dependencies and regenerate Prisma client
 echo_info "Installing npm packages and updating dependencies..."
 if ! npm install; then
