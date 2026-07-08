@@ -13,7 +13,7 @@ Every permission profile should eventually list:
 
 ---
 
-## 🟢 Access Profiles & Permission Layers (v1.5.0)
+## 🟢 Access Profiles & Permission Layers (v1.7.0)
 
 First-class Role, Permission, and RolePermission tables are fully established in the database schema. Access enforcement and middleware are active, gating all secure routes on the backend and controlling feature access on the frontend.
 
@@ -44,3 +44,10 @@ Every permission represents a logical action on a module:
 | `organization` | `delete` | Soft-delete and restore organization units and learning groups | `DELETE /api/organization-units/:id`, `POST /api/organization-units/:id/restore`, `DELETE /api/learning-groups/:id`, `POST /api/learning-groups/:id/restore` | Delete and Restore actions |
 | `organization` | `manage-members` | Manage organization unit managers and group members | `POST /api/organization-units/:id/managers`, `DELETE /api/organization-units/:id/managers/:userId`, `POST /api/learning-groups/:id/members`, `DELETE /api/learning-groups/:id/members/:userId` | Member/manager list managers |
 | `organization` | `manage-groups` | Advanced management and configuration of temporary/permanent learning groups | - | Email reminder notification list recipient |
+| `assignments` | `view` | View personal and admin assignments, self-assign and complete assignments | `GET /api/assignments`, `POST /api/assignments/self-assign`, `DELETE /api/assignments/self-assign/:instanceId`, `POST /api/assignment-instances/:id/complete` | Course catalog, My Lessons list |
+| `assignments` | `create` | Schedule optional learning assignments for lessons or courses | `POST /api/assignments`, `POST /api/assignments/course` | Lesson/Course details panels |
+| `assignments` | `create-mandatory` | Schedule mandatory learning assignments for lessons or courses | `POST /api/assignments`, `POST /api/assignments/course` | Mandatory checkbox toggle |
+| `assignments` | `delete` | Cancel and soft-delete administrative learning assignments | `DELETE /api/assignments/:id` | Assignments management list |
+| `assignments` | `view-reports` | View individual learner progress reports for assignments | `GET /api/assignments/:id/instances` | Admin dashboard reports |
+| `assignments` | `edit` | Reactivate archived/suspended users and resolve dynamic memberships | `POST /api/users/:id/reactivate` | User profile list controls |
+

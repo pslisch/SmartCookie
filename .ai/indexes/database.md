@@ -164,14 +164,106 @@ This index describes the data models, entity relationships, and schemas supporti
 - **Relations**:
   - Belongs to `User` (via `userId`, cascade deletes on token)
 
+### Assignments (`assignments`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `lessonId` (String, Foreign Key to `lessons.id`)
+  - `assignmentType` (Enum: `IMMEDIATE`, `SCHEDULED`)
+  - `scheduledFor` (DateTime, Nullable)
+  - `dueDateDefaultDays` (Int, Nullable)
+  - `isMandatory` (Boolean, Default: `false`)
+  - `createdById` (String, Foreign Key to `users.id`)
+  - `ownerId` (String, Foreign Key to `users.id`)
+  - `status` (Enum: `DRAFT`, `SCHEDULED`, `ACTIVE`, `CANCELLED`, `ARCHIVED`, Default: `DRAFT`)
+  - `courseAssignmentBatchId` (String, Nullable, UUID grouping assignments made for a Course)
+  - `deletedAt` (DateTime, Nullable, soft-deletion timestamp)
+  - `permanentDeleteAt` (DateTime, Nullable, timestamp for permanent purging after 14 days)
+  - `deletionBatchId` (String, Nullable, UUID of soft-deletion batch)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`)
+  - Belongs to `Lesson` (via `lessonId`)
+  - Belongs to `User` as creator (via `createdById`)
+  - Belongs to `User` as owner (via `ownerId`)
+  - Has many `AssignmentTarget`s (via `targets`)
+  - Has many `UserAssignmentInstance`s (via `userAssignmentInstances`)
+
+### Assignment Targets (`assignment_targets`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `assignmentId` (String, Foreign Key to `assignments.id`)
+  - `userId` (String, Nullable, Foreign Key to `users.id`)
+  - `organizationUnitId` (String, Nullable, Foreign Key to `organization_units.id`)
+  - `learningGroupId` (String, Nullable, Foreign Key to `learning_groups.id`)
+  - `createdAt` (DateTime, Default: `now()`)
+- **Relations**:
+  - Belongs to `Assignment` (via `assignmentId`, cascade on delete)
+  - Belongs to `User` (via `userId`, cascade on delete)
+  - Belongs to `OrganizationUnit` (via `organizationUnitId`, cascade on delete)
+  - Belongs to `LearningGroup` (via `learningGroupId`, cascade on delete)
+
+### User Assignment Instances (`user_assignment_instances`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `assignmentId` (String, Foreign Key to `assignments.id`)
+  - `userId` (String, Foreign Key to `users.id`)
+  - `status` (Enum: `DRAFT`, `SCHEDULED`, `ACTIVE`, `COMPLETED`, `CANCELLED`, `ARCHIVED`, Default: `ACTIVE`)
+  - `dueDate` (DateTime, Nullable)
+  - `startedAt` (DateTime, Nullable)
+  - `completedAt` (DateTime, Nullable)
+  - `progressPercent` (Int, Default: 0)
+  - `deletedAt` (DateTime, Nullable, soft-deletion timestamp)
+  - `permanentDeleteAt` (DateTime, Nullable, timestamp for permanent purging after 14 days)
+  - `deletionBatchId` (String, Nullable, UUID of soft-deletion batch)
+  - `lastReminderSentAt` (DateTime, Nullable, timestamp of last overdue email)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Indexes & Constraints**:
+  - Unique composite index on `(assignmentId, userId)`
+- **Relations**:
+  - Belongs to `Assignment` (via `assignmentId`, cascade on delete)
+  - Belongs to `User` (via `userId`, cascade on delete)
+  - Has many `UserAssignmentInstanceSource`s (via `sources`)
+
+### User Assignment Instance Sources (`user_assignment_instance_sources`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `userAssignmentInstanceId` (String, Foreign Key to `user_assignment_instances.id`)
+  - `sourceType` (Enum: `MANUAL`, `ORGANIZATION_UNIT`, `LEARNING_GROUP`, `SELF_ASSIGNED`, `MANDATORY`, `API`)
+  - `sourceOrganizationUnitId` (String, Nullable, Foreign Key to `organization_units.id`)
+  - `sourceLearningGroupId` (String, Nullable, Foreign Key to `learning_groups.id`)
+  - `createdAt` (DateTime, Default: `now()`)
+- **Relations**:
+  - Belongs to `UserAssignmentInstance` (via `userAssignmentInstanceId`, cascade on delete)
+  - Belongs to `OrganizationUnit` (via `sourceOrganizationUnitId`, cascade on delete)
+  - Belongs to `LearningGroup` (via `sourceLearningGroupId`, cascade on delete)
+
+### Audit Logs (`audit_logs`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `entityType` (String)
+  - `entityId` (String)
+  - `action` (String)
+  - `actorId` (String, Nullable, Foreign Key to `users.id`)
+  - `metadata` (Json, Nullable)
+  - `createdAt` (DateTime, Default: `now()`)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to `User` as actor (via `actorId`, set null on delete)
+
+
 ---
 
-## 🟢 Schema Registry (v1.6.0)
+## 🟢 Schema Registry (v1.7.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
 - **v1.3.0**: Made `passwordHash` and `recoveryEmail` fields nullable for pending invited users and superuser-specific isolation respectively. Added raw SQL CHECK constraint enforcing `passwordHash` presence for active users.
 - **v1.4.0**: Added Role, Permission, and RolePermission tables to establish first-class role-based access control (RBAC). Linked Users to Roles and added inheritance control to Companies.
 - **v1.5.0**: Synchronized company-level settings toggles (`roleInheritanceEnabled`) and mapped permission relationships across all session and page lifecycles.
-- **v1.6.0 (Current)**: Multi-Tenant Organization Model MVP. Added `OrganizationUnit`, `LearningGroup`, and `Membership` models. Extended `Company` with `domain` and `settings`. Included strict CHECK constraints and cascading soft-delete triggers.
+- **v1.6.0**: Multi-Tenant Organization Model MVP. Added `OrganizationUnit`, `LearningGroup`, and `Membership` models. Extended `Company` with `domain` and `settings`. Included strict CHECK constraints and cascading soft-delete triggers.
+- **v1.7.0 (Current)**: Learning Assignments & Target Resolution Engine. Added `Assignment`, `AssignmentTarget`, `UserAssignmentInstance`, `UserAssignmentInstanceSource`, and `AuditLog` models. Enhanced `UserAssignmentInstance` with `last_reminder_sent_at` column for automated notification tracking. Added cascading soft-deletes and scheduled cleanup tasks.
 

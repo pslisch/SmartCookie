@@ -12,30 +12,40 @@ import crypto from 'crypto';
 export function csrfProtection(req: Request, res: Response, next: NextFunction) {
   const safeMethods = ['GET', 'HEAD', 'OPTIONS', 'TRACE'];
   
-  // 1. If it's a safe method, generate/ensure the cookie exists
+  // 1. If it's a safe method, generate/ensure the cookies exist
   if (safeMethods.includes(req.method)) {
-    let token = req.cookies?.csrfToken;
+    let token = req.cookies?.csrfToken || req.cookies?.['XSRF-TOKEN'];
     if (!token) {
       token = crypto.randomBytes(24).toString('hex');
-      res.cookie('csrfToken', token, {
-        httpOnly: false, // Must be readable by client-side JS to submit back
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-      });
     }
+    
+    // Set both cookie formats for cross-compatibility
+    res.cookie('csrfToken', token, {
+      httpOnly: false, // Must be readable by client-side JS to submit back
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+    });
+    res.cookie('XSRF-TOKEN', token, {
+      httpOnly: false, // Must be readable by client-side JS to submit back
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+    });
+
     // Also attach to response headers for ease of programmatic inspection
     res.setHeader('X-CSRF-Token', token);
     return next();
   }
 
   // 2. For state-changing methods, validate the token
-  const cookieToken = req.cookies?.csrfToken;
-  const headerToken = req.headers['x-csrf-token'] as string | undefined;
+  const cookieToken = req.cookies?.csrfToken || req.cookies?.['XSRF-TOKEN'];
+  const headerToken = (req.headers['x-csrf-token'] || req.headers['x-xsrf-token']) as string | undefined;
   const bodyToken = req.body?._csrf as string | undefined;
   const submittedToken = headerToken || bodyToken;
 
   if (!cookieToken || !submittedToken || cookieToken !== submittedToken) {
+    console.error(`CSRF mismatch: cookieToken=${cookieToken}, headerToken=${headerToken}, bodyToken=${bodyToken}`);
     return res.status(403).json({
       error: 'Forbidden: CSRF token mismatch or missing.',
     });

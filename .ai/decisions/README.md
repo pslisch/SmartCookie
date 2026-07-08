@@ -127,6 +127,65 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0010] Separation of Assignment Administrative Intent and Materialized Learner Instances
+- **Status**: Approved
+- **Date**: 2026-07-08
+- **Authors**: AI Coding Agent
+- **Context**: When assigning learning content (lessons or courses) to broad targets such as Organization Units (OUs), Learning Groups, or individual users, a simple relational schema would face heavy data duplication or state-tracking bottlenecks if a single table was used. It must be easy to cancel/soft-delete an administrative assignment while managing individual user progress records cleanly.
+- **Decision**:
+  - Split the domain into two physical models: `Assignment` (tracks the admin's intention, targeting configuration, and schedules) and `UserAssignmentInstance` (tracks the direct user state: started/completed timestamps, progress percentage, due date, and reminder histories).
+  - Use `AssignmentTarget` to represent individual targeting records (polymorphic relation to `userId`, `organizationUnitId`, or `learningGroupId`).
+  - Introduce `courseAssignmentBatchId` to group lesson-level `Assignment` entries when an entire Course is assigned, allowing lessons within a course to fan out and materialize in parallel while retaining an administrative batch linkage.
+- **Consequences**:
+  - **Positives**: Extreme clarity in data models; simple index constraints; very fast progress and completions queries on `UserAssignmentInstance`; easy bulk-soft-deletion of assignments and their associated instances using cascade triggers.
+  - **Negatives**: Requires maintaining target-to-instance mappings during creation and active syncing.
+
+---
+
+### [ADR-0011] Multi-Source Qualifying Links & Dynamic Membership Hooks
+- **Status**: Approved
+- **Date**: 2026-07-08
+- **Authors**: AI Coding Agent
+- **Context**: In an enterprise LMS, a user can easily qualify for the same lesson assignment from multiple overlapping sources (e.g., they are assigned a lesson directly as a user, they belong to an OU that was assigned the lesson, and they belong to a Learning Group that was assigned the same lesson). If they leave the group, their active assignment instance should not be cancelled if they still qualify via the OU or user assignment.
+- **Decision**:
+  - Create the `UserAssignmentInstanceSource` model. For every qualifying assignment targeting path that resolves to a user, create a source link with a type (e.g., `MANUAL`, `ORGANIZATION_UNIT`, `LEARNING_GROUP`).
+  - Keep a single `UserAssignmentInstance` record per user and lesson (enforced by a database-level `@@unique([assignmentId, userId])` index constraint) with multiple `UserAssignmentInstanceSource` child links.
+  - **Dynamic Hooks (`MembershipAssignmentHooksService`)**: Wire transactional hooks on membership creation and removal. When a user is added to a group/OU, create any matching assignment sources (and materialize instances if they don't exist). When a user leaves a group/OU, delete the associated source link. If the `UserAssignmentInstance` has no remaining sources, automatically mark its status as `CANCELLED`.
+- **Consequences**:
+  - **Positives**: Complete protection against duplicate learning assignments; robust resilience when users move between overlapping cohorts; automated lifecycle cleanup.
+  - **Negatives**: Increased complexity in membership management code; requires database cascade or manual transaction isolation during membership updates.
+
+---
+
+### [ADR-0012] Explicit Non-Retroactivity Simplification for OU Moves
+- **Status**: Approved
+- **Date**: 2026-07-08
+- **Authors**: AI Coding Agent
+- **Context**: When an employee is promoted, transferred, or moves from one formal department (Organization Unit) to another, their historical learning record and active training tracks must remain predictable and stable. Retroactively removing all active trainings from their old department and assigning all trainings from their new department could trigger massive accidental data loss (e.g., deleting a completed training because the old department is no longer assigned, or overwhelming them with 20 newly assigned lessons).
+- **Decision**:
+  - Implement a strict, explicit simplification: **Moving a user to a different OU does NOT retroactively reconcile assignments**. Previously materialized assignment instances and completed training logs remain fully intact.
+  - Only direct membership modifications in active OUs/Groups (explicit joins/leaves) trigger dynamic synchronization.
+  - This design choice is spelled out clearly for future engineers to preserve training compliance stability and prevent accidental compliance deletion.
+- **Consequences**:
+  - **Positives**: Complete predictability of historical user states; compliance record preservation; prevents unexpected cascading database deletions or accidental mass notifications.
+  - **Negatives**: Admins must manually assign new trainings or rely on future-scheduled assignments for incoming transfers.
+
+---
+
+### [ADR-0013] Generic Reusable Audit Log and Dynamic Overdue Reminder Engine
+- **Status**: Approved
+- **Date**: 2026-07-08
+- **Authors**: AI Coding Agent
+- **Context**: Regulatory training compliance requires robust auditing of all system changes. Furthermore, reminding users of overdue training is a primary requirement, but must be throttled to avoid spamming.
+- **Decision**:
+  - **AuditLog**: Create a central `audit_logs` model that maps a polymorphic `entityType` and `entityId` to an `action` and `metadata` JSON blob. This is integrated directly via a generic `AuditLogService` used by all business domains (assignments, user management, group changes).
+  - **Throttling Overdue Alerts**: Add a `lastReminderSentAt` column directly on `UserAssignmentInstance`. The daily scheduler task (`purgeExpiredAssignments` & `sendBasicReminders`) runs a check of active past-due assignments. It only dispatches a notification if the current date is at least 14 days after `lastReminderSentAt` (or if no reminder was ever sent), setting the timestamp upon successful dispatch.
+- **Consequences**:
+  - **Positives**: High-fidelity compliance trail; very low operational risk; completely prevents email spamming for overdue courses.
+  - **Negatives**: The 14-day throttle is globally hardcoded in this MVP pass and cannot be customized per-assignment.
+
+---
+
 ## 🔮 Planned ADRs (updated)
 
 - **ADR-0006: Authentication Strategy**: Detailing the Superuser,

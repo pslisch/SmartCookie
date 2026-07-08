@@ -43,6 +43,9 @@ if [ "$REAL_USER" = "root" ]; then
     REAL_USER=$(logname 2>/dev/null || echo "root")
 fi
 
+echo_info "Setting ownership of installation directory to $REAL_USER..."
+sudo chown -R "$REAL_USER":"$REAL_USER" "$PROJECT_ROOT"
+
 # Resolve Node.js absolute path (standard pathing might change on VPS systems)
 NODE_PATH=$(which node || echo "/usr/bin/node")
 

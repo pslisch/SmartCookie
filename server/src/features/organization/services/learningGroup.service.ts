@@ -1,5 +1,6 @@
 import { prisma } from '../../../shared/db/prisma';
 import crypto from 'crypto';
+import { membershipAssignmentHooksService } from '../../assignments/services/membershipAssignmentHooks.service';
 
 export class LearningGroupService {
   async create(
@@ -146,7 +147,7 @@ export class LearningGroupService {
       return existing;
     }
 
-    return await prisma.membership.create({
+    const result = await prisma.membership.create({
       data: {
         userId,
         learningGroupId,
@@ -156,6 +157,9 @@ export class LearningGroupService {
         createdById: creatorId
       }
     });
+
+    await membershipAssignmentHooksService.onMembershipCreated(result.id);
+    return result;
   }
 
   async removeMember(userId: string, learningGroupId: string) {
@@ -169,6 +173,8 @@ export class LearningGroupService {
         deletedAt: new Date()
       }
     });
+
+    await membershipAssignmentHooksService.onMembershipDeleted(userId, null, learningGroupId);
     return { success: true };
   }
 

@@ -8,6 +8,7 @@ import { SESSION_DURATION_MS, PASSWORD_RESET_TTL_SECONDS } from '../../../shared
 import { TokenService } from '../../../shared/token/token.service';
 import { TokenPurpose } from '@prisma/client';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
+import { mandatoryAssignmentService } from '../../assignments/services/mandatoryAssignment.service';
 
 const router = Router();
 
@@ -41,10 +42,10 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
     // Set HTTP-only session cookie
     res.cookie('sid', session.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     let roleName: string | null = null;
@@ -220,6 +221,9 @@ router.post('/activate', async (req: Request, res: Response) => {
       },
     });
 
+    // Auto-create instances for mandatory assignments
+    await mandatoryAssignmentService.onUserActivated(updatedUser.id);
+
     // Create session in the DB
     const expiresAt = new Date(Date.now() + SESSION_DURATION_MS); // 30 days
     const session = await prisma.session.create({
@@ -234,10 +238,10 @@ router.post('/activate', async (req: Request, res: Response) => {
     // Set HTTP-only session cookie
     res.cookie('sid', session.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     let roleName: string | null = null;
@@ -383,10 +387,10 @@ router.post('/reset-password', async (req: Request, res: Response) => {
     // Set the HTTP-only session cookie
     res.cookie('sid', session.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     let roleName: string | null = null;

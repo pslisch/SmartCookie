@@ -3,10 +3,11 @@ import { recoveryEmailChangedTemplate, RecoveryEmailChangedData } from './templa
 import { invitationTemplate, InvitationData } from './templates/invitation';
 import { passwordResetTemplate, PasswordResetData } from './templates/passwordReset';
 import { groupExpirationTemplate, GroupExpirationData } from './templates/groupExpiration';
+import { assignmentReminderTemplate, AssignmentReminderData } from './templates/assignmentReminder';
 
-export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration';
+export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder';
 
-export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData;
+export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData;
 
 export interface EmailService {
   send(to: string, template: EmailTemplateName, data: EmailTemplateData): Promise<void>;
@@ -72,6 +73,13 @@ class EmailServiceImpl implements EmailService {
       }
       case 'group-expiration': {
         const rendered = groupExpirationTemplate(data as GroupExpirationData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
+      case 'assignment-reminder': {
+        const rendered = assignmentReminderTemplate(data as AssignmentReminderData);
         subject = rendered.subject;
         text = rendered.text;
         html = rendered.html;

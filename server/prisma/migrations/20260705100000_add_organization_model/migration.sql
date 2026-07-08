@@ -50,6 +50,10 @@ CREATE TABLE `memberships` (
     `deletion_batch_id` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    CONSTRAINT `memberships_exclusive_target_check` CHECK (
+        (`organization_unit_id` IS NOT NULL AND `learning_group_id` IS NULL) OR
+        (`organization_unit_id` IS NULL AND `learning_group_id` IS NOT NULL)
+    ),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -69,16 +73,10 @@ ALTER TABLE `learning_groups` ADD CONSTRAINT `learning_groups_parent_group_id_fk
 ALTER TABLE `memberships` ADD CONSTRAINT `memberships_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey (Membership to OrganizationUnit)
-ALTER TABLE `memberships` ADD CONSTRAINT `memberships_organization_unit_id_fkey` FOREIGN KEY (`organization_unit_id`) REFERENCES `organization_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `memberships` ADD CONSTRAINT `memberships_organization_unit_id_fkey` FOREIGN KEY (`organization_unit_id`) REFERENCES `organization_units`(`id`) ON DELETE CASCADE;
 
 -- AddForeignKey (Membership to LearningGroup)
-ALTER TABLE `memberships` ADD CONSTRAINT `memberships_learning_group_id_fkey` FOREIGN KEY (`learning_group_id`) REFERENCES `learning_groups`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `memberships` ADD CONSTRAINT `memberships_learning_group_id_fkey` FOREIGN KEY (`learning_group_id`) REFERENCES `learning_groups`(`id`) ON DELETE CASCADE;
 
 -- AddForeignKey (Membership creator)
 ALTER TABLE `memberships` ADD CONSTRAINT `memberships_created_by_id_fkey` FOREIGN KEY (`created_by_id`) REFERENCES `users`(`id`) ON UPDATE CASCADE;
-
--- Add CHECK constraint to ensure exclusive FK-pair
-ALTER TABLE `memberships` ADD CONSTRAINT `memberships_exclusive_target_check` CHECK (
-    (`organization_unit_id` IS NOT NULL AND `learning_group_id` IS NULL) OR
-    (`organization_unit_id` IS NULL AND `learning_group_id` IS NOT NULL)
-);

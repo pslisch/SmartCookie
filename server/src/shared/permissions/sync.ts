@@ -11,22 +11,24 @@ export async function syncPermissions() {
 
   for (const perm of permissions) {
     try {
-      await prisma.permission.upsert({
+      const existing = await prisma.permission.findFirst({
         where: {
-          module_action_idx: {
-            module: perm.module,
-            action: perm.action,
-          },
-        },
-        update: {}, // Keep existing record intact if it already exists
-        create: {
           module: perm.module,
           action: perm.action,
         },
       });
+
+      if (!existing) {
+        await prisma.permission.create({
+          data: {
+            module: perm.module,
+            action: perm.action,
+          },
+        });
+      }
     } catch (err: any) {
       console.error(
-        `[Permission Sync] Failed to upsert permission ${perm.module}:${perm.action}`,
+        `[Permission Sync] Failed to sync permission ${perm.module}:${perm.action}`,
         err
       );
     }

@@ -10,10 +10,12 @@ import permissionsRouter from './features/rbac/routes/permissions.routes';
 import companyRouter from './features/rbac/routes/company.routes';
 import organizationUnitsRouter from './features/organization/routes/organizationUnits.routes';
 import learningGroupsRouter from './features/organization/routes/learningGroups.routes';
+import assignmentsRouter, { assignmentInstancesRouter } from './features/assignments/routes/assignments.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
 import './features/organization/organization.permissions';
+import './features/assignments/assignments.permissions';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 import { scheduledTasksService } from './shared/scheduler/scheduledTasks.service';
@@ -33,8 +35,24 @@ async function startServer() {
   try {
     await syncPermissions();
     await seedSuperuserRoles();
+
+    // Run manual DB migrations on startup
+    const { prisma } = await import('./shared/db/prisma');
+    console.log('[Startup] Running manual schema migration checks...');
+    try {
+      await prisma.$executeRawUnsafe(
+        'ALTER TABLE `user_assignment_instances` ADD COLUMN `last_reminder_sent_at` DATETIME NULL;'
+      );
+      console.log('[Startup] Column last_reminder_sent_at added successfully.');
+    } catch (colErr: any) {
+      if (colErr.message.includes('Duplicate column name') || colErr.message.includes('already exists') || colErr.message.includes('1060')) {
+        console.log('[Startup] Column last_reminder_sent_at already exists.');
+      } else {
+        console.warn('[Startup] Non-blocking warning during column creation:', colErr.message);
+      }
+    }
   } catch (err) {
-    console.error('Failed to sync permissions or seed superuser roles on startup:', err);
+    console.error('Failed to sync permissions, seed superuser roles, or run startup schema migration:', err);
   }
 
   // JSON body parsing and cookie parsing
@@ -55,6 +73,8 @@ async function startServer() {
   app.use('/api/company', companyRouter);
   app.use('/api/organization-units', organizationUnitsRouter);
   app.use('/api/learning-groups', learningGroupsRouter);
+  app.use('/api/assignments', assignmentsRouter);
+  app.use('/api/assignment-instances', assignmentInstancesRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

@@ -63,10 +63,10 @@ router.post('/superuser', async (req: Request, res: Response) => {
     // Set signed cookie for the session ID
     res.cookie('sid', session.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     res.status(201).json({

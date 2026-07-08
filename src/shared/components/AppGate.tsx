@@ -117,6 +117,22 @@ export function AppGate({ children }: AppGateProps) {
     checkStatusAndSession();
   }, []);
 
+  const handleJsonResponse = async (res: Response, fallbackErrorMessage: string) => {
+    const contentType = res.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(`Server error (${res.status} ${res.statusText}): ${text.substring(0, 100)}...`);
+    }
+
+    if (!res.ok) {
+      throw new Error(data.error || fallbackErrorMessage);
+    }
+    return data;
+  };
+
   const triggerSuperuserSubmit = async (username: string, password: string, recoveryEmail: string) => {
     const res = await fetch('/api/setup/superuser', {
       method: 'POST',
@@ -131,11 +147,7 @@ export function AppGate({ children }: AppGateProps) {
       }),
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to create superuser.');
-    }
-
+    await handleJsonResponse(res, 'Failed to create superuser.');
     await checkStatusAndSession();
   };
 
@@ -152,11 +164,7 @@ export function AppGate({ children }: AppGateProps) {
       }),
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to complete company step.');
-    }
-
+    await handleJsonResponse(res, 'Failed to complete company step.');
     await checkStatusAndSession();
   };
 
@@ -172,11 +180,7 @@ export function AppGate({ children }: AppGateProps) {
       }),
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to complete organization structure step.');
-    }
-
+    await handleJsonResponse(res, 'Failed to complete organization structure step.');
     await checkStatusAndSession();
   };
 
@@ -192,11 +196,7 @@ export function AppGate({ children }: AppGateProps) {
       }),
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to complete role templates step.');
-    }
-
+    await handleJsonResponse(res, 'Failed to complete role templates step.');
     await checkStatusAndSession();
   };
 

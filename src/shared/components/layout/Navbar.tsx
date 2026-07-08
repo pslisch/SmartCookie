@@ -53,9 +53,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center space-x-2 text-slate-950 transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99] group"
               id="navbar-logo-btn"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-lg shadow-sm">
-                S
-              </div>
+              <img
+                src="/SC_logo.png"
+                alt="Logo"
+                referrerPolicy="no-referrer"
+                className="h-8 w-8 object-contain"
+                id="navbar-logo-img"
+              />
               <span className="text-xl font-bold tracking-tight text-blue-900 group-hover:text-blue-600 transition-colors">
                 {appName}
               </span>

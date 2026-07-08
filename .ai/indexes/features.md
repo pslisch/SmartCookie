@@ -130,4 +130,17 @@ Every logged feature should eventually document:
 - **Events**: Background scheduler tasks run periodically (every hour) to purge expired units, auto-expire temporary groups, and dispatch email reminders via `EmailService`.
 - **Dependencies**: Express, Prisma ORM, Node.js, React, i18next, motion/react, lucide-react
 
+### 10. Learning Assignments & Target Resolution Engine
+- **Description**: Implements robust, enterprise-grade learning assignment mechanics. Facilitates target-based lesson and course assignment (assigning to individual users, OUs, or Learning Groups) which materializes into individual `UserAssignmentInstance` entries. Features dynamic target resolution (crawling the OU hierarchy subtree to resolve child nodes and membership listings, resolving multi-source qualifying links to prevent duplicate active instances), self-assignment workflows, audit logging, soft-deletion lifecycles, and user-reactivation behavior (RESTORE vs. FRESH_START). A daily cron scheduler automatically runs background tasks to purge soft-deleted items past their retention window and dispatches transactional overdue reminders.
+- **Components**: Frontend code is out of scope / deferred (MVP focuses on complete backend services, routes, permissions, database models, and tests).
+- **Pages**: None (Backend architecture MVP).
+- **Services**: `AssignmentService` (`server/src/features/assignments/services/assignment.service.ts`), `TargetResolutionService` (`server/src/features/assignments/services/targetResolution.service.ts`), `MaterializationService` (`server/src/features/assignments/services/materialization.service.ts`), `SelfAssignmentService` (`server/src/features/assignments/services/selfAssignment.service.ts`), `CompletionService` (`server/src/features/assignments/services/completion.service.ts`), `MembershipAssignmentHooksService` (`server/src/features/assignments/services/membershipAssignmentHooks.service.ts`), `UserReactivationService` (`server/src/features/auth/services/userReactivation.service.ts`), `AuditLogService` (`server/src/shared/audit/auditLog.service.ts`), `ScheduledTasksService` (`server/src/shared/scheduler/scheduledTasks.service.ts`)
+- **APIs**: `POST /api/assignments`, `POST /api/assignments/course`, `DELETE /api/assignments/:id`, `GET /api/assignments`, `GET /api/assignments/:id/instances`, `POST /api/assignments/self-assign`, `DELETE /api/assignments/self-assign/:instanceId`, `POST /api/assignment-instances/:id/complete`, `POST /api/users/:id/reactivate`
+- **Database**: `assignments`, `assignment_targets`, `user_assignment_instances`, `user_assignment_instance_sources`, `audit_logs` (Prisma & MariaDB schemas)
+- **Permissions**: Gated by `assignments:view`, `assignments:create`, `assignments:edit`, `assignments:delete`, `assignments:view-reports`, and `assignments:create-mandatory` permissions.
+- **Routes**: `server/src/features/assignments/routes/assignments.routes.ts`, `server/src/features/auth/routes/users.routes.ts`
+- **Events**: Background scheduler tasks run periodically to purge soft-deleted items and send overdue email alerts via `EmailService`.
+- **Dependencies**: Express, Prisma ORM, Node.js, Nodemailer
+
+
 

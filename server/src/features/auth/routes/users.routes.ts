@@ -6,6 +6,7 @@ import { TokenService } from '../../../shared/token/token.service';
 import { TokenPurpose } from '@prisma/client';
 import { emailService } from '../../../shared/email/email.service';
 import { PASSWORD_RESET_TTL_SECONDS } from '../../../shared/constants';
+import { userReactivationService } from '../services/userReactivation.service';
 
 const router = Router();
 
@@ -125,6 +126,31 @@ router.post('/:id/admin-reset-password', requirePermission('users', 'edit'), asy
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message || 'An internal error occurred.' });
+  }
+});
+
+/**
+ * POST /api/users/:id/reactivate
+ * Requires assignments:edit permission.
+ * Reactivates an archived/suspended user with either RESTORE or FRESH_START.
+ */
+router.post('/:id/reactivate', requirePermission('assignments', 'edit'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { option } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+
+    if (option !== 'RESTORE' && option !== 'FRESH_START') {
+      return res.status(400).json({ error: 'Option must be RESTORE or FRESH_START.' });
+    }
+
+    const result = await userReactivationService.reactivate(id, option, req.user!.id);
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to reactivate user.' });
   }
 });
 

@@ -1,5 +1,6 @@
 import { prisma } from '../../../shared/db/prisma';
 import crypto from 'crypto';
+import { membershipAssignmentHooksService } from '../../assignments/services/membershipAssignmentHooks.service';
 
 export class OrganizationUnitService {
   async create(name: string, parentId?: string | null, companyId?: string) {
@@ -277,7 +278,7 @@ export class OrganizationUnitService {
       return existing;
     }
 
-    return await prisma.membership.create({
+    const result = await prisma.membership.create({
       data: {
         userId,
         organizationUnitId,
@@ -287,6 +288,9 @@ export class OrganizationUnitService {
         createdById: creatorId
       }
     });
+
+    await membershipAssignmentHooksService.onMembershipCreated(result.id);
+    return result;
   }
 
   async removeManager(userId: string, organizationUnitId: string) {
@@ -301,6 +305,8 @@ export class OrganizationUnitService {
         deletedAt: new Date()
       }
     });
+
+    await membershipAssignmentHooksService.onMembershipDeleted(userId, organizationUnitId, null);
     return { success: true };
   }
 
@@ -331,6 +337,17 @@ export class OrganizationUnitService {
       creatorId = superuser.id;
     }
 
+    // Find previous memberships first
+    const previousMemberships = await prisma.membership.findMany({
+      where: {
+        userId,
+        membershipType: 'MEMBER',
+        organizationUnitId: { not: null },
+        deletedAt: null
+      },
+      select: { organizationUnitId: true }
+    });
+
     // Soft-delete existing MEMBER memberships of this user in any OU (moving them out)
     await prisma.membership.updateMany({
       where: {
@@ -344,8 +361,15 @@ export class OrganizationUnitService {
       }
     });
 
+    // Trigger leave hooks
+    for (const pm of previousMemberships) {
+      if (pm.organizationUnitId) {
+        await membershipAssignmentHooksService.onMembershipDeleted(userId, pm.organizationUnitId, null);
+      }
+    }
+
     // Create new MEMBER membership
-    return await prisma.membership.create({
+    const result = await prisma.membership.create({
       data: {
         userId,
         organizationUnitId,
@@ -355,6 +379,11 @@ export class OrganizationUnitService {
         createdById: creatorId
       }
     });
+
+    // Trigger join hook
+    await membershipAssignmentHooksService.onMembershipCreated(result.id);
+
+    return result;
   }
 
   // Internal helper to walk descendants

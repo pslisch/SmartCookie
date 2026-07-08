@@ -130,6 +130,43 @@ SmartCookie includes a fully configured internationalization engine implemented 
 
 ---
 
+## 📅 Learning Assignments, Target Resolution, & Auditing
+
+SmartCookie v1.7.0 introduces a robust, enterprise-grade learning assignment subsystem. This architecture enables administrators to assign educational courses and lessons to individual learners, dynamic Organization Units (OUs), or specific Learning Groups, materializing individual learner progress tracks.
+
+### 1. Architectural Model Splitting
+To prevent database bottlenecks and redundant data storage, the subsystem separates administrative intention from individual tracking state:
+* **`Assignment`**: An administrative record representing the action of assigning a course or lesson to a group of targets with a given due date.
+* **`AssignmentTarget`**: A join record mapping an active `Assignment` to physical entities, supporting polymorphic targets (`userId`, `organizationUnitId`, or `learningGroupId`).
+* **`UserAssignmentInstance`**: An individual record representing the actual learning track, containing completion status (`ACTIVE`, `COMPLETED`, `CANCELLED`, `ARCHIVED`), due dates, progress percentage, started/completed timestamps, and overdue notification logs.
+
+### 2. Dynamic Target Resolution Engine (`TargetResolutionService`)
+Upon creating an assignment, the target resolution engine dynamically compiles the flattened list of target user IDs:
+* Direct user targets are resolved immediately.
+* Organization Unit targets are parsed recursively; the engine walks down the organizational unit hierarchy tree, capturing all child and grandchild OUs, and aggregates active memberships.
+* Learning Group targets resolve directly to active group member IDs.
+
+### 3. Multi-Source Qualifying Links & De-duplication
+A learner can qualify for the same lesson assignment via multiple paths simultaneously (e.g., being targeted directly, belonging to an assigned OU, and belonging to an assigned Learning Group).
+* To prevent duplicate active assignments, a learner gets exactly one `UserAssignmentInstance` per unique `(assignmentId, userId)` pair.
+* To support overlapping paths, the system creates `UserAssignmentInstanceSource` records linking the single instance to each qualifying target path.
+* **Dynamic Membership Hooks (`MembershipAssignmentHooksService`)**: When a user leaves an OU or Group, the associated `UserAssignmentInstanceSource` record is deleted. If other qualifying sources remain, the instance survives and remains `ACTIVE`. If the last qualifying source is deleted, the instance status automatically updates to `CANCELLED` to reflect the change in eligibility.
+
+### 4. Non-Retroactivity Policy for OU Moves
+SmartCookie implements a strict **non-retroactivity rule for organizational transfers**:
+* When a user is moved to a different OU, their previously materialized assignment instances and completed training histories remain completely intact and untouched.
+* This is an explicit, simplifying design choice made to guarantee data predictability, protect training logs, and prevent accidental data loss for compliance auditing.
+
+### 5. Unified Audit Logging (`AuditLogService`)
+A centralized, generic `audit_logs` database table captures and records all administrative adjustments (such as assignment creation, cancellations, user reactivations, or membership changes) with a polymorphic mapping (`entityType`, `entityId`), an actor reference, and rich JSON metadata. This supports enterprise-grade logging and external compliance reporting.
+
+### 6. Scheduled Background Dispatchers (`ScheduledTasksService`)
+A daily cron job handles system cleanups and alerts:
+* **Purge Soft-Deletes**: Permanently deletes soft-deleted records (`deletedAt` is set) whose `permanentDeleteAt` retention window (14 days) has elapsed, covering assignments, assignment instances, and memberships.
+* **Overdue Notifications**: Scans active past-due user assignment instances and sends automated email alerts via `EmailService`. Alerts are strictly throttled to a maximum frequency of once every 14 days per instance using `lastReminderSentAt` to prevent spamming.
+
+---
+
 ## 🚀 Deployment Targets & Production Topology
 
 The production architecture for SmartCookie has been finalized and implemented as a robust, fully automated, self-healing topology on a dedicated Ubuntu VPS.

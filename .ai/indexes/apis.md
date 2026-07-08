@@ -16,7 +16,7 @@ Every documented endpoint logs:
 
 ---
 
-## 🟢 Active Rest Routes (v1.6.0)
+## 🟢 Active Rest Routes (v1.7.0)
 
 ### 1. Setup Status Check
 - **Endpoint**: `/api/setup/status`
@@ -369,5 +369,78 @@ Every documented endpoint logs:
 - **Response**: `{ success: true, company: { id, name, ... } }` (200 OK)
 - **Used By**: `SetupWizard` (Step 3: Org Structure)
 - **Permissions**: Requires active superuser session cookie (`sid`) (reaches 403 Forbidden if setup status is already `complete`)
+
+### 45. Create Lesson Assignment
+- **Endpoint**: `/api/assignments`
+- **Method**: `POST`
+- **Request**: `{ lessonId: string, targets: Array<{ type: "USER" | "ORGANIZATION_UNIT" | "LEARNING_GROUP", targetId: string }>, type: "IMMEDIATE" | "SCHEDULED", scheduledFor?: Date, dueDateDefaultDays?: number, isMandatory?: boolean }`
+- **Response**: Created `Assignment` object (200 OK)
+- **Used By**: Admin Dashboard / Assignments Scheduler
+- **Permissions**: Requires authenticated session with `"assignments:create-mandatory"` (if `isMandatory` is true) or `"assignments:create"` (if false). Superuser bypasses.
+
+### 46. Create Course Assignment
+- **Endpoint**: `/api/assignments/course`
+- **Method**: `POST`
+- **Request**: `{ courseId: string, targets: Array<{ type: "USER" | "ORGANIZATION_UNIT" | "LEARNING_GROUP", targetId: string }>, type: "IMMEDIATE" | "SCHEDULED", scheduledFor?: Date, dueDateDefaultDays?: number, isMandatory?: boolean }`
+- **Response**: Array of created `Assignment` objects (200 OK)
+- **Used By**: Admin Dashboard / Course Scheduler
+- **Permissions**: Requires authenticated session with `"assignments:create-mandatory"` (if `isMandatory` is true) or `"assignments:create"` (if false). Superuser bypasses.
+
+### 47. Cancel / Delete Assignment
+- **Endpoint**: `/api/assignments/:id`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: Admin Dashboard / Assignments List
+- **Permissions**: Requires active session with `"assignments:delete"` permission. Superuser bypasses.
+
+### 48. List Assignments
+- **Endpoint**: `/api/assignments`
+- **Method**: `GET`
+- **Request**: Optional query filters: `status` and `lessonId`
+- **Response**: `[{ id, companyId, lessonId, status, lesson: { id, title }, targets: [...] }]` (200 OK)
+- **Used By**: Admin Dashboard / Assignments List
+- **Permissions**: Requires active session with `"assignments:view"` permission. Superuser bypasses.
+
+### 49. Get Assignment Instances
+- **Endpoint**: `/api/assignments/:id/instances`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: List of materialized `UserAssignmentInstance` entries with user profiles (200 OK)
+- **Used By**: Admin Reports / Progress breakdown
+- **Permissions**: Requires active session with `"assignments:view-reports"` permission. Superuser bypasses.
+
+### 50. Self-Assign Lesson
+- **Endpoint**: `/api/assignments/self-assign`
+- **Method**: `POST`
+- **Request**: `{ lessonId }`
+- **Response**: Created `UserAssignmentInstance` object (200 OK)
+- **Used By**: Learner Dashboard / Course catalog
+- **Permissions**: Requires active session with `"assignments:view"` permission.
+
+### 51. Remove Self-Assignment
+- **Endpoint**: `/api/assignments/self-assign/:instanceId`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true, message: "Self-assignment removed." }` (200 OK)
+- **Used By**: Learner Dashboard / My Lessons
+- **Permissions**: Requires active session with `"assignments:view"` permission (gated by owner matching req.user.id).
+
+### 52. Complete Assignment Instance
+- **Endpoint**: `/api/assignment-instances/:id/complete`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ success: true, instance: { id, status: "COMPLETED", ... } }` (200 OK)
+- **Used By**: Learner Lesson player / My Lessons
+- **Permissions**: Requires active session with `"assignments:view"` permission (gated by owner matching req.user.id).
+
+### 53. Reactivate User
+- **Endpoint**: `/api/users/:id/reactivate`
+- **Method**: `POST`
+- **Request**: `{ option: "RESTORE" | "FRESH_START" }`
+- **Response**: `{ success: true, user: { id, status: "ACTIVE" } }` (200 OK)
+- **Used By**: Admin panel / User Management list
+- **Permissions**: Requires active session with `"assignments:edit"` permission. Superuser bypasses.
+
 
 

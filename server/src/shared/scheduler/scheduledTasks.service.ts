@@ -36,6 +36,8 @@ export class ScheduledTasksService {
     await this.expireTemporaryGroups();
     await this.sendExpirationReminders();
     await this.purgeExpiredSoftDeletes();
+    await this.purgeExpiredAssignments();
+    await this.sendBasicReminders();
     console.log('[Scheduler] All periodic tasks finished.');
   }
 
@@ -244,6 +246,103 @@ export class ScheduledTasksService {
         where: { id: { in: groupIds } }
       });
       console.log(`[Scheduler] Purged ${deleteResult.count} expired soft-deleted learning groups.`);
+    }
+  }
+
+  /**
+   * Permanently deletes soft-deleted Assignment and UserAssignmentInstance rows past their permanentDeleteAt.
+   */
+  async purgeExpiredAssignments() {
+    const now = new Date();
+
+    // 1. Purge UserAssignmentInstances past permanentDeleteAt
+    const instancesToPurge = await prisma.userAssignmentInstance.findMany({
+      where: {
+        deletedAt: { not: null },
+        permanentDeleteAt: { lte: now }
+      },
+      select: { id: true }
+    });
+
+    if (instancesToPurge.length > 0) {
+      const instanceIds = instancesToPurge.map((i) => i.id);
+      const deleteResult = await prisma.userAssignmentInstance.deleteMany({
+        where: { id: { in: instanceIds } }
+      });
+      console.log(`[Scheduler] Purged ${deleteResult.count} expired soft-deleted user assignment instances.`);
+    }
+
+    // 2. Purge Assignments past permanentDeleteAt
+    const assignmentsToPurge = await prisma.assignment.findMany({
+      where: {
+        deletedAt: { not: null },
+        permanentDeleteAt: { lte: now }
+      },
+      select: { id: true }
+    });
+
+    if (assignmentsToPurge.length > 0) {
+      const assignmentIds = assignmentsToPurge.map((a) => a.id);
+      const deleteResult = await prisma.assignment.deleteMany({
+        where: { id: { in: assignmentIds } }
+      });
+      console.log(`[Scheduler] Purged ${deleteResult.count} expired soft-deleted assignments.`);
+    }
+  }
+
+  /**
+   * For ACTIVE, non-completed instances past their dueDate (or a configurable interval before it),
+   * send ONE reminder email via EmailService if none sent in the last 14 days (track via lastReminderSentAt).
+   */
+  async sendBasicReminders() {
+    const now = new Date();
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    const instancesToRemind = await prisma.userAssignmentInstance.findMany({
+      where: {
+        status: 'ACTIVE',
+        deletedAt: null,
+        dueDate: { lt: now },
+        OR: [
+          { lastReminderSentAt: null },
+          { lastReminderSentAt: { lte: fourteenDaysAgo } }
+        ]
+      },
+      include: {
+        user: true,
+        assignment: {
+          include: {
+            lesson: {
+              select: {
+                title: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    for (const instance of instancesToRemind) {
+      if (!instance.user || !instance.user.email) {
+        continue;
+      }
+
+      try {
+        await emailService.send(instance.user.email, 'assignment-reminder', {
+          lessonTitle: instance.assignment.lesson.title,
+          dueDate: instance.dueDate
+        });
+
+        // Update lastReminderSentAt
+        await prisma.userAssignmentInstance.update({
+          where: { id: instance.id },
+          data: { lastReminderSentAt: now }
+        });
+
+        console.log(`[Scheduler] Sent learning assignment reminder to ${instance.user.email} for "${instance.assignment.lesson.title}"`);
+      } catch (err) {
+        console.error(`[Scheduler] Failed to send assignment reminder for instance ${instance.id} to ${instance.user.email}:`, err);
+      }
     }
   }
 }

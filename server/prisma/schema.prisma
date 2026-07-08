@@ -1,5 +1,5 @@
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
 }
 
 generator client {
@@ -34,6 +34,11 @@ model User {
   role          Role?      @relation(fields: [roleId], references: [id])
   memberships        Membership[] @relation("UserMemberships")
   createdMemberships Membership[] @relation("MembershipCreator")
+  createdAssignments Assignment[] @relation("AssignmentCreator")
+  ownedAssignments   Assignment[] @relation("AssignmentOwner")
+  assignmentTargets  AssignmentTarget[] @relation("UserAssignmentTargets")
+  userAssignmentInstances UserAssignmentInstance[] @relation("UserAssignmentInstances")
+  auditLogs          AuditLog[] @relation("UserAuditLogs")
 
   @@unique([isSuperuserUnique], name: "is_superuser_unique_idx")
   @@map("users")
@@ -69,6 +74,10 @@ model Company {
   settings         Json?
   organizationUnits OrganizationUnit[]
   learningGroups   LearningGroup[]
+  lessons          Lesson[]
+  courses          Course[]
+  assignments      Assignment[]
+  auditLogs        AuditLog[]
 
   @@map("companies")
 }
@@ -136,6 +145,8 @@ model OrganizationUnit {
   createdAt         DateTime           @default(now()) @map("created_at")
   updatedAt         DateTime           @updatedAt @map("updated_at")
   memberships       Membership[]
+  assignmentTargets AssignmentTarget[]
+  assignmentInstanceSources UserAssignmentInstanceSource[] @relation("SourceOrganizationUnit")
 
   @@map("organization_units")
 }
@@ -163,6 +174,8 @@ model LearningGroup {
   createdAt         DateTime           @default(now()) @map("created_at")
   updatedAt         DateTime           @updatedAt @map("updated_at")
   memberships       Membership[]
+  assignmentTargets AssignmentTarget[]
+  assignmentInstanceSources UserAssignmentInstanceSource[] @relation("SourceLearningGroup")
 
   @@map("learning_groups")
 }
@@ -205,3 +218,190 @@ model Membership {
 
   @@map("memberships")
 }
+
+enum LessonStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum CompletionRule {
+  MARKED_COMPLETE
+  QUIZ_PASSED
+  MIN_SCORE
+  ACKNOWLEDGEMENT
+  CUSTOM
+}
+
+enum AssignmentType {
+  IMMEDIATE
+  SCHEDULED
+}
+
+enum AssignmentStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  CANCELLED
+  ARCHIVED
+}
+
+model Lesson {
+  id                   String           @id @default(uuid())
+  companyId            String           @map("company_id")
+  company              Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title                String
+  status               LessonStatus     @default(DRAFT)
+  version              Int              @default(1)
+  prerequisiteLessonId String?          @map("prerequisite_lesson_id")
+  prerequisiteLesson   Lesson?          @relation("LessonPrerequisites", fields: [prerequisiteLessonId], references: [id], onDelete: SetNull)
+  dependentLessons     Lesson[]         @relation("LessonPrerequisites")
+  completionRule       CompletionRule   @default(MARKED_COMPLETE) @map("completion_rule")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+  courseLessons        CourseLesson[]
+  assignments          Assignment[]
+
+  @@map("lessons")
+}
+
+model Course {
+  id            String         @id @default(uuid())
+  companyId     String         @map("company_id")
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title         String
+  status        CourseStatus   @default(DRAFT)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  courseLessons CourseLesson[]
+
+  @@map("courses")
+}
+
+model CourseLesson {
+  courseId  String   @map("course_id")
+  lessonId  String   @map("lesson_id")
+  order     Int
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, lessonId])
+  @@map("course_lessons")
+}
+
+model Assignment {
+  id                      String             @id @default(uuid())
+  companyId               String             @map("company_id")
+  company                 Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  lessonId                String             @map("lesson_id")
+  lesson                  Lesson             @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  assignmentType          AssignmentType     @map("assignment_type")
+  scheduledFor            DateTime?          @map("scheduled_for")
+  dueDateDefaultDays      Int?               @map("due_date_default_days")
+  isMandatory             Boolean            @default(false) @map("is_mandatory")
+  createdById             String             @map("created_by_id")
+  createdBy               User               @relation("AssignmentCreator", fields: [createdById], references: [id])
+  ownerId                 String             @map("owner_id")
+  owner                   User               @relation("AssignmentOwner", fields: [ownerId], references: [id])
+  status                  AssignmentStatus   @default(DRAFT)
+  courseAssignmentBatchId String?            @map("course_assignment_batch_id")
+  deletedAt               DateTime?          @map("deleted_at")
+  permanentDeleteAt       DateTime?          @map("permanent_delete_at")
+  deletionBatchId         String?            @map("deletion_batch_id")
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+  targets                 AssignmentTarget[]
+  userAssignmentInstances UserAssignmentInstance[]
+
+  @@map("assignments")
+}
+
+model AssignmentTarget {
+  id                 String            @id @default(uuid())
+  assignmentId       String            @map("assignment_id")
+  assignment         Assignment        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  userId             String?           @map("user_id")
+  user               User?             @relation("UserAssignmentTargets", fields: [userId], references: [id], onDelete: Cascade)
+  organizationUnitId String?           @map("organization_unit_id")
+  organizationUnit   OrganizationUnit? @relation(fields: [organizationUnitId], references: [id], onDelete: Cascade)
+  learningGroupId    String?           @map("learning_group_id")
+  learningGroup      LearningGroup?    @relation(fields: [learningGroupId], references: [id], onDelete: Cascade)
+  createdAt          DateTime          @default(now()) @map("created_at")
+
+  @@map("assignment_targets")
+}
+
+enum UserAssignmentInstanceStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum AssignmentSourceType {
+  MANUAL
+  ORGANIZATION_UNIT
+  LEARNING_GROUP
+  SELF_ASSIGNED
+  MANDATORY
+  API
+}
+
+model UserAssignmentInstance {
+  id                String                       @id @default(uuid())
+  assignmentId      String                       @map("assignment_id")
+  assignment        Assignment                   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  userId            String                       @map("user_id")
+  user              User                         @relation("UserAssignmentInstances", fields: [userId], references: [id], onDelete: Cascade)
+  status            UserAssignmentInstanceStatus @default(ACTIVE)
+  dueDate           DateTime?                    @map("due_date")
+  startedAt         DateTime?                    @map("started_at")
+  completedAt       DateTime?                    @map("completed_at")
+  progressPercent   Int                          @default(0) @map("progress_percent")
+  deletedAt         DateTime?                    @map("deleted_at")
+  permanentDeleteAt DateTime?                    @map("permanent_delete_at")
+  deletionBatchId   String?                      @map("deletion_batch_id")
+  lastReminderSentAt DateTime?                   @map("last_reminder_sent_at")
+  createdAt         DateTime                     @default(now()) @map("created_at")
+  updatedAt         DateTime                     @updatedAt @map("updated_at")
+  sources           UserAssignmentInstanceSource[]
+
+  @@unique([assignmentId, userId])
+  @@map("user_assignment_instances")
+}
+
+model UserAssignmentInstanceSource {
+  id                       String                 @id @default(uuid())
+  userAssignmentInstanceId String                 @map("user_assignment_instance_id")
+  userAssignmentInstance   UserAssignmentInstance @relation(fields: [userAssignmentInstanceId], references: [id], onDelete: Cascade)
+  sourceType               AssignmentSourceType   @map("source_type")
+  sourceOrganizationUnitId String?                @map("source_organization_unit_id")
+  sourceOrganizationUnit   OrganizationUnit?      @relation("SourceOrganizationUnit", fields: [sourceOrganizationUnitId], references: [id], onDelete: Cascade)
+  sourceLearningGroupId    String?                @map("source_learning_group_id")
+  sourceLearningGroup      LearningGroup?         @relation("SourceLearningGroup", fields: [sourceLearningGroupId], references: [id], onDelete: Cascade)
+  createdAt                DateTime               @default(now()) @map("created_at")
+
+  @@map("user_assignment_instance_sources")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  companyId  String   @map("company_id")
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  action     String
+  actorId    String?  @map("actor_id")
+  actor      User?    @relation("UserAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
