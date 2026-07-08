@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 // Load .env configuration
 dotenv.config({ override: true });
 
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
@@ -18,7 +19,10 @@ function getPrisma(): PrismaClient {
         throw new Error('DATABASE_URL environment variable is required');
       }
 
+      const adapter = new PrismaMariaDb(dbUrl);
+
       prismaInstance = new PrismaClient({
+        adapter,
         log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
       });
 
