@@ -78,7 +78,11 @@ export function AppGate({ children }: AppGateProps) {
       } else if (setupRes.ok) {
         const setupData = await setupRes.json();
         setSetupStatus(setupData.status);
-        setIsLoading(false);
+        if (setupData.status === 'complete') {
+          await fetchSession();
+        } else {
+          setIsLoading(false);
+        }
       } else {
         // Fallback
         setSetupStatus('complete');

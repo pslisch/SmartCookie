@@ -38,26 +38,17 @@ async function startServer() {
 
     // Run manual DB migrations on startup
     const { prisma } = await import('./shared/db/prisma');
-    console.log('[Startup] Running manual schema migration checks...');
-    try {
-      await prisma.$executeRawUnsafe(
-        'ALTER TABLE `user_assignment_instances` ADD COLUMN `last_reminder_sent_at` DATETIME NULL;'
-      );
-      console.log('[Startup] Column last_reminder_sent_at added successfully.');
-    } catch (colErr: any) {
-      if (colErr.message.includes('Duplicate column name') || colErr.message.includes('already exists') || colErr.message.includes('1060')) {
-        console.log('[Startup] Column last_reminder_sent_at already exists.');
-      } else {
-        console.warn('[Startup] Non-blocking warning during column creation:', colErr.message);
-      }
-    }
   } catch (err) {
     console.error('Failed to sync permissions, seed superuser roles, or run startup schema migration:', err);
   }
 
   // JSON body parsing and cookie parsing
   app.use(express.json());
-  app.use(cookieParser(process.env.SESSION_SECRET || 'smartcookie-secret-fallback'));
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret && process.env.NODE_ENV === 'production') {
+    throw new Error('SESSION_SECRET must be set in production');
+  }
+  app.use(cookieParser(sessionSecret || 'smartcookie-secret-fallback'));
 
   // Place API routes before static file handlers
   app.get('/api/health', (req, res) => {

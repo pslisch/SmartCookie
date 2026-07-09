@@ -45,7 +45,7 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   const submittedToken = headerToken || bodyToken;
 
   if (!cookieToken || !submittedToken || cookieToken !== submittedToken) {
-    console.error(`CSRF mismatch: cookieToken=${cookieToken}, headerToken=${headerToken}, bodyToken=${bodyToken}`);
+    console.error(`CSRF mismatch: cookieToken=${!!cookieToken}, headerToken=${!!headerToken}, bodyToken=${!!bodyToken}`);
     return res.status(403).json({
       error: 'Forbidden: CSRF token mismatch or missing.',
     });

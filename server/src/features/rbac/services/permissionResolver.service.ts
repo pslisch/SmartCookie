@@ -92,6 +92,33 @@ export class PermissionResolverService {
       (p) => p.module === module && p.action === action
     );
   }
+  async filterUsersWithPermission(userIds: string[], module: string, action: string): Promise<string[]> {
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, isSuperuser: true, roleId: true }
+    });
+
+    const result: string[] = [];
+    const roleMap = new Map<string, Permission[]>();
+
+    for (const user of users) {
+      if (user.isSuperuser) {
+        result.push(user.id);
+        continue;
+      }
+      if (!user.roleId) continue;
+
+      if (!roleMap.has(user.roleId)) {
+        roleMap.set(user.roleId, await this.getEffectivePermissions(user.roleId));
+      }
+      
+      const perms = roleMap.get(user.roleId)!;
+      if (perms.some(p => p.module === module && p.action === action)) {
+        result.push(user.id);
+      }
+    }
+    return result;
+  }
 }
 
 export const permissionResolverService = new PermissionResolverService();

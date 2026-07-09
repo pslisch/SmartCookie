@@ -1,6 +1,7 @@
 import { prisma } from '../../../shared/db/prisma';
 import { UserAssignmentInstanceStatus, AssignmentSourceType, MembershipStatus } from '@prisma/client';
 import { targetResolutionService } from './targetResolution.service';
+import { organizationUnitService } from '../../organization/services/organizationUnit.service';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
 
 export class MaterializationService {
@@ -49,7 +50,7 @@ export class MaterializationService {
               candidateDates.push(date);
             } else if (src.sourceType === 'ORGANIZATION_UNIT' && src.organizationUnitId) {
               // Get user's active membership in this OU or descendant OUs
-              const descendantOus = await this.getDescendantOUs(src.organizationUnitId);
+              const descendantOus = await organizationUnitService.getDescendantOUs(src.organizationUnitId);
               const membership = await prisma.membership.findFirst({
                 where: {
                   userId,
@@ -172,44 +173,6 @@ export class MaterializationService {
         );
       }
     }
-  }
-
-  /**
-   * Helper to perform cycle-safe BFS to find all descendant OU IDs including the root OU ID.
-   * Only returns/walks OUs where deletedAt is null.
-   */
-  private async getDescendantOUs(rootOuId: string): Promise<string[]> {
-    const rootOu = await prisma.organizationUnit.findUnique({
-      where: { id: rootOuId },
-    });
-    if (!rootOu || rootOu.deletedAt !== null) {
-      return [];
-    }
-
-    const result: string[] = [rootOuId];
-    const queue: string[] = [rootOuId];
-    const visited = new Set<string>([rootOuId]);
-
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-      const children = await prisma.organizationUnit.findMany({
-        where: {
-          parentId: currentId,
-          deletedAt: null,
-        },
-        select: { id: true },
-      });
-
-      for (const child of children) {
-        if (!visited.has(child.id)) {
-          visited.add(child.id);
-          result.push(child.id);
-          queue.push(child.id);
-        }
-      }
-    }
-
-    return result;
   }
 
   private mapSourceType(type: 'MANUAL' | 'ORGANIZATION_UNIT' | 'LEARNING_GROUP'): AssignmentSourceType {

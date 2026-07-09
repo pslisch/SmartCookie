@@ -1,5 +1,6 @@
 import { prisma } from '../../../shared/db/prisma';
 import { MembershipStatus } from '@prisma/client';
+import { organizationUnitService } from '../../organization/services/organizationUnit.service';
 
 export interface TargetSource {
   targetId: string;
@@ -49,7 +50,7 @@ export class TargetResolutionService {
       } else if (target.organizationUnitId) {
         // organizationUnitId targets: that OU's direct members PLUS every descendant OU's members
         // Walk the tree down (cascading). Only ACTIVE memberships, only non-deleted OUs.
-        const ouIds = await this.getDescendantOUs(target.organizationUnitId);
+        const ouIds = await organizationUnitService.getDescendantOUs(target.organizationUnitId);
         
         if (ouIds.length > 0) {
           const memberships = await prisma.membership.findMany({
@@ -123,44 +124,6 @@ export class TargetResolutionService {
     }
 
     return resolvedUsers;
-  }
-
-  /**
-   * Helper to perform cycle-safe BFS to find all descendant OU IDs including the root OU ID.
-   * Only returns/walks OUs where deletedAt is null.
-   */
-  private async getDescendantOUs(rootOuId: string): Promise<string[]> {
-    const rootOu = await prisma.organizationUnit.findUnique({
-      where: { id: rootOuId },
-    });
-    if (!rootOu || rootOu.deletedAt !== null) {
-      return [];
-    }
-
-    const result: string[] = [rootOuId];
-    const queue: string[] = [rootOuId];
-    const visited = new Set<string>([rootOuId]);
-
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-      const children = await prisma.organizationUnit.findMany({
-        where: {
-          parentId: currentId,
-          deletedAt: null,
-        },
-        select: { id: true },
-      });
-
-      for (const child of children) {
-        if (!visited.has(child.id)) {
-          visited.add(child.id);
-          result.push(child.id);
-          queue.push(child.id);
-        }
-      }
-    }
-
-    return result;
   }
 }
 

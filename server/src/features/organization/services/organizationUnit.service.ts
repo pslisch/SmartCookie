@@ -386,6 +386,38 @@ export class OrganizationUnitService {
     return result;
   }
 
+  // Internal helper to walk descendants using BFS
+  async getDescendantOUs(rootOuId: string): Promise<string[]> {
+    const rootOu = await prisma.organizationUnit.findUnique({
+      where: { id: rootOuId },
+    });
+    if (!rootOu || rootOu.deletedAt !== null) {
+      return [];
+    }
+
+    const queue = [rootOuId];
+    const descendantOus = [rootOuId];
+    const visited = new Set<string>([rootOuId]);
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const children = await prisma.organizationUnit.findMany({
+        where: { parentId: currentId, deletedAt: null },
+        select: { id: true },
+      });
+      
+      for (const child of children) {
+        if (!visited.has(child.id)) {
+          visited.add(child.id);
+          descendantOus.push(child.id);
+          queue.push(child.id);
+        }
+      }
+    }
+
+    return descendantOus;
+  }
+
   // Internal helper to walk descendants
   private async getDescendants(nodeId: string): Promise<string[]> {
     const children = await prisma.organizationUnit.findMany({

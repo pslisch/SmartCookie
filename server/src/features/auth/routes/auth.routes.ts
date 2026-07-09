@@ -45,7 +45,7 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
       secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'none',
+      sameSite: 'lax',
     });
 
     let roleName: string | null = null;
@@ -241,7 +241,7 @@ router.post('/activate', async (req: Request, res: Response) => {
       secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'none',
+      sameSite: 'lax',
     });
 
     let roleName: string | null = null;
@@ -390,7 +390,7 @@ router.post('/reset-password', async (req: Request, res: Response) => {
       secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'none',
+      sameSite: 'lax',
     });
 
     let roleName: string | null = null;

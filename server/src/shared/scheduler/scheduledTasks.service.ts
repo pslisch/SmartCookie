@@ -139,9 +139,12 @@ export class ScheduledTasksService {
           }
         });
 
-        for (const user of potentialManagers) {
-          const hasPerm = await permissionResolverService.hasPermission(user.id, 'organization', 'manage-groups');
-          if (hasPerm && user.email) {
+        const potentialManagerIds = potentialManagers.map(u => u.id);
+        const authorizedManagerIds = await permissionResolverService.filterUsersWithPermission(potentialManagerIds, 'organization', 'manage-groups');
+        const authorizedManagers = potentialManagers.filter(u => authorizedManagerIds.includes(u.id));
+
+        for (const user of authorizedManagers) {
+          if (user.email) {
             recipientEmails.add(user.email.trim());
           }
         }
