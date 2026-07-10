@@ -77,15 +77,61 @@ Every registered component should include:
 
 ### 8. `Settings`
 - **Location**: `src/features/rbac/pages/Settings.tsx`
-- **Purpose**: System-wide configuration panel housing administrative subsystems like access control registries and user directories.
+- **Purpose**: Superuser-only settings and configuration panel showing an empty state until further configurable system features are added.
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx`
-- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `RoleManagement`, Lucide Icons
+- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, Lucide Icons
 
 ### 9. `RoleManagement`
 - **Location**: `src/features/rbac/pages/RoleManagement.tsx`
 - **Purpose**: Full-featured interactive administrator interface to view roles, create/duplicate/delete custom roles, map parent inheritance options, and configure modular permission grids.
 - **Props**: None (Self-contained).
-- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Used By**: `src/features/management/pages/Management.tsx`
 - **Dependencies**: React, `react-i18next`, Lucide Icons, Fetch API, CSRF Token helper
+
+### 10. `Management`
+- **Location**: `src/features/management/pages/Management.tsx`
+- **Purpose**: Centralized administration and oversight hub presenting gated cards for Role Management, User & Group Management, and Lesson Assignments.
+- **Props**: None (Self-contained).
+- **Used By**: `src/App.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `usePermission`, `RoleManagement`, `UserGroupManagement`, `AssignmentManagement`, `ContentManagement`, Lucide Icons
+
+### 11. `AssignmentManagement`
+- **Location**: `src/features/assignments/pages/AssignmentManagement.tsx`
+- **Purpose**: Manage, dispatch, list, and cancel assignments with full role-based permissions gating, targets pickers (departments, cohorts, individual users), due dates, and mandatory indicators.
+- **Props**: None (Self-contained).
+- **Used By**: `src/features/management/pages/Management.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `usePermission`, Lucide Icons
+
+### 12. `ContentManagement`
+- **Location**: `src/features/assignments/pages/ContentManagement.tsx`
+- **Purpose**: Create minimal Lesson and Course stub drafts, toggle publication status, and order lessons inside courses.
+- **Props**: None (Self-contained).
+- **Used By**: `src/features/management/pages/Management.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, Lucide Icons
+
+### 13. `MyLessons`
+- **Location**: `src/features/lessons/pages/MyLessons.tsx`
+- **Purpose**: Comprehensive dashboard for learners to track and complete assigned studies, view due dates, and manage their self-assigned courses/lessons list.
+- **Props**: None (Self-contained).
+- **Used By**: `src/App.tsx` (via hash navigation)
+- **Dependencies**: React, `motion/react`, Lucide Icons, Fetch API
+
+### 14. `Catalog`
+- **Location**: `src/features/catalog/pages/Catalog.tsx`
+- **Purpose**: Interactive course and lesson curriculum catalog for users to discover and self-assign new learning content.
+- **Props**: None (Self-contained).
+- **Used By**: `src/App.tsx` (via hash navigation)
+- **Dependencies**: React, `motion/react`, Lucide Icons, Fetch API
+
+### 15. `AssignmentInstanceReport`
+- **Location**: `src/features/assignments/components/AssignmentInstanceReport.tsx`
+- **Purpose**: Rich reporting interface and data visualizer displaying progress, completion statistics, overdue tracking, and member completion records for a specific assignment.
+- **Props**:
+  - `assignmentId`: `string` - ID of the assignment to view reports for.
+  - `assignmentTitle`: `string` - Title of the assignment.
+  - `onClose`: `() => void` - Close handler callback.
+- **Used By**: `src/features/assignments/pages/AssignmentManagement.tsx`
+- **Dependencies**: React, `motion/react`, Lucide Icons, Recharts (for analytics visualization)
+
 

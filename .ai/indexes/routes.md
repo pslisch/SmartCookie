@@ -64,4 +64,10 @@ Every listed visual route should eventually document:
 - **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend `usePermission('roles', 'manage')` hook (bounces to `my-lessons` tab if access is unauthorized)
 - **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
 
+### 9. Management Hub
+- **Path**: Local State Tab & Hash URL (`#management`)
+- **Component**: `src/features/management/pages/Management.tsx`
+- **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend permission check (bounces to `my-lessons` if no administrative permission)
+- **Permissions**: Requires active session with administrative permissions (e.g., `assignments:view`, `roles:manage`, etc., Superuser bypasses)
+
 

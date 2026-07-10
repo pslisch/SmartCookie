@@ -11,7 +11,8 @@ import { Footer } from './shared/components/layout/Footer';
 import { MyLessons } from './features/lessons/pages/MyLessons';
 import { Catalog } from './features/catalog/pages/Catalog';
 import { Settings } from './features/rbac/pages/Settings';
-import { AppGate } from './shared/components/AppGate';
+import { Management } from './features/management/pages/Management';
+import { AppGate, useAuth } from './shared/components/AppGate';
 import { usePermission } from './shared/hooks/usePermission';
 import pkg from '@/package.json';
 
@@ -27,21 +28,21 @@ const formatAppName = (rawName: string): string => {
 const getInitialTab = (): Tab => {
   // 1. Check if there was an attempted tab saved before login
   const saved = localStorage.getItem('attemptedTab');
-  if (saved && (saved === 'catalog' || saved === 'my-lessons' || saved === 'settings')) {
+  if (saved && (saved === 'catalog' || saved === 'my-lessons' || saved === 'settings' || saved === 'management')) {
     localStorage.removeItem('attemptedTab');
     return saved as Tab;
   }
 
   // 2. Check URL hash
   const hash = window.location.hash.replace('#', '');
-  if (hash && (hash === 'catalog' || hash === 'my-lessons' || hash === 'settings')) {
+  if (hash && (hash === 'catalog' || hash === 'my-lessons' || hash === 'settings' || hash === 'management')) {
     return hash as Tab;
   }
 
   // 3. Check query param
   const urlParams = new URLSearchParams(window.location.search);
   const tabParam = urlParams.get('tab');
-  if (tabParam && (tabParam === 'catalog' || tabParam === 'my-lessons' || tabParam === 'settings')) {
+  if (tabParam && (tabParam === 'catalog' || tabParam === 'my-lessons' || tabParam === 'settings' || tabParam === 'management')) {
     return tabParam as Tab;
   }
 
@@ -50,27 +51,36 @@ const getInitialTab = (): Tab => {
 
 function AppContent({ appName }: { appName: string }) {
   const [currentTab, setCurrentTab] = useState<Tab>(getInitialTab);
+  const { user } = useAuth();
   
-  const hasRolesManage = usePermission('roles', 'manage');
-  const hasOrgView = usePermission('organization', 'view');
-  const hasOrgCreate = usePermission('organization', 'create');
-  const hasOrgEdit = usePermission('organization', 'edit');
-  const hasOrgDelete = usePermission('organization', 'delete');
-  const hasOrgManageMembers = usePermission('organization', 'manage-members');
-  const hasOrgManageGroups = usePermission('organization', 'manage-groups');
-  const hasSettingsAccess = hasRolesManage || hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups;
+  const hasManagementAccess = 
+    usePermission('roles', 'manage') || 
+    usePermission('organization', 'view') || 
+    usePermission('organization', 'manage-members') || 
+    usePermission('organization', 'manage-groups') || 
+    usePermission('assignments', 'create') || 
+    usePermission('assignments', 'edit') || 
+    usePermission('assignments', 'assign-own-groups') || 
+    usePermission('assignments', 'assign-globally') || 
+    usePermission('assignments', 'view-reports') || 
+    usePermission('assignments', 'create-mandatory');
+
+  const hasSettingsAccess = !!user?.isSuperuser;
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {
     window.location.hash = currentTab;
   }, [currentTab]);
 
-  // Fallback if settings tab is selected but user has no permission
+  // Fallback if settings or management tab is selected but user has no permission
   useEffect(() => {
     if (currentTab === Tab.Settings && !hasSettingsAccess) {
       setCurrentTab(Tab.MyLessons);
     }
-  }, [currentTab, hasSettingsAccess]);
+    if (currentTab === Tab.Management && !hasManagementAccess) {
+      setCurrentTab(Tab.MyLessons);
+    }
+  }, [currentTab, hasSettingsAccess, hasManagementAccess]);
 
   return (
     <Shell>
@@ -87,7 +97,9 @@ function AppContent({ appName }: { appName: string }) {
           <MyLessons />
         ) : currentTab === Tab.Catalog ? (
           <Catalog />
-        ) : hasSettingsAccess ? (
+        ) : currentTab === Tab.Management && hasManagementAccess ? (
+          <Management />
+        ) : currentTab === Tab.Settings && hasSettingsAccess ? (
           <Settings />
         ) : (
           <MyLessons />

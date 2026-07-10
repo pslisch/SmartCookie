@@ -32,9 +32,10 @@ The diagram below outlines the full-stack system architecture, detailing the ent
 |                 |                                     |                     +---------------+-----------+
 |                 |                                     |                     |  Active Tab   |           |
 |                 |                                     |                     |  (Hash Synced)|           |
-|                 |                                     |                     +---------------+-----------+
-|                 |                                     |                     | - MyLessons   | - Catalog |
-|                 |                                     |                     +---------------+-----------+
+|                 |                                     |                     +---------------------------+
+|                 |                                     |                     | - MyLessons  | - Catalog  |
+|                 |                                     |                     | - Management | - Settings |
+|                 |                                     |                     +---------------------------+
 +-----------------+-------------------------------------+-------------------------------------+-----------+
 |                 |                                     |                                     |           |
 |  JSON API (Http)|                                     |                                     |           |
@@ -91,10 +92,22 @@ The diagram below outlines the full-stack system architecture, detailing the ent
 - **`src/features/auth/pages/AcceptInvitation.tsx`**: Account activation workflow. Collects new password input, enforces the system-wide password policy, activates the user, and initiates an immediate log in.
 - **`src/features/auth/pages/ForgotPassword.tsx`**: Privacy-safe recovery trigger. Implements an enumeration-free frontend, showing the exact same confirmation regardless of whether the email is registered or not.
 - **`src/features/auth/pages/ResetPassword.tsx`**: Action page for the recovery flow. Consumes the cryptographic token, validates the new password, destroys all other device sessions to protect compromised credentials, and creates a fresh session.
-- **`src/features/rbac/pages/Settings.tsx` & `RoleManagement.tsx`**: Administrative control center for role registries, parent mappings, and permission grids.
+- **`src/features/management/pages/Management.tsx`**: Management Portal. Gated admin hub serving as the central coordinator for Lesson & Course creation, assignment distribution, student cohort group mapping, and role configuration.
+- **`src/features/assignments/pages/AssignmentManagement.tsx`**: Assignment Management console. Facilitates scheduling and targets picking (OUs, learning groups, individuals) for lessons and courses. Allows viewing learner completion reports.
+- **`src/features/assignments/pages/ContentManagement.tsx`**: Lesson & Course Content designer. Allows administrators to draft lessons, bundle them into multi-lesson courses, customize ordering, and toggle publication status.
+- **`src/features/catalog/pages/Catalog.tsx`**: Refactored Curriculum Catalog. Lists all published lessons and courses, allowing users to discover and self-assign learning items directly with real-time assigned status sync.
+- **`src/features/lessons/pages/MyLessons.tsx`**: Refactored Student Hub. Lists all assigned lessons (self-assigned, group-assigned, or mandatory dept-assigned), displaying active completion tracking, due dates, progress, and allowing self-assignment removals.
+- **`src/features/rbac/pages/Settings.tsx` & `RoleManagement.tsx`**: Administrative control center for role registries, parent mappings, and permission grids. Now focuses purely on system preferences, user/group overview, and roles configuration.
 - **`src/shared/hooks/usePermission.ts`**: High-performance permission hooks that leverage session states and company-wide inheritance context, offering dynamic short-circuiting for Superusers.
 - **`src/shared/components/layout/Shell.tsx`**: Layout envelope anchoring nav-bars, footers, and active content canvas.
 - **`src/shared/components/layout/Navbar.tsx`**: Responsive header syncing client tabs with active URL fragments.
+
+### 🧭 Navigation & Layout Restructuring
+To support enterprise scaling and clean administrative partitioning, the main Shell layout navigation was reorganized. The top-level **Settings** tab (which previously directly housed user lists and system role registries) was split into two separate paths to separate concerns:
+1. **Management Hub (`#management`)**: A central administrative suite gathering Content Management (lessons and courses), Assignment Management (allocating items to OUs, groups, or individuals), and general management tools.
+2. **Settings Area (`#settings`)**: Shifted to concentrate purely on system configuration, role permission grids, and company-wide profile preferences.
+
+This restructuring guarantees administrators have single-click access to specific workflows without cluttering settings panels, and ensures a clean user interface for both regular learners and advanced corporate administrators.
 
 ### Backend Architecture (ADR-0004)
 - **`server/src/features/auth/routes/setup.routes.ts`**: Handles system status checks and initialization forms. Protected by a complete-check middleware that returns 403 Forbidden once the wizard is finalized.

@@ -5,11 +5,12 @@
 
 import React, { useState } from 'react';
 import { Tab } from '../../types';
-import { User, Menu, X, BookOpen, Compass, Languages, Settings } from 'lucide-react';
+import { User, Menu, X, BookOpen, Compass, Languages, Settings, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { usePermission } from '../../hooks/usePermission';
+import { useAuth } from '../AppGate';
 
 interface NavbarProps {
   currentTab: Tab;
@@ -24,15 +25,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
+  const { user } = useAuth();
   
-  const hasRolesManage = usePermission('roles', 'manage');
-  const hasOrgView = usePermission('organization', 'view');
-  const hasOrgCreate = usePermission('organization', 'create');
-  const hasOrgEdit = usePermission('organization', 'edit');
-  const hasOrgDelete = usePermission('organization', 'delete');
-  const hasOrgManageMembers = usePermission('organization', 'manage-members');
-  const hasOrgManageGroups = usePermission('organization', 'manage-groups');
-  const hasSettingsAccess = hasRolesManage || hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups;
+  const hasManagementAccess = 
+    usePermission('roles', 'manage') || 
+    usePermission('organization', 'view') || 
+    usePermission('organization', 'manage-members') || 
+    usePermission('organization', 'manage-groups') || 
+    usePermission('assignments', 'create') || 
+    usePermission('assignments', 'edit') || 
+    usePermission('assignments', 'assign-own-groups') || 
+    usePermission('assignments', 'assign-globally') || 
+    usePermission('assignments', 'view-reports') || 
+    usePermission('assignments', 'create-mandatory');
+
+  const hasSettingsAccess = !!user?.isSuperuser;
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -103,6 +110,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 />
               )}
             </button>
+
+            {hasManagementAccess && (
+              <button
+                onClick={() => handleTabSelect(Tab.Management)}
+                className={`relative flex items-center space-x-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                  currentTab === Tab.Management ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800'
+                }`}
+                id="tab-management-desktop"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                <span>{t('nav.management')}</span>
+                {currentTab === Tab.Management && (
+                  <motion.div
+                    layoutId="active-tab-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
+            )}
 
             {hasSettingsAccess && (
               <button
@@ -186,6 +213,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Compass className="h-5 w-5" />
                 <span>{t('nav.catalog')}</span>
               </button>
+
+              {hasManagementAccess && (
+                <button
+                  onClick={() => handleTabSelect(Tab.Management)}
+                  className={`flex w-full items-center space-x-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+                    currentTab === Tab.Management ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  }`}
+                  id="tab-management-mobile"
+                >
+                  <LayoutDashboard className="h-5 w-5" />
+                  <span>{t('nav.management')}</span>
+                </button>
+              )}
 
               {hasSettingsAccess && (
                 <button

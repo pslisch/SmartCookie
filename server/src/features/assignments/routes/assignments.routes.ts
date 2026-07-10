@@ -207,6 +207,22 @@ router.get('/:id/instances', async (req: Request, res: Response) => {
             username: true,
             email: true,
           }
+        },
+        sources: {
+          include: {
+            sourceOrganizationUnit: {
+              select: {
+                id: true,
+                name: true,
+              }
+            },
+            sourceLearningGroup: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
+          }
         }
       }
     });
@@ -270,6 +286,58 @@ router.delete('/self-assign/:instanceId', async (req: Request, res: Response) =>
  */
 export const assignmentInstancesRouter = Router();
 assignmentInstancesRouter.use(requireAuth);
+
+/**
+ * GET /api/assignment-instances
+ * Lists the logged-in user's own assignment instances.
+ * Gated by assignments:view.
+ */
+assignmentInstancesRouter.get('/', async (req: Request, res: Response) => {
+  try {
+    const hasPerm = await permissionResolverService.hasPermission(req.user!.id, 'assignments', 'view');
+    if (!hasPerm) {
+      return res.status(403).json({ error: 'Forbidden: Missing required permission "assignments:view".' });
+    }
+
+    const instances = await prisma.userAssignmentInstance.findMany({
+      where: {
+        userId: req.user!.id,
+        deletedAt: null,
+      },
+      include: {
+        sources: {
+          include: {
+            sourceOrganizationUnit: {
+              select: { id: true, name: true }
+            },
+            sourceLearningGroup: {
+              select: { id: true, name: true }
+            }
+          }
+        },
+        assignment: {
+          include: {
+            lesson: {
+              select: {
+                id: true,
+                title: true,
+                status: true,
+                completionRule: true,
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc',
+      }
+    });
+
+    return res.json(instances);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to retrieve your assignment instances.' });
+  }
+});
 
 /**
  * POST /api/assignment-instances/:id/complete

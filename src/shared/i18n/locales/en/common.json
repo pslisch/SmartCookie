@@ -6,6 +6,7 @@
     "openMenu": "Open main menu",
     "language": "Language",
     "changeLanguage": "Change language",
+    "management": "Management",
     "settings": "Settings"
   },
   "footer": {
@@ -138,7 +139,27 @@
     "backBtn": "Back to Settings Hub",
     "managePermissionsBtn": "Manage Permissions",
     "manageDirectoryBtn": "Manage Directory",
-    "userGroupManagementDesc": "Manage organization units, hierarchy, learning groups, and memberships for corporate structural organization."
+    "userGroupManagementDesc": "Manage organization units, hierarchy, learning groups, and memberships for corporate structural organization.",
+    "emptyState": "No settings are configurable yet - check back as more features are added."
+  },
+  "management": {
+    "titleHub": "Management Hub",
+    "hubSubtitle": "Oversee system roles, organization structure, and course/lesson assignments.",
+    "roles": "Role Management",
+    "rolesDesc": "Configure roles, duplicate/delete them, and customize hierarchical parent role access levels.",
+    "rolesSubtitle": "Configure role-based access control (RBAC), system permissions, and company settings.",
+    "userGroupManagement": "User & Group Management",
+    "userGroupManagementDesc": "Manage organization units, hierarchy, learning groups, and memberships for corporate structural organization.",
+    "userGroupManagementSubtitle": "Manage your company department structure, organization units, and learning group cohorts.",
+    "assignments": "Assignment Management",
+    "assignmentsDesc": "Create and track learning assignments, assign courses to groups or individuals, and view compliance reports.",
+    "assignmentsSubtitle": "Manage lesson and course assignments, set completion targets, and track user progress.",
+    "activeSession": "Active Session",
+    "backBtn": "Back to Management Hub",
+    "managePermissionsBtn": "Manage Permissions",
+    "manageDirectoryBtn": "Manage Directory",
+    "manageAssignmentsBtn": "Manage Assignments",
+    "placeholder": "Assignment Management feature is coming in Task 5."
   },
   "rbac": {
     "title": "Role-Based Access Control",

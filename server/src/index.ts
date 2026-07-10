@@ -11,6 +11,7 @@ import companyRouter from './features/rbac/routes/company.routes';
 import organizationUnitsRouter from './features/organization/routes/organizationUnits.routes';
 import learningGroupsRouter from './features/organization/routes/learningGroups.routes';
 import assignmentsRouter, { assignmentInstancesRouter } from './features/assignments/routes/assignments.routes';
+import contentRouter from './features/assignments/routes/content.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
@@ -66,6 +67,7 @@ async function startServer() {
   app.use('/api/learning-groups', learningGroupsRouter);
   app.use('/api/assignments', assignmentsRouter);
   app.use('/api/assignment-instances', assignmentInstancesRouter);
+  app.use('/api', contentRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {
