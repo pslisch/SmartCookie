@@ -315,7 +315,7 @@ export const Catalog: React.FC = () => {
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              {tab === 'LESSONS' ? t('catalog.tabs.lessons') : t('catalog.tabs.courses')}
+              {tab === 'LESSONS' ? t('catalog.lessonsTab') : t('catalog.coursesTab')}
             </button>
           ))}
         </div>
@@ -331,9 +331,9 @@ export const Catalog: React.FC = () => {
         filteredLessons.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-16 text-center text-slate-400">
             <BookOpen className="h-10 w-10 mx-auto text-slate-300 mb-3" />
-            <p className="text-base font-bold text-slate-600">{t('catalog.noLessons')}</p>
+            <p className="text-base font-bold text-slate-600">{t('catalog.noLessonsTitle')}</p>
             <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-              {t('catalog.noLessonsDetail')}
+              {t('catalog.noLessonsDesc')}
             </p>
           </div>
         ) : (
@@ -350,12 +350,12 @@ export const Catalog: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
                         <BookOpen className="h-3 w-3" />
-                        {t('catalog.lessonLabel')}
+                        {t('catalog.lessonBadge')}
                       </span>
                       {assigned && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
                           <Check className="h-3.5 w-3.5" />
-                          {t('catalog.assignedLabel')}
+                          {t('catalog.assignedBadge')}
                         </span>
                       )}
                     </div>
@@ -409,9 +409,9 @@ export const Catalog: React.FC = () => {
       ) : filteredCourses.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-16 text-center text-slate-400">
           <Bookmark className="h-10 w-10 mx-auto text-slate-300 mb-3" />
-          <p className="text-base font-bold text-slate-600">{t('catalog.noCourses')}</p>
+          <p className="text-base font-bold text-slate-600">{t('catalog.noCoursesTitle')}</p>
           <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-            {t('catalog.noCoursesDetail')}
+            {t('catalog.noCoursesDesc')}
           </p>
         </div>
       ) : (
@@ -432,7 +432,7 @@ export const Catalog: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
                       <Layers className="h-3.5 w-3.5" />
-                      {t('catalog.courseLabel')}
+                      {t('catalog.courseBadge')}
                     </span>
                     <span className="text-xs font-bold text-slate-400">
                       {t('catalog.lessonsCount', { count: totalLessons })}
@@ -466,10 +466,10 @@ export const Catalog: React.FC = () => {
                               </span>
                               {assigned ? (
                                 <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 gap-0.5">
-                                  <Check className="h-3 w-3" /> {t('catalog.assignedLabel')}
+                                  <Check className="h-3 w-3" /> {t('catalog.assignedBadge')}
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-bold text-slate-400">{t('catalog.notAssignedLabel')}</span>
+                                <span className="text-[10px] font-bold text-slate-400">{t('catalog.notAssignedBadge')}</span>
                               )}
                             </div>
                           );
