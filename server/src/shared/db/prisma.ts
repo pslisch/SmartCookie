@@ -14,9 +14,17 @@ function getPrisma(): PrismaClient {
     if (globalForPrisma.prisma) {
       prismaInstance = globalForPrisma.prisma;
     } else {
-      const dbUrl = process.env.DATABASE_URL;
+      let dbUrl = process.env.DATABASE_URL;
       if (!dbUrl) {
         throw new Error('DATABASE_URL environment variable is required');
+      }
+
+      // Strip enclosing quotes if they exist
+      if (
+        (dbUrl.startsWith('"') && dbUrl.endsWith('"')) ||
+        (dbUrl.startsWith("'") && dbUrl.endsWith("'"))
+      ) {
+        dbUrl = dbUrl.slice(1, -1);
       }
 
       const adapter = new PrismaMariaDb(dbUrl);

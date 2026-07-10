@@ -79,18 +79,18 @@ export const ContentManagement: React.FC = () => {
   const fetchLessons = async () => {
     try {
       const res = await fetch('/api/lessons');
-      if (!res.ok) throw new Error('Failed to load lessons.');
+      if (!res.ok) throw new Error(t('content.messages.fetchLessonsError'));
       const data = await res.json();
       setLessons(data);
     } catch (err: any) {
-      setError(err.message || 'Error loading lessons.');
+      setError(err.message || t('content.messages.fetchLessonsErr'));
     }
   };
 
   const fetchCourses = async () => {
     try {
       const res = await fetch('/api/courses');
-      if (!res.ok) throw new Error('Failed to load courses.');
+      if (!res.ok) throw new Error(t('content.messages.fetchCoursesError'));
       const data = await res.json();
       setCourses(data);
 
@@ -103,7 +103,7 @@ export const ContentManagement: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Error loading courses.');
+      setError(err.message || t('content.messages.fetchCoursesErr'));
     }
   };
 
@@ -139,16 +139,16 @@ export const ContentManagement: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to create lesson.');
+        throw new Error(data.error || t('content.messages.createLessonError'));
       }
 
       const newLesson = await res.json();
       setLessons((prev) => [newLesson, ...prev]);
-      setSuccess(`Lesson "${newLesson.title}" created successfully as Draft.`);
+      setSuccess(t('content.messages.createLessonSuccess', { title: newLesson.title }));
       setShowCreateModal(false);
       setTitleInput('');
     } catch (err: any) {
-      setError(err.message || 'Failed to create lesson.');
+      setError(err.message || t('content.messages.createLessonError'));
     } finally {
       setIsActionLoading(false);
     }
@@ -175,16 +175,16 @@ export const ContentManagement: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to create course.');
+        throw new Error(data.error || t('content.messages.createCourseError'));
       }
 
       const newCourse = await res.json();
       setCourses((prev) => [newCourse, ...prev]);
-      setSuccess(`Course "${newCourse.title}" created successfully as Draft.`);
+      setSuccess(t('content.messages.createCourseSuccess', { title: newCourse.title }));
       setShowCreateModal(false);
       setTitleInput('');
     } catch (err: any) {
-      setError(err.message || 'Failed to create course.');
+      setError(err.message || t('content.messages.createCourseError'));
     } finally {
       setIsActionLoading(false);
     }
@@ -205,21 +205,22 @@ export const ContentManagement: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to update publication status.');
+        throw new Error(data.error || t('content.messages.togglePublishError'));
       }
 
       const updated = await res.json();
       setLessons((prev) => prev.map((l) => (l.id === lesson.id ? updated : l)));
       setSuccess(
-        `Lesson "${lesson.title}" is now ${
-          updated.status === 'PUBLISHED' ? 'Published' : 'Draft'
-        }.`
+        t('content.messages.togglePublishSuccess', {
+          title: lesson.title,
+          status: updated.status === 'PUBLISHED' ? t('content.published') : t('content.draft')
+        })
       );
 
       // Refresh courses as well to reflect changes in included lessons
       await fetchCourses();
     } catch (err: any) {
-      setError(err.message || 'Failed to toggle status.');
+      setError(err.message || t('content.messages.togglePublishErr'));
     }
   };
 
@@ -238,18 +239,19 @@ export const ContentManagement: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to update publication status.');
+        throw new Error(data.error || t('content.messages.togglePublishError'));
       }
 
       const updated = await res.json();
       setCourses((prev) => prev.map((c) => (c.id === course.id ? updated : c)));
       setSuccess(
-        `Course "${course.title}" is now ${
-          updated.status === 'PUBLISHED' ? 'Published' : 'Draft'
-        }.`
+        t('content.messages.togglePublishCourseSuccess', {
+          title: course.title,
+          status: updated.status === 'PUBLISHED' ? t('content.published') : t('content.draft')
+        })
       );
     } catch (err: any) {
-      setError(err.message || 'Failed to toggle status.');
+      setError(err.message || t('content.messages.togglePublishErr'));
     }
   };
 
@@ -299,7 +301,7 @@ export const ContentManagement: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to save course lessons.');
+        throw new Error(data.error || t('content.messages.saveCourseLessonsError'));
       }
 
       const updatedCourse = await res.json();
@@ -307,9 +309,9 @@ export const ContentManagement: React.FC = () => {
         prev.map((c) => (c.id === selectedCourse.id ? updatedCourse : c))
       );
       setSelectedCourse(updatedCourse);
-      setSuccess(`Lessons inside Course "${selectedCourse.title}" saved successfully.`);
+      setSuccess(t('content.messages.saveCourseLessonsSuccess', { title: selectedCourse.title }));
     } catch (err: any) {
-      setError(err.message || 'Failed to update course lessons.');
+      setError(err.message || t('content.messages.saveCourseLessonsErr'));
     } finally {
       setIsActionLoading(false);
     }
@@ -365,7 +367,7 @@ export const ContentManagement: React.FC = () => {
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Lessons
+            {t('content.lessonsTab')}
           </button>
           <button
             onClick={() => {
@@ -377,7 +379,7 @@ export const ContentManagement: React.FC = () => {
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Courses
+            {t('content.coursesTab')}
           </button>
         </div>
 
@@ -390,7 +392,7 @@ export const ContentManagement: React.FC = () => {
           className="flex items-center justify-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          <span>{activeTab === 'lessons' ? 'Create Lesson' : 'Create Course'}</span>
+          <span>{activeTab === 'lessons' ? t('content.createLessonBtn') : t('content.createCourseBtn')}</span>
         </button>
       </div>
 
@@ -399,13 +401,13 @@ export const ContentManagement: React.FC = () => {
         {/* Left main column: List of items */}
         <div className="lg:col-span-2 space-y-4">
           <h2 className="text-lg font-bold text-slate-800 font-sans">
-            {activeTab === 'lessons' ? 'All Lessons' : 'All Courses'}
+            {activeTab === 'lessons' ? t('content.allLessons') : t('content.allCourses')}
           </h2>
 
           {activeTab === 'lessons' ? (
             lessons.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-400">
-                No lessons found. Create a lesson stub to begin.
+                {t('content.noLessons')}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
@@ -419,7 +421,7 @@ export const ContentManagement: React.FC = () => {
                         {lesson.title}
                       </h4>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Created at: {new Date(lesson.createdAt).toLocaleDateString()}
+                        {t('content.createdAt', { date: new Date(lesson.createdAt).toLocaleDateString() })}
                       </p>
                     </div>
 
@@ -432,7 +434,7 @@ export const ContentManagement: React.FC = () => {
                             : 'bg-slate-50 text-slate-600 border border-slate-100'
                         }`}
                       >
-                        {lesson.status}
+                        {lesson.status === 'PUBLISHED' ? t('content.published') : t('content.draft')}
                       </span>
 
                       {/* Action Publish/Unpublish */}
@@ -443,7 +445,7 @@ export const ContentManagement: React.FC = () => {
                             ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
                             : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
                         }`}
-                        title={lesson.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
+                        title={lesson.status === 'PUBLISHED' ? t('content.unpublishTooltip') : t('content.publishTooltip')}
                       >
                         {lesson.status === 'PUBLISHED' ? (
                           <EyeOff className="h-4.5 w-4.5" />
@@ -458,7 +460,7 @@ export const ContentManagement: React.FC = () => {
             )
           ) : courses.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-400">
-              No courses found. Create a course stub to begin.
+              {t('content.noCourses')}
             </div>
           ) : (
             <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
@@ -475,11 +477,11 @@ export const ContentManagement: React.FC = () => {
                         {course.title}
                       </h4>
                       <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-lg">
-                        {course.courseLessons.length} lessons
+                        {t('content.lessonsCount', { count: course.courseLessons.length })}
                       </span>
                     </div>
                     <p className="text-xs text-slate-400 mt-1">
-                      Created at: {new Date(course.createdAt).toLocaleDateString()}
+                      {t('content.createdAt', { date: new Date(course.createdAt).toLocaleDateString() })}
                     </p>
                   </div>
 
@@ -492,7 +494,7 @@ export const ContentManagement: React.FC = () => {
                           : 'bg-slate-50 text-slate-600 border border-slate-100'
                       }`}
                     >
-                      {course.status}
+                      {course.status === 'PUBLISHED' ? t('content.published') : t('content.draft')}
                     </span>
 
                     {/* Manage internal lessons */}
@@ -504,7 +506,7 @@ export const ContentManagement: React.FC = () => {
                           : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      <span>Structure</span>
+                      <span>{t('content.structureBtn')}</span>
                       <ChevronRight className="h-3 w-3" />
                     </button>
 
@@ -516,7 +518,7 @@ export const ContentManagement: React.FC = () => {
                           ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
                           : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
                       }`}
-                      title={course.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
+                      title={course.status === 'PUBLISHED' ? t('content.unpublishTooltip') : t('content.publishTooltip')}
                     >
                       {course.status === 'PUBLISHED' ? (
                         <EyeOff className="h-4.5 w-4.5" />
@@ -534,30 +536,30 @@ export const ContentManagement: React.FC = () => {
         {/* Right sidebar column: Structure and Ordering manager for Courses */}
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-slate-800 font-sans">
-            Course Structure & Order
+            {t('content.courseStructureTitle')}
           </h2>
 
           {selectedCourse ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 space-y-4 shadow-sm">
               <div className="border-b border-slate-200 pb-3 flex justify-between items-center">
                 <div>
-                  <span className="text-[10px] font-bold text-blue-600 tracking-wider uppercase">Editing Course</span>
+                  <span className="text-[10px] font-bold text-blue-600 tracking-wider uppercase">{t('content.editingCourse')}</span>
                   <h3 className="font-bold text-slate-800 text-base">{selectedCourse.title}</h3>
                 </div>
                 <button
                   onClick={() => setSelectedCourse(null)}
                   className="text-slate-400 hover:text-slate-600 text-xs font-semibold"
                 >
-                  Deselect
+                  {t('content.deselectBtn')}
                 </button>
               </div>
 
               {/* Orderable lists */}
               <div className="space-y-2">
-                <span className="text-xs font-bold text-slate-500">Ordered List</span>
+                <span className="text-xs font-bold text-slate-500">{t('content.orderedList')}</span>
                 {courseLessons.length === 0 ? (
                   <p className="text-xs text-slate-400 italic py-2 text-center border border-dashed border-slate-200 rounded-xl bg-white">
-                    No lessons assigned to this course yet. Add some from the picker below.
+                    {t('content.noLessonsInCourse')}
                   </p>
                 ) : (
                   <div className="space-y-1.5 max-h-60 overflow-y-auto">
@@ -573,7 +575,7 @@ export const ContentManagement: React.FC = () => {
                           <span className="font-bold text-slate-700 truncate">{les.title}</span>
                           {les.status === 'DRAFT' && (
                             <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
-                              Draft
+                              {t('content.draftBadge')}
                             </span>
                           )}
                         </div>
@@ -615,13 +617,13 @@ export const ContentManagement: React.FC = () => {
                 {isActionLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <span>Save Course Structure</span>
+                  <span>{t('content.saveStructureBtn')}</span>
                 )}
               </button>
 
               {/* Picker list to add lessons */}
               <div className="border-t border-slate-200 pt-3 space-y-2">
-                <span className="text-xs font-bold text-slate-500">Add Lesson to Course</span>
+                <span className="text-xs font-bold text-slate-500">{t('content.addLessonToCourse')}</span>
                 <div className="space-y-1 max-h-48 overflow-y-auto">
                   {lessons
                     .filter((l) => !courseLessons.some((cl) => cl.id === l.id))
@@ -637,7 +639,7 @@ export const ContentManagement: React.FC = () => {
                     ))}
                   {lessons.filter((l) => !courseLessons.some((cl) => cl.id === l.id)).length === 0 && (
                     <p className="text-xs text-slate-400 italic text-center py-2">
-                      All lessons are already in this course.
+                      {t('content.allLessonsInCourse')}
                     </p>
                   )}
                 </div>
@@ -645,7 +647,7 @@ export const ContentManagement: React.FC = () => {
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center text-slate-400 text-sm">
-              Select a Course first to view/manage its lesson structure and order.
+              {t('content.selectCourseFirst')}
             </div>
           )}
         </div>
@@ -661,13 +663,13 @@ export const ContentManagement: React.FC = () => {
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-lg font-bold text-slate-900 font-sans">
-                {activeTab === 'lessons' ? 'Create New Lesson' : 'Create New Course'}
+                {activeTab === 'lessons' ? t('content.createModal.newLessonTitle') : t('content.createModal.newCourseTitle')}
               </h3>
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="text-slate-400 hover:text-slate-600"
               >
-                Cancel
+                {t('content.createModal.cancelBtn')}
               </button>
             </div>
 
@@ -677,7 +679,7 @@ export const ContentManagement: React.FC = () => {
             >
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Title
+                  {t('content.createModal.titleLabel')}
                 </label>
                 <input
                   type="text"
@@ -685,7 +687,7 @@ export const ContentManagement: React.FC = () => {
                   value={titleInput}
                   onChange={(e) => setTitleInput(e.target.value)}
                   placeholder={
-                    activeTab === 'lessons' ? 'Enter lesson title...' : 'Enter course title...'
+                    activeTab === 'lessons' ? t('content.createModal.lessonPlaceholder') : t('content.createModal.coursePlaceholder')
                   }
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-bold text-slate-800 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none"
                 />
@@ -697,7 +699,7 @@ export const ContentManagement: React.FC = () => {
                   onClick={() => setShowCreateModal(false)}
                   className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {t('content.createModal.cancelBtn')}
                 </button>
                 <button
                   type="submit"
@@ -707,7 +709,7 @@ export const ContentManagement: React.FC = () => {
                   {isActionLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <span>Create</span>
+                    <span>{t('content.createModal.createBtn')}</span>
                   )}
                 </button>
               </div>

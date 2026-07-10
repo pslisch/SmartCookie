@@ -45,7 +45,15 @@ async function startServer() {
 
   // JSON body parsing and cookie parsing
   app.use(express.json());
-  const sessionSecret = process.env.SESSION_SECRET;
+  let sessionSecret = process.env.SESSION_SECRET;
+  if (sessionSecret) {
+    if (
+      (sessionSecret.startsWith('"') && sessionSecret.endsWith('"')) ||
+      (sessionSecret.startsWith("'") && sessionSecret.endsWith("'"))
+    ) {
+      sessionSecret = sessionSecret.slice(1, -1);
+    }
+  }
   if (!sessionSecret && process.env.NODE_ENV === 'production') {
     throw new Error('SESSION_SECRET must be set in production');
   }

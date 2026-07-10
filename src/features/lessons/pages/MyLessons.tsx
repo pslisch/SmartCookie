@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   BookOpen,
@@ -70,6 +71,7 @@ function getCookie(name: string): string {
 }
 
 export const MyLessons: React.FC = () => {
+  const { t } = useTranslation();
   const [instances, setInstances] = useState<UserAssignmentInstance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState<string | null>(null);
@@ -85,12 +87,12 @@ export const MyLessons: React.FC = () => {
       const res = await fetch('/api/assignment-instances');
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to fetch assigned lessons.');
+        throw new Error(data.error || t('myLessons.messages.fetchLessonsError'));
       }
       const data = await res.json();
       setInstances(data);
     } catch (err: any) {
-      setError(err.message || 'Error loading lessons.');
+      setError(err.message || t('myLessons.messages.fetchLessonsErr'));
     } finally {
       setIsLoading(false);
     }
@@ -115,21 +117,21 @@ export const MyLessons: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to mark lesson as complete.');
+        throw new Error(data.error || t('myLessons.messages.completeError'));
       }
 
-      setSuccess('Lesson completed successfully!');
+      setSuccess(t('myLessons.messages.completeSuccess'));
       // Refresh local list
       await fetchMyLessons();
     } catch (err: any) {
-      setError(err.message || 'Error completing lesson.');
+      setError(err.message || t('myLessons.messages.completeErr'));
     } finally {
       setIsActionLoading(null);
     }
   };
 
   const handleRemoveSelfAssignment = async (instanceId: string) => {
-    if (!confirm('Are you sure you want to remove this self-assigned lesson?')) {
+    if (!confirm(t('myLessons.removeSelfAssignConfirm'))) {
       return;
     }
 
@@ -147,14 +149,14 @@ export const MyLessons: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to remove self-assigned lesson.');
+        throw new Error(data.error || t('myLessons.messages.removeError'));
       }
 
-      setSuccess('Self-assigned lesson removed successfully.');
+      setSuccess(t('myLessons.messages.removeSuccess'));
       // Refresh local list
       await fetchMyLessons();
     } catch (err: any) {
-      setError(err.message || 'Error removing lesson.');
+      setError(err.message || t('myLessons.messages.removeErr'));
     } finally {
       setIsActionLoading(null);
     }
@@ -202,10 +204,10 @@ export const MyLessons: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-800 font-sans">
-            My Lessons & Assignments
+            {t('myLessons.title')}
           </h1>
           <p className="text-sm text-slate-400 mt-1 font-medium">
-            View, track progress, and complete your assigned learning content.
+            {t('myLessons.subtitle')}
           </p>
         </div>
       </div>
@@ -243,7 +245,7 @@ export const MyLessons: React.FC = () => {
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search your lessons..."
+            placeholder={t('myLessons.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
@@ -252,19 +254,25 @@ export const MyLessons: React.FC = () => {
 
         {/* Filter Tabs */}
         <div className="flex items-center gap-1 bg-slate-200 p-1 rounded-xl self-start md:self-auto">
-          {(['ALL', 'IN_PROGRESS', 'COMPLETED'] as const).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all uppercase tracking-wide ${
-                activeFilter === filter
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {filter.replace('_', ' ')}
-            </button>
-          ))}
+          {(['ALL', 'IN_PROGRESS', 'COMPLETED'] as const).map((filter) => {
+            let label = '';
+            if (filter === 'ALL') label = t('myLessons.allFilter');
+            else if (filter === 'IN_PROGRESS') label = t('myLessons.inProgressFilter');
+            else if (filter === 'COMPLETED') label = t('myLessons.completedFilter');
+            return (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all uppercase tracking-wide ${
+                  activeFilter === filter
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -272,16 +280,16 @@ export const MyLessons: React.FC = () => {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 space-y-3">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-sm text-slate-400 font-medium">Loading assigned lessons...</p>
+          <p className="text-sm text-slate-400 font-medium">{t('myLessons.loading')}</p>
         </div>
       ) : filteredInstances.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-16 text-center text-slate-400">
           <BookOpen className="h-10 w-10 mx-auto text-slate-300 mb-3" />
-          <p className="text-base font-bold text-slate-600">No lessons found</p>
+          <p className="text-base font-bold text-slate-600">{t('myLessons.noLessonsTitle')}</p>
           <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
             {searchTerm 
-              ? "We couldn't find any lessons matching your search query. Try another term!"
-              : "You do not have any lessons assigned to you in this section. Explore courses to self-assign published content!"}
+              ? t('myLessons.noLessonsQueryDesc')
+              : t('myLessons.noLessonsDesc')}
           </p>
         </div>
       ) : (
@@ -311,17 +319,17 @@ export const MyLessons: React.FC = () => {
                           : 'bg-blue-50 text-blue-700 border-blue-100'
                       }`}
                     >
-                      {isCompleted ? 'Completed' : overdue ? 'Overdue' : 'In Progress'}
+                      {isCompleted ? t('myLessons.completedStatus') : overdue ? t('myLessons.overdueStatus') : t('myLessons.inProgressStatus')}
                     </span>
 
                     {/* Sources Badge Row */}
                     <div className="flex flex-wrap gap-1 max-w-[60%] justify-end">
                       {inst.sources?.map((src) => {
                         let shortLabel: string = src.sourceType;
-                        if (src.sourceType === 'SELF_ASSIGNED') shortLabel = 'Self';
-                        else if (src.sourceType === 'MANDATORY') shortLabel = 'Mandatory';
-                        else if (src.sourceType === 'ORGANIZATION_UNIT') shortLabel = 'Dept';
-                        else if (src.sourceType === 'LEARNING_GROUP') shortLabel = 'Group';
+                        if (src.sourceType === 'SELF_ASSIGNED') shortLabel = t('myLessons.selfSource');
+                        else if (src.sourceType === 'MANDATORY') shortLabel = t('myLessons.mandatorySource');
+                        else if (src.sourceType === 'ORGANIZATION_UNIT') shortLabel = t('myLessons.deptSource');
+                        else if (src.sourceType === 'LEARNING_GROUP') shortLabel = t('myLessons.groupSource');
 
                         return (
                           <span
@@ -338,11 +346,11 @@ export const MyLessons: React.FC = () => {
 
                   <div>
                     <h3 className="font-extrabold text-slate-800 text-base leading-tight font-sans">
-                      {inst.assignment?.lesson?.title || 'Untitled Lesson'}
+                      {inst.assignment?.lesson?.title || t('myLessons.untitledLesson')}
                     </h3>
                     <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-wide flex items-center gap-1">
                       <Layers className="h-3 w-3 text-slate-300" />
-                      Rule: {inst.assignment?.lesson?.completionRule || 'MARKED_COMPLETE'}
+                      {t('myLessons.ruleLabel', { rule: inst.assignment?.lesson?.completionRule || 'MARKED_COMPLETE' })}
                     </p>
                   </div>
                 </div>
@@ -352,7 +360,7 @@ export const MyLessons: React.FC = () => {
                   {/* Progress Indicator */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-bold text-slate-400">
-                      <span>Progress</span>
+                      <span>{t('myLessons.progressLabel')}</span>
                       <span className="text-slate-600 font-mono">{inst.progressPercent}%</span>
                     </div>
                     <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -370,13 +378,13 @@ export const MyLessons: React.FC = () => {
                     {inst.dueDate && (
                       <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5 text-slate-400" />
-                        <span>Due {new Date(inst.dueDate).toLocaleDateString()}</span>
+                        <span>{t('myLessons.dueDate', { date: new Date(inst.dueDate).toLocaleDateString() })}</span>
                       </span>
                     )}
                     {isCompleted && inst.completedAt && (
                       <span className="flex items-center gap-1 text-emerald-600 font-semibold">
                         <Check className="h-3.5 w-3.5" />
-                        <span>Done {new Date(inst.completedAt).toLocaleDateString()}</span>
+                        <span>{t('myLessons.completedDate', { date: new Date(inst.completedAt).toLocaleDateString() })}</span>
                       </span>
                     )}
                   </div>
@@ -396,7 +404,7 @@ export const MyLessons: React.FC = () => {
                         ) : (
                           <>
                             <CheckCircle className="h-3.5 w-3.5" />
-                            <span>Mark Complete</span>
+                            <span>{t('myLessons.markCompleteBtn')}</span>
                           </>
                         )}
                       </button>
@@ -416,7 +424,7 @@ export const MyLessons: React.FC = () => {
                         ) : (
                           <>
                             <Trash2 className="h-3.5 w-3.5" />
-                            <span>Remove</span>
+                            <span>{t('myLessons.removeBtn')}</span>
                           </>
                         )}
                       </button>

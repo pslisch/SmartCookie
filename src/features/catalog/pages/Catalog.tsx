@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   BookOpen,
@@ -83,6 +84,7 @@ function getCookie(name: string): string {
 }
 
 export const Catalog: React.FC = () => {
+  const { t } = useTranslation();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [instances, setInstances] = useState<UserAssignmentInstance[]>([]);
@@ -105,7 +107,7 @@ export const Catalog: React.FC = () => {
       ]);
 
       if (!lessonsRes.ok || !coursesRes.ok || !instancesRes.ok) {
-        throw new Error('Failed to load catalog data from server.');
+        throw new Error(t('catalog.messages.fetchError'));
       }
 
       const lessonsData = await lessonsRes.json();
@@ -116,7 +118,7 @@ export const Catalog: React.FC = () => {
       setCourses(coursesData.filter((c: Course) => c.status === 'PUBLISHED'));
       setInstances(instancesData);
     } catch (err: any) {
-      setError(err.message || 'Error loading catalog. Please try again.');
+      setError(err.message || t('catalog.messages.fetchErr'));
     } finally {
       setIsLoading(false);
     }
@@ -163,10 +165,10 @@ export const Catalog: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || `Failed to assign ${lessonTitle}.`);
+        throw new Error(data.error || t('catalog.messages.selfAssignError', { title: lessonTitle }));
       }
 
-      setSuccess(`"${lessonTitle}" was added to your lessons!`);
+      setSuccess(t('catalog.messages.selfAssignSuccess', { title: lessonTitle }));
       
       // Reload instances to update assigned state
       const instancesRes = await fetch('/api/assignment-instances');
@@ -175,7 +177,7 @@ export const Catalog: React.FC = () => {
         setInstances(instancesData);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to self-assign lesson.');
+      setError(err.message || t('catalog.messages.selfAssignErr'));
     } finally {
       setIsActionLoading(null);
     }
@@ -210,9 +212,9 @@ export const Catalog: React.FC = () => {
       }
 
       if (succeededCount > 0) {
-        setSuccess(`Course "${course.title}" assigned! Added ${succeededCount} new lesson(s) to your list.`);
+        setSuccess(t('catalog.messages.selfAssignCourseSuccess', { title: course.title, count: succeededCount }));
       } else {
-        throw new Error('Could not assign course lessons.');
+        throw new Error(t('catalog.messages.selfAssignCourseError'));
       }
 
       // Reload instances to update assigned state
@@ -222,7 +224,7 @@ export const Catalog: React.FC = () => {
         setInstances(instancesData);
       }
     } catch (err: any) {
-      setError(err.message || 'Error self-assigning course lessons.');
+      setError(err.message || t('catalog.messages.selfAssignCourseErr'));
     } finally {
       setIsActionLoading(null);
     }
@@ -250,10 +252,10 @@ export const Catalog: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-800 font-sans">
-            Learning Catalog
+            {t('catalog.title')}
           </h1>
           <p className="text-sm text-slate-400 mt-1 font-medium">
-            Discover and self-assign training courses or individual lessons instantly.
+            {t('catalog.subtitle')}
           </p>
         </div>
       </div>
@@ -291,7 +293,7 @@ export const Catalog: React.FC = () => {
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder={activeTab === 'LESSONS' ? 'Search lessons...' : 'Search courses...'}
+            placeholder={activeTab === 'LESSONS' ? t('catalog.searchLessonsPlaceholder') : t('catalog.searchCoursesPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
@@ -313,7 +315,7 @@ export const Catalog: React.FC = () => {
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              {tab.toLowerCase()}
+              {tab === 'LESSONS' ? t('catalog.tabs.lessons') : t('catalog.tabs.courses')}
             </button>
           ))}
         </div>
@@ -323,15 +325,15 @@ export const Catalog: React.FC = () => {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 space-y-3">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-sm text-slate-400 font-medium">Loading learning catalog...</p>
+          <p className="text-sm text-slate-400 font-medium">{t('catalog.loading')}</p>
         </div>
       ) : activeTab === 'LESSONS' ? (
         filteredLessons.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-16 text-center text-slate-400">
             <BookOpen className="h-10 w-10 mx-auto text-slate-300 mb-3" />
-            <p className="text-base font-bold text-slate-600">No published lessons</p>
+            <p className="text-base font-bold text-slate-600">{t('catalog.noLessons')}</p>
             <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-              There are currently no published lessons available in the learning catalog. Check back soon!
+              {t('catalog.noLessonsDetail')}
             </p>
           </div>
         ) : (
@@ -348,12 +350,12 @@ export const Catalog: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
                         <BookOpen className="h-3 w-3" />
-                        Lesson
+                        {t('catalog.lessonLabel')}
                       </span>
                       {assigned && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
                           <Check className="h-3.5 w-3.5" />
-                          Assigned
+                          {t('catalog.assignedLabel')}
                         </span>
                       )}
                     </div>
@@ -362,14 +364,14 @@ export const Catalog: React.FC = () => {
                         {lesson.title}
                       </h3>
                       <p className="text-[10px] font-mono text-slate-400 mt-1.5 uppercase tracking-wide">
-                        Rule: {lesson.completionRule}
+                        {t('catalog.ruleLabel', { rule: lesson.completionRule })}
                       </p>
                     </div>
                   </div>
 
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-4">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                      Self-Assign Allowed
+                      {t('catalog.selfAssignAllowed')}
                     </span>
                     
                     {assigned ? (
@@ -379,7 +381,7 @@ export const Catalog: React.FC = () => {
                         id={`already-assigned-btn-${lesson.id}`}
                       >
                         <Check className="h-3.5 w-3.5" />
-                        <span>Already Assigned</span>
+                        <span>{t('catalog.alreadyAssignedBtn')}</span>
                       </button>
                     ) : (
                       <button
@@ -393,7 +395,7 @@ export const Catalog: React.FC = () => {
                         ) : (
                           <>
                             <Plus className="h-3.5 w-3.5" />
-                            <span>Self-Assign</span>
+                            <span>{t('catalog.selfAssignBtn')}</span>
                           </>
                         )}
                       </button>
@@ -407,9 +409,9 @@ export const Catalog: React.FC = () => {
       ) : filteredCourses.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-16 text-center text-slate-400">
           <Bookmark className="h-10 w-10 mx-auto text-slate-300 mb-3" />
-          <p className="text-base font-bold text-slate-600">No published courses</p>
+          <p className="text-base font-bold text-slate-600">{t('catalog.noCourses')}</p>
           <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-            There are currently no published courses available in the learning catalog. Check back soon!
+            {t('catalog.noCoursesDetail')}
           </p>
         </div>
       ) : (
@@ -430,10 +432,10 @@ export const Catalog: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100">
                       <Layers className="h-3.5 w-3.5" />
-                      Course
+                      {t('catalog.courseLabel')}
                     </span>
                     <span className="text-xs font-bold text-slate-400">
-                      {totalLessons} Lesson{totalLessons !== 1 ? 's' : ''}
+                      {t('catalog.lessonsCount', { count: totalLessons })}
                     </span>
                   </div>
 
@@ -446,10 +448,10 @@ export const Catalog: React.FC = () => {
                   {/* Course Lessons List */}
                   <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
                     <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                      Included Lessons:
+                      {t('catalog.includedLessonsTitle')}
                     </p>
                     {courseLessons.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic">No lessons assigned to this course yet.</p>
+                      <p className="text-xs text-slate-400 italic">{t('catalog.noLessonsInCourse')}</p>
                     ) : (
                       <div className="space-y-1.5 max-h-40 overflow-y-auto">
                         {course.courseLessons.map((cl) => {
@@ -464,10 +466,10 @@ export const Catalog: React.FC = () => {
                               </span>
                               {assigned ? (
                                 <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 gap-0.5">
-                                  <Check className="h-3 w-3" /> Assigned
+                                  <Check className="h-3 w-3" /> {t('catalog.assignedLabel')}
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-bold text-slate-400">Not Assigned</span>
+                                <span className="text-[10px] font-bold text-slate-400">{t('catalog.notAssignedLabel')}</span>
                               )}
                             </div>
                           );
@@ -480,8 +482,8 @@ export const Catalog: React.FC = () => {
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-4">
                   <span className="text-xs font-bold text-slate-400">
                     {allAssigned 
-                      ? 'All lessons assigned!' 
-                      : `${unassignedLessons.length} lesson(s) to assign`
+                      ? t('catalog.allLessonsAssigned') 
+                      : t('catalog.lessonsToAssign', { count: unassignedLessons.length })
                     }
                   </span>
 
@@ -492,7 +494,7 @@ export const Catalog: React.FC = () => {
                       id={`course-already-assigned-${course.id}`}
                     >
                       <Check className="h-3.5 w-3.5" />
-                      <span>Already Assigned</span>
+                      <span>{t('catalog.alreadyAssignedBtn')}</span>
                     </button>
                   ) : (
                     <button
@@ -506,7 +508,7 @@ export const Catalog: React.FC = () => {
                       ) : (
                         <>
                           <Plus className="h-3.5 w-3.5" />
-                          <span>Assign Course</span>
+                          <span>{t('catalog.assignCourseBtn')}</span>
                         </>
                       )}
                     </button>

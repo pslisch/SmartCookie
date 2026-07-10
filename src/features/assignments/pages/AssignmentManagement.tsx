@@ -177,7 +177,7 @@ export const AssignmentManagement: React.FC = () => {
         setLgs(data);
       }
     } catch (err: any) {
-      setError('Failed to load initial assignment data.');
+      setError(t('assignments.management.initialDataError'));
     } finally {
       setIsLoading(false);
     }
@@ -189,23 +189,23 @@ export const AssignmentManagement: React.FC = () => {
 
   // Format Targets Summary
   const getTargetsSummary = (targets: Target[]) => {
-    if (!targets || targets.length === 0) return 'All Members';
+    if (!targets || targets.length === 0) return t('assignments.management.allMembers');
     
     const parts: string[] = [];
     const userCount = targets.filter((t) => t.user).length;
     const ouCount = targets.filter((t) => t.organizationUnit).length;
     const lgCount = targets.filter((t) => t.learningGroup).length;
 
-    if (userCount > 0) parts.push(`${userCount} User(s)`);
-    if (ouCount > 0) parts.push(`${ouCount} Dept(s)`);
-    if (lgCount > 0) parts.push(`${lgCount} Group(s)`);
+    if (userCount > 0) parts.push(t('assignments.management.usersCount', { count: userCount }));
+    if (ouCount > 0) parts.push(t('assignments.management.deptsCount', { count: ouCount }));
+    if (lgCount > 0) parts.push(t('assignments.management.groupsCount', { count: lgCount }));
 
     return parts.join(', ');
   };
 
   // Handle Cancel Assignment Action
   const handleCancelAssignment = async (assignmentId: string) => {
-    if (!confirm('Are you sure you want to cancel this assignment? This will cancel it for all targeted users.')) {
+    if (!confirm(t('assignments.management.cancelConfirm'))) {
       return;
     }
 
@@ -221,16 +221,16 @@ export const AssignmentManagement: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to cancel assignment.');
+        throw new Error(data.error || t('assignments.management.cancelError'));
       }
 
       // Update local state
       setAssignments((prev) =>
         prev.map((a) => (a.id === assignmentId ? { ...a, status: 'CANCELLED' } : a))
       );
-      setSuccess('Assignment cancelled successfully.');
+      setSuccess(t('assignments.management.cancelSuccess'));
     } catch (err: any) {
-      setError(err.message || 'Error cancelling assignment.');
+      setError(err.message || t('assignments.management.cancelError'));
     }
   };
 
@@ -243,11 +243,11 @@ export const AssignmentManagement: React.FC = () => {
 
     // Validations
     if (showCreateModal === 'lesson' && !selectedLessonId) {
-      setError('Please select a lesson to assign.');
+      setError(t('assignments.management.createModal.selectLessonError'));
       return;
     }
     if (showCreateModal === 'course' && !selectedCourseId) {
-      setError('Please select a course to assign.');
+      setError(t('assignments.management.createModal.selectCourseError'));
       return;
     }
 
@@ -286,7 +286,7 @@ export const AssignmentManagement: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to create assignment.');
+        throw new Error(data.error || t('assignments.management.createError'));
       }
 
       const created = await res.json();
@@ -298,10 +298,10 @@ export const AssignmentManagement: React.FC = () => {
         setAssignments(data);
       }
 
-      setSuccess('Assignment created successfully.');
+      setSuccess(t('assignments.management.createSuccess'));
       closeAndResetForm();
     } catch (err: any) {
-      setError(err.message || 'Failed to create assignment.');
+      setError(err.message || t('assignments.management.createError'));
     } finally {
       setIsActionLoading(false);
     }
@@ -396,7 +396,15 @@ export const AssignmentManagement: React.FC = () => {
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              {st}
+              {st === 'ALL'
+                ? t('assignments.management.all')
+                : st === 'ACTIVE'
+                ? t('assignments.management.active')
+                : st === 'SCHEDULED'
+                ? t('assignments.management.scheduled')
+                : st === 'CANCELLED'
+                ? t('assignments.management.cancelled')
+                : t('assignments.management.archived')}
             </button>
           ))}
         </div>
@@ -414,7 +422,7 @@ export const AssignmentManagement: React.FC = () => {
               id="assign-lesson-btn"
             >
               <Plus className="h-4 w-4" />
-              <span>Assign a Lesson</span>
+              <span>{t('assignments.management.assignLessonBtn')}</span>
             </button>
             <button
               onClick={() => {
@@ -426,7 +434,7 @@ export const AssignmentManagement: React.FC = () => {
               id="assign-course-btn"
             >
               <Plus className="h-4 w-4" />
-              <span>Assign a Course</span>
+              <span>{t('assignments.management.assignCourseBtn')}</span>
             </button>
           </div>
         )}
@@ -435,7 +443,7 @@ export const AssignmentManagement: React.FC = () => {
       {/* Primary List View */}
       {filteredAssignments.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-400">
-          No assignments found matching this status filter.
+          {t('assignments.management.noAssignments')}
         </div>
       ) : (
         <div className="space-y-4">
@@ -464,14 +472,14 @@ export const AssignmentManagement: React.FC = () => {
                           <Sparkles className="h-3 w-3" />
                         </span>
                         <h3 className="text-sm font-bold text-blue-800">
-                          Course Assignment Batch
+                          {t('assignments.management.courseBatch')}
                         </h3>
                         <span className="text-[10px] font-mono bg-blue-100/50 text-blue-600 px-1.5 py-0.5 rounded">
-                          ID: {batchId.substring(0, 8)}...
+                          {t('assignments.management.batchIdLabel', { id: batchId.substring(0, 8) })}
                         </span>
                       </div>
                       <span className="text-xs font-bold text-blue-600">
-                        {batchItems.length} Lessons fanned-out
+                        {t('assignments.management.fannedOut', { count: batchItems.length })}
                       </span>
                     </div>
 
@@ -495,20 +503,20 @@ export const AssignmentManagement: React.FC = () => {
                               </h4>
                               {item.isMandatory && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
-                                  Mandatory
+                                  {t('assignments.management.mandatory')}
                                 </span>
                               )}
                             </div>
                             <div className="flex flex-wrap items-center text-xs text-slate-400 mt-1 gap-x-3 gap-y-1">
                               <span className="flex items-center space-x-1">
                                 <Users className="h-3.5 w-3.5 text-slate-400" />
-                                <span>Target: {getTargetsSummary(item.targets)}</span>
+                                <span>{t('assignments.management.targetSummary', { summary: getTargetsSummary(item.targets) })}</span>
                               </span>
                               <span>&bull;</span>
-                              <span>Type: {item.assignmentType}</span>
+                              <span>{t('assignments.management.typeLabel', { type: item.assignmentType })}</span>
                               <span>&bull;</span>
                               <span>
-                                Assigned: {new Date(item.createdAt).toLocaleDateString()}
+                                {t('assignments.management.assignedOn', { date: new Date(item.createdAt).toLocaleDateString() })}
                               </span>
                             </div>
                           </div>
@@ -533,7 +541,7 @@ export const AssignmentManagement: React.FC = () => {
                                   setSelectedReportAssignment({ id: item.id, title: item.lesson.title });
                                 }}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition-colors"
-                                title="View Report"
+                                title={t('assignments.management.viewReportTooltip')}
                                 id={`view-report-btn-${item.id}`}
                               >
                                 <BarChart3 className="h-4 w-4" />
@@ -547,7 +555,7 @@ export const AssignmentManagement: React.FC = () => {
                                   handleCancelAssignment(item.id);
                                 }}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-red-600 hover:border-red-200 hover:bg-red-50/50 transition-colors"
-                                title="Cancel Assignment"
+                                title={t('assignments.management.cancelAssignmentTooltip')}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -579,19 +587,19 @@ export const AssignmentManagement: React.FC = () => {
                         </h4>
                         {assignment.isMandatory && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
-                            Mandatory
+                            {t('assignments.management.mandatoryLabel')}
                           </span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center text-xs text-slate-400 mt-1.5 gap-x-3 gap-y-1">
                         <span className="flex items-center space-x-1">
                           <Users className="h-3.5 w-3.5 text-slate-400" />
-                          <span>Target: {getTargetsSummary(assignment.targets)}</span>
+                          <span>{t('assignments.management.targetLabel', { summary: getTargetsSummary(assignment.targets) })}</span>
                         </span>
                         <span>&bull;</span>
-                        <span>Type: {assignment.assignmentType}</span>
+                        <span>{t('assignments.management.typeLabel', { type: assignment.assignmentType })}</span>
                         <span>&bull;</span>
-                        <span>Assigned: {new Date(assignment.createdAt).toLocaleDateString()}</span>
+                        <span>{t('assignments.management.assignedLabel', { date: new Date(assignment.createdAt).toLocaleDateString() })}</span>
                       </div>
                     </div>
 
@@ -615,7 +623,7 @@ export const AssignmentManagement: React.FC = () => {
                             setSelectedReportAssignment({ id: assignment.id, title: assignment.lesson.title });
                           }}
                           className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition-colors"
-                          title="View Report"
+                          title={t('assignments.management.viewReportTooltip')}
                           id={`view-report-btn-${assignment.id}`}
                         >
                           <BarChart3 className="h-4.5 w-4.5" />
@@ -629,7 +637,7 @@ export const AssignmentManagement: React.FC = () => {
                             handleCancelAssignment(assignment.id);
                           }}
                           className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-red-600 hover:border-red-200 hover:bg-red-50/50 transition-colors"
-                          title="Cancel Assignment"
+                          title={t('assignments.management.cancelAssignmentTooltip')}
                         >
                           <Trash2 className="h-4.5 w-4.5" />
                         </button>
@@ -656,13 +664,13 @@ export const AssignmentManagement: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-lg font-bold text-slate-900 font-sans flex items-center space-x-2">
                 <BookOpen className="h-5 w-5 text-blue-600" />
-                <span>{showCreateModal === 'lesson' ? 'Assign a Lesson' : 'Assign a Course'}</span>
+                <span>{showCreateModal === 'lesson' ? t('assignments.management.createModal.lessonTitle') : t('assignments.management.createModal.courseTitle')}</span>
               </h3>
               <button
                 onClick={closeAndResetForm}
                 className="text-slate-400 hover:text-slate-600 font-bold"
               >
-                Cancel
+                {t('assignments.management.createModal.cancelBtn')}
               </button>
             </div>
 
@@ -671,7 +679,7 @@ export const AssignmentManagement: React.FC = () => {
               {showCreateModal === 'lesson' ? (
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Select Published Lesson
+                    {t('assignments.management.createModal.selectLesson')}
                   </label>
                   <select
                     required
@@ -679,7 +687,7 @@ export const AssignmentManagement: React.FC = () => {
                     onChange={(e) => setSelectedLessonId(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-bold text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
                   >
-                    <option value="">-- Choose Lesson --</option>
+                    <option value="">{t('assignments.management.createModal.chooseLesson')}</option>
                     {publishedLessons.map((l) => (
                       <option key={l.id} value={l.id}>
                         {l.title}
@@ -690,7 +698,7 @@ export const AssignmentManagement: React.FC = () => {
               ) : (
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Select Published Course
+                    {t('assignments.management.createModal.selectCourse')}
                   </label>
                   <select
                     required
@@ -698,7 +706,7 @@ export const AssignmentManagement: React.FC = () => {
                     onChange={(e) => setSelectedCourseId(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-bold text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
                   >
-                    <option value="">-- Choose Course --</option>
+                    <option value="">{t('assignments.management.createModal.chooseCourse')}</option>
                     {publishedCourses.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title}
@@ -712,14 +720,14 @@ export const AssignmentManagement: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-2">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Target Group / Member Picker
+                    {t('assignments.management.createModal.targetPicker')}
                   </span>
                   {/* Search filter inside picker */}
                   <div className="relative flex items-center">
                     <Search className="absolute left-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
-                      placeholder="Search targets..."
+                      placeholder={t('assignments.management.createModal.searchTargets')}
                       value={targetSearch}
                       onChange={(e) => setTargetSearch(e.target.value)}
                       className="rounded-lg border border-slate-200 px-2.5 py-1 pl-8 text-xs focus:outline-none focus:border-blue-500 w-full sm:w-48 font-semibold"
@@ -732,7 +740,7 @@ export const AssignmentManagement: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-1.5 sticky top-0 bg-slate-50 py-1 border-b border-slate-100 mb-1 z-10">
                       <Building className="h-4 w-4 text-indigo-600" />
-                      <span className="text-xs font-bold text-slate-700">Departments</span>
+                      <span className="text-xs font-bold text-slate-700">{t('assignments.management.createModal.departments')}</span>
                     </div>
                     {ous
                       .filter((ou) =>
@@ -753,7 +761,7 @@ export const AssignmentManagement: React.FC = () => {
                         </label>
                       ))}
                     {ous.length === 0 && (
-                      <p className="text-[11px] text-slate-400 italic">No departments</p>
+                      <p className="text-[11px] text-slate-400 italic">{t('assignments.management.createModal.noDepartments')}</p>
                     )}
                   </div>
 
@@ -761,7 +769,7 @@ export const AssignmentManagement: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-1.5 sticky top-0 bg-slate-50 py-1 border-b border-slate-100 mb-1 z-10">
                       <GraduationCap className="h-4 w-4 text-emerald-600" />
-                      <span className="text-xs font-bold text-slate-700">Learning Cohorts</span>
+                      <span className="text-xs font-bold text-slate-700">{t('assignments.management.createModal.learningCohorts')}</span>
                     </div>
                     {lgs
                       .filter((lg) =>
@@ -782,7 +790,7 @@ export const AssignmentManagement: React.FC = () => {
                         </label>
                       ))}
                     {lgs.length === 0 && (
-                      <p className="text-[11px] text-slate-400 italic">No learning cohorts</p>
+                      <p className="text-[11px] text-slate-400 italic">{t('assignments.management.createModal.noCohorts')}</p>
                     )}
                   </div>
 
@@ -790,7 +798,7 @@ export const AssignmentManagement: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-1.5 sticky top-0 bg-slate-50 py-1 border-b border-slate-100 mb-1 z-10">
                       <Users className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs font-bold text-slate-700">Individual Members</span>
+                      <span className="text-xs font-bold text-slate-700">{t('assignments.management.createModal.individualMembers')}</span>
                     </div>
                     {users
                       .filter((u) =>
@@ -812,15 +820,15 @@ export const AssignmentManagement: React.FC = () => {
                         </label>
                       ))}
                     {users.length === 0 && (
-                      <p className="text-[11px] text-slate-400 italic">No individual users</p>
+                      <p className="text-[11px] text-slate-400 italic">{t('assignments.management.createModal.noIndividualUsers')}</p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-xs font-bold text-slate-400 mr-1.5 self-center">Selected:</span>
+                  <span className="text-xs font-bold text-slate-400 mr-1.5 self-center">{t('assignments.management.createModal.selectedLabel')}</span>
                   {selectedOUIds.length === 0 && selectedLGIds.length === 0 && selectedUserIds.length === 0 && (
-                    <span className="text-xs text-slate-400 italic">Whole organization default</span>
+                    <span className="text-xs text-slate-400 italic">{t('assignments.management.createModal.wholeOrgDefault')}</span>
                   )}
                   {selectedOUIds.map((ouid) => (
                     <span key={ouid} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
@@ -847,7 +855,7 @@ export const AssignmentManagement: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Assignment Schedule Type
+                    {t('assignments.management.createModal.scheduleType')}
                   </label>
                   <div className="flex bg-slate-100 p-1 rounded-xl">
                     <button
@@ -859,7 +867,7 @@ export const AssignmentManagement: React.FC = () => {
                           : 'text-slate-500 hover:text-slate-800'
                       }`}
                     >
-                      Immediate
+                      {t('assignments.management.createModal.immediate')}
                     </button>
                     <button
                       type="button"
@@ -870,7 +878,7 @@ export const AssignmentManagement: React.FC = () => {
                           : 'text-slate-500 hover:text-slate-800'
                       }`}
                     >
-                      Scheduled
+                      {t('assignments.management.createModal.scheduled')}
                     </button>
                   </div>
                 </div>
@@ -879,7 +887,7 @@ export const AssignmentManagement: React.FC = () => {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
                       <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                      <span>Release Date & Time</span>
+                      <span>{t('assignments.management.createModal.releaseDateTime')}</span>
                     </label>
                     <input
                       type="datetime-local"
@@ -896,7 +904,7 @@ export const AssignmentManagement: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Default Due Date Days
+                    {t('assignments.management.createModal.defaultDueDays')}
                   </label>
                   <input
                     type="number"
@@ -918,8 +926,8 @@ export const AssignmentManagement: React.FC = () => {
                         className="rounded h-5 w-5 text-blue-600 border-slate-300 focus:ring-blue-500"
                       />
                       <div>
-                        <span>Mandatory Assignment</span>
-                        <p className="text-xs text-slate-400 font-normal mt-0.5">Will enroll automatically & block progress.</p>
+                        <span>{t('assignments.management.createModal.mandatoryAssignment')}</span>
+                        <p className="text-xs text-slate-400 font-normal mt-0.5">{t('assignments.management.createModal.mandatoryNote')}</p>
                       </div>
                     </label>
                   </div>
@@ -933,7 +941,7 @@ export const AssignmentManagement: React.FC = () => {
                   onClick={closeAndResetForm}
                   className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {t('assignments.management.createModal.cancelBtn')}
                 </button>
                 <button
                   type="submit"
@@ -943,7 +951,7 @@ export const AssignmentManagement: React.FC = () => {
                   {isActionLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <span>Create Assignment</span>
+                    <span>{t('assignments.management.createModal.createBtn')}</span>
                   )}
                 </button>
               </div>
