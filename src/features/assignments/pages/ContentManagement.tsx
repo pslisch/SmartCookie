@@ -20,8 +20,11 @@ import {
   ChevronRight,
   PlusCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  Upload
 } from 'lucide-react';
+import { usePermission } from '../../../shared/hooks/usePermission';
+import { ContentImportWizard } from '../../content/pages/ContentImportWizard';
 
 interface Lesson {
   id: string;
@@ -74,7 +77,10 @@ export const ContentManagement: React.FC = () => {
 
   // Form states
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
   const [titleInput, setTitleInput] = useState('');
+
+  const hasImportPermission = usePermission('content', 'import');
 
   const fetchLessons = async () => {
     try {
@@ -383,17 +389,33 @@ export const ContentManagement: React.FC = () => {
           </button>
         </div>
 
-        <button
-          onClick={() => {
-            setError('');
-            setSuccess('');
-            setShowCreateModal(true);
-          }}
-          className="flex items-center justify-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          <span>{activeTab === 'lessons' ? t('content.createLessonBtn') : t('content.createCourseBtn')}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {activeTab === 'lessons' && hasImportPermission && (
+            <button
+              onClick={() => {
+                setError('');
+                setSuccess('');
+                setShowImportWizard(true);
+              }}
+              className="flex items-center justify-center space-x-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-slate-950"
+            >
+              <Upload className="h-4 w-4" />
+              <span>Import SCORM Package</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              setError('');
+              setSuccess('');
+              setShowCreateModal(true);
+            }}
+            className="flex items-center justify-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            <span>{activeTab === 'lessons' ? t('content.createLessonBtn') : t('content.createCourseBtn')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Primary Panels layout */}
@@ -715,6 +737,21 @@ export const ContentManagement: React.FC = () => {
               </div>
             </form>
           </motion.div>
+        </div>
+      )}
+
+      {/* CONTENT IMPORT WIZARD MODAL */}
+      {showImportWizard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="w-full max-w-3xl my-8">
+            <ContentImportWizard
+              onClose={() => setShowImportWizard(false)}
+              onSuccess={() => {
+                setShowImportWizard(false);
+                loadAll();
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

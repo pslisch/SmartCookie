@@ -17,8 +17,10 @@ import {
   Search,
   Check,
   ExternalLink,
-  Layers
+  Layers,
+  Play
 } from 'lucide-react';
+import { ScormPlayer } from '../../content/components/ScormPlayer';
 
 interface SourceOrgUnit {
   id: string;
@@ -44,6 +46,7 @@ interface Lesson {
   title: string;
   status: 'DRAFT' | 'PUBLISHED';
   completionRule: 'MARKED_COMPLETE' | 'QUIZ_PASSED' | 'MIN_SCORE' | 'ACKNOWLEDGEMENT' | 'CUSTOM';
+  contentId?: string | null;
 }
 
 interface Assignment {
@@ -79,6 +82,7 @@ export const MyLessons: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'IN_PROGRESS' | 'COMPLETED'>('ALL');
+  const [playingInstanceId, setPlayingInstanceId] = useState<string | null>(null);
 
   const fetchMyLessons = async () => {
     setIsLoading(true);
@@ -191,6 +195,20 @@ export const MyLessons: React.FC = () => {
 
     return true;
   });
+
+  if (playingInstanceId) {
+    return (
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8" id="playing-scorm-container">
+        <ScormPlayer
+          userAssignmentInstanceId={playingInstanceId}
+          onClose={() => {
+            setPlayingInstanceId(null);
+            fetchMyLessons();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -391,6 +409,20 @@ export const MyLessons: React.FC = () => {
 
                   {/* CTA Buttons */}
                   <div className="flex gap-2">
+                    {/* Launch SCORM Player Action */}
+                    {inst.assignment?.lesson?.contentId && (
+                      <button
+                        onClick={() => setPlayingInstanceId(inst.id)}
+                        className="flex-1 flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
+                        id={`launch-scorm-btn-${inst.id}`}
+                      >
+                        <Play className="h-3.5 w-3.5 fill-current" />
+                        <span>
+                          {isCompleted ? 'Replay' : inst.progressPercent > 0 ? 'Resume' : 'Launch'}
+                        </span>
+                      </button>
+                    )}
+
                     {/* Mark Complete Action (only if rule is MARKED_COMPLETE) */}
                     {!isCompleted && inst.assignment?.lesson?.completionRule === 'MARKED_COMPLETE' && (
                       <button

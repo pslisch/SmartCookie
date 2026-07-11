@@ -39,6 +39,7 @@ model User {
   assignmentTargets  AssignmentTarget[] @relation("UserAssignmentTargets")
   userAssignmentInstances UserAssignmentInstance[] @relation("UserAssignmentInstances")
   auditLogs          AuditLog[] @relation("UserAuditLogs")
+  createdContents    Content[]  @relation("ContentCreator")
 
   @@unique([isSuperuserUnique], name: "is_superuser_unique_idx")
   @@map("users")
@@ -78,6 +79,8 @@ model Company {
   courses          Course[]
   assignments      Assignment[]
   auditLogs        AuditLog[]
+  contentCategories ContentCategory[]
+  contents          Content[]
 
   @@map("companies")
 }
@@ -261,6 +264,8 @@ model Lesson {
   prerequisiteLesson   Lesson?          @relation("LessonPrerequisites", fields: [prerequisiteLessonId], references: [id], onDelete: SetNull)
   dependentLessons     Lesson[]         @relation("LessonPrerequisites")
   completionRule       CompletionRule   @default(MARKED_COMPLETE) @map("completion_rule")
+  contentId            String?          @map("content_id")
+  content              Content?         @relation(fields: [contentId], references: [id], onDelete: SetNull)
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
   courseLessons        CourseLesson[]
@@ -308,6 +313,7 @@ model Assignment {
   ownerId                 String             @map("owner_id")
   owner                   User               @relation("AssignmentOwner", fields: [ownerId], references: [id])
   status                  AssignmentStatus   @default(DRAFT)
+  attemptLimit            Int                @default(0) @map("attempt_limit")
   courseAssignmentBatchId String?            @map("course_assignment_batch_id")
   deletedAt               DateTime?          @map("deleted_at")
   permanentDeleteAt       DateTime?          @map("permanent_delete_at")
@@ -371,6 +377,7 @@ model UserAssignmentInstance {
   createdAt         DateTime                     @default(now()) @map("created_at")
   updatedAt         DateTime                     @updatedAt @map("updated_at")
   sources           UserAssignmentInstanceSource[]
+  contentAttempts   ContentAttempt[]
 
   @@unique([assignmentId, userId])
   @@map("user_assignment_instances")
@@ -403,5 +410,99 @@ model AuditLog {
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("audit_logs")
+}
+
+enum ContentProviderType {
+  SCORM_1_2
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentAttemptStatus {
+  PASSED
+  COMPLETED
+  FAILED
+  INCOMPLETE
+  BROWSED
+  NOT_ATTEMPTED
+}
+
+model Content {
+  id                   String           @id @default(uuid())
+  companyId            String           @map("company_id")
+  company              Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  providerType         ContentProviderType @map("provider_type")
+  title                String
+  description          String?          @db.Text
+  categoryId           String?          @map("category_id")
+  category             ContentCategory? @relation("CategoryToContent", fields: [categoryId], references: [id], onDelete: SetNull)
+  author               String?
+  language             String?
+  version              Int              @default(1)
+  contentGroupId       String           @map("content_group_id")
+  status               ContentStatus    @default(DRAFT)
+  storagePathZip       String           @map("storage_path_zip")
+  storagePathExtracted String           @map("storage_path_extracted")
+  launchFile           String           @map("launch_file")
+  manifestData         Json             @map("manifest_data")
+  thumbnailPath        String?          @map("thumbnail_path")
+  tags                 ContentTag[]
+  createdById          String           @map("created_by_id")
+  createdBy            User             @relation("ContentCreator", fields: [createdById], references: [id])
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+  lessons              Lesson[]
+
+  @@map("contents")
+}
+
+model ContentTag {
+  id        String   @id @default(uuid())
+  contentId String   @map("content_id")
+  content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  tag       String
+
+  @@map("content_tags")
+}
+
+model ContentCategory {
+  id               String            @id @default(uuid())
+  companyId        String            @map("company_id")
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name             String
+  parentCategoryId String?           @map("parent_category_id")
+  parentCategory   ContentCategory?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  childCategories  ContentCategory[] @relation("CategoryHierarchy")
+  contents         Content[]         @relation("CategoryToContent")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  @@map("content_categories")
+}
+
+model ContentAttempt {
+  id                        String                 @id @default(uuid())
+  userAssignmentInstanceId  String                 @map("user_assignment_instance_id")
+  userAssignmentInstance    UserAssignmentInstance @relation(fields: [userAssignmentInstanceId], references: [id], onDelete: Cascade)
+  attemptNumber             Int                    @map("attempt_number")
+  lessonStatus              ContentAttemptStatus   @map("lesson_status")
+  scoreRaw                  Decimal?               @map("score_raw") @db.Decimal(10, 2)
+  scoreMin                  Decimal?               @map("score_min") @db.Decimal(10, 2)
+  scoreMax                  Decimal?               @map("score_max") @db.Decimal(10, 2)
+  sessionTimeSeconds        Int?                   @map("session_time_seconds")
+  lessonLocation            String?                @map("lesson_location")
+  suspendData               String?                @map("suspend_data") @db.Text
+  objectives                Json?                  @map("objectives")
+  interactions              Json?                  @map("interactions")
+  startedAt                 DateTime?              @map("started_at")
+  finishedAt                DateTime?              @map("finished_at")
+  createdAt                 DateTime               @default(now()) @map("created_at")
+  updatedAt                 DateTime               @updatedAt @map("updated_at")
+
+  @@map("content_attempts")
 }
 

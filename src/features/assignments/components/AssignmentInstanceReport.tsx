@@ -44,6 +44,18 @@ interface InstanceSource {
   createdAt: string;
 }
 
+interface ContentAttempt {
+  id: string;
+  attemptNumber: number;
+  lessonStatus: string;
+  scoreRaw: number | null;
+  scoreMin: number | null;
+  scoreMax: number | null;
+  sessionTimeSeconds: number | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+}
+
 interface UserAssignmentInstance {
   id: string;
   assignmentId: string;
@@ -54,6 +66,12 @@ interface UserAssignmentInstance {
   completedAt: string | null;
   progressPercent: number;
   sources: InstanceSource[];
+  contentAttempts?: ContentAttempt[];
+  assignment?: {
+    lesson: {
+      contentId: string | null;
+    }
+  };
 }
 
 interface AssignmentInstanceReportProps {
@@ -232,6 +250,56 @@ export const AssignmentInstanceReport: React.FC<AssignmentInstanceReportProps> =
                           </span>
                           {renderSources(inst.sources)}
                         </div>
+
+                        {/* SCORM reporting details if SCORM-backed */}
+                        {inst.assignment?.lesson?.contentId && (() => {
+                          const attempts = inst.contentAttempts || [];
+                          const attemptCount = attempts.length;
+                          const latestAttempt = attempts[attempts.length - 1];
+                          const lessonStatus = latestAttempt ? latestAttempt.lessonStatus : 'NOT STARTED';
+                          const rawScore = latestAttempt ? latestAttempt.scoreRaw : null;
+                          const scoreFormatted = rawScore !== null ? `${rawScore}` : 'N/A';
+                          const totalSessionTime = attempts.reduce((sum, att) => sum + (att.sessionTimeSeconds || 0), 0);
+                          
+                          const formatTime = (seconds: number) => {
+                            if (!seconds) return '0s';
+                            const h = Math.floor(seconds / 3600);
+                            const m = Math.floor((seconds % 3600) / 60);
+                            const s = seconds % 60;
+                            if (h > 0) return `${h}h ${m}m ${s}s`;
+                            if (m > 0) return `${m}m ${s}s`;
+                            return `${s}s`;
+                          };
+
+                          return (
+                            <div className="pl-10 pt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500 font-medium border-t border-slate-100 mt-2.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider">Attempts:</span>
+                                <span className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded font-bold">{attemptCount}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider">Latest Status:</span>
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold border ${
+                                  lessonStatus === 'PASSED' || lessonStatus === 'COMPLETED'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                    : lessonStatus === 'FAILED'
+                                    ? 'bg-rose-50 text-rose-700 border-rose-100 animate-pulse'
+                                    : 'bg-amber-50 text-amber-700 border-amber-100'
+                                }`}>
+                                  {lessonStatus}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider">Score:</span>
+                                <span className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded font-bold">{scoreFormatted}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-[10px] text-slate-400 uppercase tracking-wider">Active Time:</span>
+                                <span className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded font-bold">{formatTime(totalSessionTime)}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Right: Status, Progress, and Dates */}

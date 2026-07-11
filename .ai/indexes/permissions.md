@@ -50,4 +50,10 @@ Every permission represents a logical action on a module:
 | `assignments` | `delete` | Cancel and soft-delete administrative learning assignments | `DELETE /api/assignments/:id` | Assignments management list |
 | `assignments` | `view-reports` | View individual learner progress reports for assignments | `GET /api/assignments/:id/instances` | Admin dashboard reports |
 | `assignments` | `edit` | Reactivate archived/suspended users and resolve dynamic memberships | `POST /api/users/:id/reactivate` | User profile list controls |
+| `content` | `view` | View SCORM content library packages and version lists | `GET /api/content`, `GET /api/content/:contentGroupId/versions` | SCORM Content Library, Version history |
+| `content` | `import` | Import, validate, and unpack SCORM package ZIP files | `POST /api/content/import` | SCORM Import Wizard button and dropzones |
+| `content` | `publish` | Transition SCORM draft packages to published status | `POST /api/content/:id/publish` | Publish buttons inside SCORM library |
+| `content` | `archive` | Soft-delete/Archive SCORM packages | `POST /api/content/:id/archive` | Archive buttons inside SCORM library |
+| `content` | `restore` | Restore archived SCORM packages back to draft status | `POST /api/content/:id/restore` | Restore action in archived content views |
+| `content` | `download-zip` | Download original uploaded ZIP package binary streams | `GET /api/content/:id/download` | Download buttons across library and histories |
 

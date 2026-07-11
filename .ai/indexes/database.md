@@ -226,6 +226,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - Belongs to `Assignment` (via `assignmentId`, cascade on delete)
   - Belongs to `User` (via `userId`, cascade on delete)
   - Has many `UserAssignmentInstanceSource`s (via `sources`)
+  - Has many `ContentAttempt`s (via `contentAttempts`)
 
 ### User Assignment Instance Sources (`user_assignment_instance_sources`)
 - **Fields**:
@@ -239,6 +240,117 @@ This index describes the data models, entity relationships, and schemas supporti
   - Belongs to `UserAssignmentInstance` (via `userAssignmentInstanceId`, cascade on delete)
   - Belongs to `OrganizationUnit` (via `sourceOrganizationUnitId`, cascade on delete)
   - Belongs to `LearningGroup` (via `sourceLearningGroupId`, cascade on delete)
+
+### Lessons (`lessons`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `title` (String)
+  - `status` (Enum: `DRAFT`, `PUBLISHED`, `ARCHIVED`, Default: `DRAFT`)
+  - `version` (Int, Default: 1)
+  - `prerequisiteLessonId` (String, Nullable, Foreign Key self-relation)
+  - `completionRule` (Enum: `MARKED_COMPLETE`, `SCORM_CRITERIA`)
+  - `contentId` (String, Nullable, Foreign Key to `contents.id`)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`)
+  - Belongs to prerequisite `Lesson` (optional, via `prerequisiteLessonId`)
+  - Belongs to `Content` package (optional, via `contentId`)
+  - Has many `CourseLesson` associations (via `courseLessons`)
+  - Has many `Assignment`s (via `assignments`)
+
+### Courses (`courses`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `title` (String)
+  - `status` (Enum: `DRAFT`, `PUBLISHED`, Default: `DRAFT`)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`)
+  - Has many `CourseLesson` associations (via `courseLessons`)
+
+### Course Lessons (`course_lessons`)
+- **Fields**:
+  - `courseId` (String, Foreign Key to `courses.id`, Primary Key Part 1)
+  - `lessonId` (String, Foreign Key to `lessons.id`, Primary Key Part 2)
+  - `order` (Int, sequence order)
+- **Relations**:
+  - Belongs to `Course` (via `courseId`, cascade on delete)
+  - Belongs to `Lesson` (via `lessonId`, cascade on delete)
+
+### Contents (`contents`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `providerType` (Enum: `SCORM_1_2`)
+  - `title` (String)
+  - `description` (String, Nullable, Text)
+  - `categoryId` (String, Nullable, Foreign Key to `content_categories.id`)
+  - `author` (String, Nullable)
+  - `language` (String, Nullable)
+  - `version` (Int, Default: 1)
+  - `contentGroupId` (String, grouping multiple versions of the same package)
+  - `status` (Enum: `DRAFT`, `PUBLISHED`, `ARCHIVED`, Default: `DRAFT`)
+  - `storagePathZip` (String, location of the zipped package)
+  - `storagePathExtracted` (String, location of the extracted package files)
+  - `launchFile` (String, file path to load in iframe)
+  - `manifestData` (Json, metadata extracted from imsmanifest.xml)
+  - `thumbnailPath` (String, Nullable)
+  - `createdById` (String, Foreign Key to `users.id`)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`)
+  - Belongs to `ContentCategory` (optional, via `categoryId`)
+  - Belongs to `User` as creator (via `createdById`)
+  - Has many `ContentTag`s (via `tags`)
+  - Has many `Lesson`s (via `lessons`)
+
+### Content Tags (`content_tags`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `contentId` (String, Foreign Key to `contents.id`)
+  - `tag` (String)
+- **Relations**:
+  - Belongs to `Content` (via `contentId`, cascade on delete)
+
+### Content Categories (`content_categories`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `name` (String)
+  - `parentCategoryId` (String, Nullable, Foreign Key self-relation)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`)
+  - Belongs to parent `ContentCategory` (optional, via `parentCategoryId`)
+  - Has many child `ContentCategory`s (via self-relation, restrict delete if children exist)
+  - Has many `Content`s (via `contents`)
+
+### Content Attempts (`content_attempts`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `userAssignmentInstanceId` (String, Foreign Key to `user_assignment_instances.id`)
+  - `attemptNumber` (Int)
+  - `lessonStatus` (Enum: `PASSED`, `COMPLETED`, `FAILED`, `INCOMPLETE`, `BROWSED`, `NOT_ATTEMPTED`)
+  - `scoreRaw` (Decimal, Nullable)
+  - `scoreMin` (Decimal, Nullable)
+  - `scoreMax` (Decimal, Nullable)
+  - `sessionTimeSeconds` (Int, Nullable)
+  - `lessonLocation` (String, Nullable)
+  - `suspendData` (String, Nullable, Text)
+  - `objectives` (Json, Nullable)
+  - `interactions` (Json, Nullable)
+  - `startedAt` (DateTime, Nullable)
+  - `finishedAt` (DateTime, Nullable)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `UserAssignmentInstance` (via `userAssignmentInstanceId`, cascade on delete)
 
 ### Audit Logs (`audit_logs`)
 - **Fields**:
@@ -257,7 +369,7 @@ This index describes the data models, entity relationships, and schemas supporti
 
 ---
 
-## 🟢 Schema Registry (v1.7.0)
+## 🟢 Schema Registry (v1.8.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
@@ -265,5 +377,6 @@ This index describes the data models, entity relationships, and schemas supporti
 - **v1.4.0**: Added Role, Permission, and RolePermission tables to establish first-class role-based access control (RBAC). Linked Users to Roles and added inheritance control to Companies.
 - **v1.5.0**: Synchronized company-level settings toggles (`roleInheritanceEnabled`) and mapped permission relationships across all session and page lifecycles.
 - **v1.6.0**: Multi-Tenant Organization Model MVP. Added `OrganizationUnit`, `LearningGroup`, and `Membership` models. Extended `Company` with `domain` and `settings`. Included strict CHECK constraints and cascading soft-delete triggers.
-- **v1.7.0 (Current)**: Learning Assignments & Target Resolution Engine. Added `Assignment`, `AssignmentTarget`, `UserAssignmentInstance`, `UserAssignmentInstanceSource`, and `AuditLog` models. Enhanced `UserAssignmentInstance` with `last_reminder_sent_at` column for automated notification tracking. Added cascading soft-deletes and scheduled cleanup tasks.
+- **v1.7.0**: Learning Assignments & Target Resolution Engine. Added `Assignment`, `AssignmentTarget`, `UserAssignmentInstance`, `UserAssignmentInstanceSource`, and `AuditLog` models. Enhanced `UserAssignmentInstance` with `last_reminder_sent_at` column for automated notification tracking. Added cascading soft-deletes and scheduled cleanup tasks.
+- **v1.8.0 (Current)**: Content Engine SCORM 1.2 MVP. Added `Content`, `ContentTag`, `ContentCategory`, and `ContentAttempt` models. Associated `Lesson` model with optional SCORM `Content`. Mapped attempts directly to existing `UserAssignmentInstance`. Added `course_lessons`, `courses`, and `lessons` schemas documentation to Database index.
 

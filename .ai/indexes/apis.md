@@ -442,5 +442,85 @@ Every documented endpoint logs:
 - **Used By**: Admin panel / User Management list
 - **Permissions**: Requires active session with `"assignments:edit"` permission. Superuser bypasses.
 
+### 54. List SCORM Packages
+- **Endpoint**: `/api/content`
+- **Method**: `GET`
+- **Request**: Optional query parameters for filter
+- **Response**: List of `Content` package structures with categories and tags (200 OK)
+- **Used By**: SCORM Content Library Page
+- **Permissions**: Requires active session with `"content:view"` permission.
+
+### 55. Import SCORM Package
+- **Endpoint**: `/api/content/import`
+- **Method**: `POST`
+- **Request**: Multipart form containing `package` file (ZIP), `categoryId`, and tags
+- **Response**: Imported `Content` object (201 Created)
+- **Used By**: ContentImportWizard component
+- **Permissions**: Requires active session with `"content:import"` permission.
+
+### 56. Publish SCORM Package
+- **Endpoint**: `/api/content/:id/publish`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: Updated `Content` object with status `PUBLISHED` (200 OK)
+- **Used By**: SCORM Content Library
+- **Permissions**: Requires active session with `"content:publish"` permission.
+
+### 57. Archive SCORM Package
+- **Endpoint**: `/api/content/:id/archive`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: Updated `Content` object with status `ARCHIVED` (200 OK)
+- **Used By**: SCORM Content Library
+- **Permissions**: Requires active session with `"content:archive"` permission.
+
+### 58. Restore SCORM Package
+- **Endpoint**: `/api/content/:id/restore`
+- **Method**: `POST`
+- **Request**: `{ targetStatus: "DRAFT" | "PUBLISHED" }`
+- **Response**: Updated `Content` object (200 OK)
+- **Used By**: SCORM Content Library
+- **Permissions**: Requires active session with `"content:restore"` permission.
+
+### 59. Download SCORM original ZIP
+- **Endpoint**: `/api/content/:id/download`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: Binary stream of the original uploaded `.zip` package (200 OK)
+- **Used By**: SCORM Content Library / Version lists
+- **Permissions**: Requires active session with `"content:download-zip"` permission.
+
+### 60. List SCORM Package Versions
+- **Endpoint**: `/api/content/:contentGroupId/versions`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: List of all package versions under the same group ID (200 OK)
+- **Used By**: SCORM Content Library Version History Modal
+- **Permissions**: Requires active session with `"content:view"` permission.
+
+### 61. Start SCORM Content Attempt
+- **Endpoint**: `/api/content-attempts/start`
+- **Method**: `POST`
+- **Request**: `{ userAssignmentInstanceId }`
+- **Response**: Created `ContentAttempt` object (201 Created)
+- **Used By**: ScormPlayer iframe launcher
+- **Permissions**: Requires active session with `"assignments:view"` permission.
+
+### 62. Commit SCORM Content Attempt State
+- **Endpoint**: `/api/content-attempts/:id/commit`
+- **Method**: `POST`
+- **Request**: JSON object containing SCORM CMI state (`lessonStatus`, `scoreRaw`, `sessionTimeSeconds`, etc.)
+- **Response**: `{ success: true, attempt: ContentAttempt, instanceStatus: string }` (200 OK)
+- **Used By**: ScormPlayer SCORM 1.2 runtime bridge
+- **Permissions**: Requires active session with `"assignments:view"` permission.
+
+### 63. Fetch Attempt History
+- **Endpoint**: `/api/content-attempts/:instanceId`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: List of all attempt records for the assignment instance (200 OK)
+- **Used By**: ScormPlayer / AssignmentInstanceReport components
+- **Permissions**: Requires active session with `"assignments:view"` permission.
+
 
 

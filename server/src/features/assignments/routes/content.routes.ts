@@ -291,4 +291,39 @@ router.put('/courses/:id/lessons', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * PUT /api/lessons/:id/content
+ * Associate a content package (or null) with a lesson
+ */
+router.put('/lessons/:id/content', async (req: Request, res: Response) => {
+  try {
+    if (!(await checkPermission(req, res, 'create'))) return;
+
+    const { id } = req.params;
+    const { contentId } = req.body;
+
+    const lesson = await prisma.lesson.findFirst({
+      where: {
+        id,
+        companyId: req.user!.companyId!,
+      }
+    });
+
+    if (!lesson) {
+      return res.status(404).json({ error: 'Lesson not found.' });
+    }
+
+    const updated = await prisma.lesson.update({
+      where: { id },
+      data: {
+        contentId: contentId || null
+      }
+    });
+
+    return res.json(updated);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to associate content with lesson.' });
+  }
+});
+
 export default router;

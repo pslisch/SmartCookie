@@ -12,11 +12,14 @@ import organizationUnitsRouter from './features/organization/routes/organization
 import learningGroupsRouter from './features/organization/routes/learningGroups.routes';
 import assignmentsRouter, { assignmentInstancesRouter } from './features/assignments/routes/assignments.routes';
 import contentRouter from './features/assignments/routes/content.routes';
+import contentManagementRouter, { fileRouter as contentFileRouter } from './features/content/routes/content.routes.js';
+import contentAttemptsRouter from './features/content/routes/contentAttempts.routes.js';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
 import './features/organization/organization.permissions';
 import './features/assignments/assignments.permissions';
+import './features/content/content.permissions.js';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 import { scheduledTasksService } from './shared/scheduler/scheduledTasks.service';
@@ -75,6 +78,9 @@ async function startServer() {
   app.use('/api/learning-groups', learningGroupsRouter);
   app.use('/api/assignments', assignmentsRouter);
   app.use('/api/assignment-instances', assignmentInstancesRouter);
+  app.use('/api/content', contentManagementRouter);
+  app.use('/api/content-attempts', contentAttemptsRouter);
+  app.use('/content-files', contentFileRouter);
   app.use('/api', contentRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production

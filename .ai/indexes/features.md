@@ -142,5 +142,17 @@ Every logged feature should eventually document:
 - **Events**: Background scheduler tasks run periodically to purge soft-deleted items and send overdue email alerts via `EmailService`.
 - **Dependencies**: Express, Prisma ORM, Node.js, Nodemailer
 
+### 11. SCORM Content Engine & Runtime Player (SCORM 1.2 MVP)
+- **Description**: Introduces robust SCORM 1.2 learning package execution. Supports importing, validating, and extracting zip packages securely with zip-slip protections. Includes a dedicated Content Library page with search, filters (by tags, categories, and status), publish/archive/restore actions, version history views, and download original ZIP functionality. Features an interactive frontend SCORM 1.2 client API bridge (`window.API`) supporting periodic commits, attempt tracking limits, and automated progress/completion/score rollup calculation onto the parent assignment instance records.
+- **Components**: `src/features/content/components/ContentImportWizard.tsx`, `src/features/content/components/ScormPlayer.tsx`, `src/features/content/pages/ContentLibrary.tsx`
+- **Pages**: `src/features/management/pages/Management.tsx` (SCORM Content Library tab), `src/features/lessons/pages/MyLessons.tsx` (Launch/Resume course play)
+- **Services**: `ContentService` (`server/src/features/content/services/content.service.ts`), `ContentAttemptService` (`server/src/features/content/services/contentAttempt.service.ts`)
+- **APIs**: `GET /api/content`, `POST /api/content/import`, `POST /api/content/:id/publish`, `POST /api/content/:id/archive`, `POST /api/content/:id/restore`, `GET /api/content/:id/download`, `GET /api/content/:contentGroupId/versions`, `POST /api/content-attempts/start`, `POST /api/content-attempts/:id/commit`, `GET /api/content-attempts/:instanceId`
+- **Database**: `contents`, `content_tags`, `content_categories`, `content_attempts`, `user_assignment_instances` (Prisma & MariaDB schemas)
+- **Permissions**: Requires `content:import`, `content:view`, `content:publish`, `content:archive`, `content:restore`, `content:download-zip` permissions.
+- **Routes**: `server/src/features/content/routes/content.routes.ts`, `server/src/features/content/routes/contentAttempts.routes.ts`
+- **Events**: Completion and performance scoring commits trigger instant rollup calculation and updates to user study progress on completion records.
+- **Dependencies**: Express, Prisma ORM, Node.js, Adm-Zip, xml2js, React, motion/react, lucide-react
+
 
 

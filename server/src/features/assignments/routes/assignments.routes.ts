@@ -223,6 +223,20 @@ router.get('/:id/instances', async (req: Request, res: Response) => {
               }
             }
           }
+        },
+        assignment: {
+          select: {
+            lesson: {
+              select: {
+                contentId: true,
+              }
+            }
+          }
+        },
+        contentAttempts: {
+          orderBy: {
+            attemptNumber: 'asc'
+          }
         }
       }
     });
@@ -323,6 +337,7 @@ assignmentInstancesRouter.get('/', async (req: Request, res: Response) => {
                 title: true,
                 status: true,
                 completionRule: true,
+                contentId: true,
               }
             }
           }
@@ -336,6 +351,54 @@ assignmentInstancesRouter.get('/', async (req: Request, res: Response) => {
     return res.json(instances);
   } catch (error: any) {
     return res.status(500).json({ error: error.message || 'Failed to retrieve your assignment instances.' });
+  }
+});
+
+/**
+ * GET /api/assignment-instances/:id
+ * Retrieves a single assignment instance.
+ * Gated by assignments:view.
+ */
+assignmentInstancesRouter.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const hasPerm = await permissionResolverService.hasPermission(req.user!.id, 'assignments', 'view');
+    if (!hasPerm) {
+      return res.status(403).json({ error: 'Forbidden: Missing required permission "assignments:view".' });
+    }
+
+    const instance = await prisma.userAssignmentInstance.findUnique({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      include: {
+        assignment: {
+          include: {
+            lesson: {
+              include: {
+                content: true,
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!instance) {
+      return res.status(404).json({ error: 'Assignment instance not found.' });
+    }
+
+    if (instance.userId !== req.user!.id) {
+      const hasEditPerm = await permissionResolverService.hasPermission(req.user!.id, 'assignments', 'edit');
+      if (!hasEditPerm) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to access this assignment instance.' });
+      }
+    }
+
+    return res.json(instance);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to retrieve assignment instance.' });
   }
 });
 

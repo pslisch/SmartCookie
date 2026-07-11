@@ -186,6 +186,22 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0014] SCORM Content Engine & Provider Architecture
+- **Status**: Approved
+- **Date**: 2026-07-10
+- **Authors**: AI Coding Agent
+- **Context**: SmartCookie requires support for importing, cataloging, and running SCORM 1.2 compliant package payloads, as well as tracking student runtime attempts and rolling up progress securely to parent assignment instances.
+- **Decision**:
+  - **Provider Architecture**: Implemented a core `Content` model with a `providerType` enum (set to `'SCORM_1_2'`, with other providers reserved) and established a unified Content-extends-Lesson schema.
+  - **Path Traversal / Zip-Slip Mitigation**: Enforced strict filename sanitization, parent-directory boundaries (`path.relative` check) on extract, and dynamic regex blockades against any double-dot patterns (`../`, `%2e%2e`) in player asset routing.
+  - **Version Control via Separated Rows**: Grouped multiple versions of a package using a common `contentGroupId` UUID to keep historical attempt relationships completely stable.
+  - **SCORM 1.2 Runtime Adapter**: Injected a fully-compliant sandbox client API bridge (`window.API`) to buffer runtime student status, scores, and times, saving them via periodically-throttled JSON commit calls.
+- **Consequences**:
+  - **Positives**: Bullet-proof container path-traversal security; highly granular performance audits; clear version isolation; seamless integration with the existing Lesson assignment and reports engine.
+  - **Negatives**: Imports are processed synchronously (fine for standard packages under 50MB); visual differential file-tree comparators are deferred.
+
+---
+
 ## 🔮 Planned ADRs (updated)
 
 - **ADR-0006: Authentication Strategy**: Detailing the Superuser,
