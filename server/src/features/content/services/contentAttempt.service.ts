@@ -50,11 +50,13 @@ export class ContentAttemptService {
 
     // 5. Update user assignment instance startedAt if not set
     if (!instance.startedAt) {
+      const snapshottedId = instance.contentId || instance.assignment.lesson.contentId || null;
       await prisma.userAssignmentInstance.update({
         where: { id: userAssignmentInstanceId },
         data: {
           startedAt: new Date(),
           status: UserAssignmentInstanceStatus.ACTIVE,
+          contentId: snapshottedId,
         },
       });
     }

@@ -369,6 +369,9 @@ model UserAssignmentInstance {
   dueDate           DateTime?                    @map("due_date")
   startedAt         DateTime?                    @map("started_at")
   completedAt       DateTime?                    @map("completed_at")
+  contentId         String?                      @map("content_id")
+  content           Content?                     @relation(fields: [contentId], references: [id], onDelete: SetNull)
+
   progressPercent   Int                          @default(0) @map("progress_percent")
   deletedAt         DateTime?                    @map("deleted_at")
   permanentDeleteAt DateTime?                    @map("permanent_delete_at")
@@ -457,6 +460,7 @@ model Content {
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
   lessons              Lesson[]
+  assignmentInstances  UserAssignmentInstance[]
 
   @@map("contents")
 }

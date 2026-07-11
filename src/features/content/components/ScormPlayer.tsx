@@ -28,6 +28,12 @@ interface UserAssignmentInstance {
   id: string;
   status: string;
   progressPercent: number;
+  contentId?: string | null;
+  content?: {
+    id: string;
+    launchFile: string;
+    title: string;
+  } | null;
   assignment: Assignment;
 }
 
@@ -75,7 +81,7 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
       const instanceData: UserAssignmentInstance = await instanceRes.json();
       setInstance(instanceData);
 
-      if (!instanceData.assignment?.lesson?.content) {
+      if (!instanceData.content && !instanceData.assignment?.lesson?.content) {
         throw new Error('This lesson does not have any playable SCORM content package attached.');
       }
 
@@ -179,7 +185,7 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
   };
 
   const launchAttempt = (attempt: ContentAttempt, inst: UserAssignmentInstance) => {
-    const content = inst.assignment.lesson.content;
+    const content = inst.content || inst.assignment.lesson.content;
     if (!content) return;
 
     // Build the initial CMI object

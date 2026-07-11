@@ -373,6 +373,7 @@ assignmentInstancesRouter.get('/:id', async (req: Request, res: Response) => {
         deletedAt: null,
       },
       include: {
+        content: true,
         assignment: {
           include: {
             lesson: {
