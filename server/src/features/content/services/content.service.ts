@@ -13,6 +13,7 @@ export interface ImportPackageMetadata {
   language?: string;
   companyId: string;
   tags?: string[];
+  certificateSetting?: string;
 }
 
 export class ContentService {
@@ -107,6 +108,7 @@ export class ContentService {
           storagePathExtracted: extractedDir,
           launchFile: manifestInfo.launchFile,
           manifestData: manifestInfo.rawManifest as any,
+          certificateSetting: metadata.certificateSetting || 'IGNORE',
           createdById,
           tags: metadata.tags && metadata.tags.length > 0 ? {
             create: metadata.tags.map(tag => ({ tag }))

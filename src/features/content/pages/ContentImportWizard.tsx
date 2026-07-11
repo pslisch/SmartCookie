@@ -69,7 +69,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
   const [existingContentGroupId, setExistingContentGroupId] = useState('');
 
   // Certificate Setting (5 options)
-  const [certificateOption, setCertificateOption] = useState<'IGNORE' | 'AUTO' | 'QUIZ' | 'MANUAL' | 'PROCTOR'>('IGNORE');
+  const [certificateOption, setCertificateOption] = useState<'IGNORE' | 'USE_PACKAGE' | 'STORE' | 'ALLOW_DOWNLOAD' | 'SMARTCOOKIE_FUTURE'>('IGNORE');
 
   // Submit / Upload Progress States
   const [isUploading, setIsUploading] = useState(false);
@@ -694,9 +694,9 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-800">Certificate Generation Setting</h3>
+                <h3 className="text-xl font-black text-slate-800">Package Certificate Configuration</h3>
                 <p className="text-sm text-slate-500">
-                  Select how certificate issuance should be coordinated upon SCORM module complete state.
+                  Select how package-level certificates should be handled upon successful SCORM completion.
                 </p>
               </div>
 
@@ -704,32 +704,32 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                 {[
                   {
                     id: 'IGNORE',
-                    title: 'Ignore Certificate Tracking',
-                    desc: 'Default option. System records attempts and statuses, but bypasses automatic certificate issuing pipeline entirely.',
+                    title: 'Ignore package certificate',
+                    desc: 'Default option. Bypasses package-level certificates and relies entirely on standard LMS progression tracking.',
                     isMVPActive: true,
                   },
                   {
-                    id: 'AUTO',
-                    title: 'Auto-Issue upon Completion',
-                    desc: 'Automatically triggers PDF certificate rendering the moment a learner reaches COMPLETED or PASSED status.',
+                    id: 'USE_PACKAGE',
+                    title: 'Use package certificate',
+                    desc: 'Attempts to use the internal SCORM package-generated certificate if defined inside the course bundle (Inert for MVP).',
                     isMVPActive: false,
                   },
                   {
-                    id: 'QUIZ',
-                    title: 'Quiz Score Threshold Requirement',
-                    desc: 'Guards certificate release on satisfying both lesson complete status and a minimal passing quiz score.',
+                    id: 'STORE',
+                    title: 'Store certificate',
+                    desc: 'Saves any package-delivered completion certificates to the student file-vault records upon completion (Inert for MVP).',
                     isMVPActive: false,
                   },
                   {
-                    id: 'MANUAL',
-                    title: 'Manual Admin Approval Required',
-                    desc: 'Pushes certificate issuance requests to the instructor queue for audits prior to authorized delivery.',
+                    id: 'ALLOW_DOWNLOAD',
+                    title: 'Allow download',
+                    desc: 'Renders a download certificate link directly on the lesson player for the student after completing the package (Inert for MVP).',
                     isMVPActive: false,
                   },
                   {
-                    id: 'PROCTOR',
-                    title: 'External Proctor Verification',
-                    desc: 'Requires verified external proctor sign-off logs uploaded to release the course complete certificate.',
+                    id: 'SMARTCOOKIE_FUTURE',
+                    title: 'SmartCookie certificate (future)',
+                    desc: 'Uses the future SmartCookie native custom certificate template engine to issue a brand certificate (Inert for MVP).',
                     isMVPActive: false,
                   },
                 ].map((opt) => (
@@ -748,7 +748,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                         <span className="font-extrabold text-slate-800 text-sm leading-none">{opt.title}</span>
                         {!opt.isMVPActive && (
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-slate-100 text-slate-400 tracking-wider">
-                            INERT FOR MVP
+                            INERT
                           </span>
                         )}
                         {opt.isMVPActive && (

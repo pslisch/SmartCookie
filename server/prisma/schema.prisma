@@ -450,6 +450,7 @@ model Content {
   launchFile           String           @map("launch_file")
   manifestData         Json             @map("manifest_data")
   thumbnailPath        String?          @map("thumbnail_path")
+  certificateSetting   String           @default("IGNORE") @map("certificate_setting")
   tags                 ContentTag[]
   createdById          String           @map("created_by_id")
   createdBy            User             @relation("ContentCreator", fields: [createdById], references: [id])

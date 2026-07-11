@@ -118,7 +118,7 @@ router.post('/import', requirePermission('content', 'import'), upload.single('fi
       parsedTags = req.body.tags.map(t => String(t).trim());
     }
 
-    const { title, description, categoryId, author, language, versionBehavior, existingContentGroupId } = req.body;
+    const { title, description, categoryId, author, language, versionBehavior, existingContentGroupId, certificateOption } = req.body;
 
     const behavior = versionBehavior === 'REPLACE' ? 'REPLACE' : 'NEW';
 
@@ -131,7 +131,8 @@ router.post('/import', requirePermission('content', 'import'), upload.single('fi
         author: author || '',
         language: language || '',
         companyId: req.user!.companyId,
-        tags: parsedTags
+        tags: parsedTags,
+        certificateSetting: certificateOption
       },
       behavior,
       existingContentGroupId,

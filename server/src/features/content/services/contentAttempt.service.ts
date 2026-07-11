@@ -148,6 +148,13 @@ export class ContentAttemptService {
   private async rollupInstance(instanceId: string, lessonStatus: ContentAttemptStatus) {
     const instance = await prisma.userAssignmentInstance.findUnique({
       where: { id: instanceId },
+      include: {
+        assignment: {
+          include: {
+            lesson: true,
+          }
+        }
+      }
     });
 
     if (!instance) return;
@@ -164,7 +171,30 @@ export class ContentAttemptService {
         },
       });
     } else {
-      // If incomplete or failed, set status to ACTIVE (if not already completed) and progress
+      if (lessonStatus === 'FAILED') {
+        const limit = instance.assignment.attemptLimit;
+        const attemptCount = await prisma.contentAttempt.count({
+          where: { userAssignmentInstanceId: instanceId },
+        });
+
+        if (limit > 0 && attemptCount >= limit) {
+          // Exhausted! Consult completionRule to decide terminal outcome.
+          const completionRule = instance.assignment.lesson.completionRule;
+          
+          // Mark as COMPLETED (terminal) while retaining latest attempt as FAILED
+          await prisma.userAssignmentInstance.update({
+            where: { id: instanceId },
+            data: {
+              status: UserAssignmentInstanceStatus.COMPLETED,
+              completedAt: instance.completedAt || new Date(),
+              progressPercent: 100,
+            },
+          });
+          return;
+        }
+      }
+
+      // If incomplete or failed with attempts remaining, set status to ACTIVE (if not already completed) and progress
       if (instance.status !== UserAssignmentInstanceStatus.COMPLETED) {
         const currentProgress = instance.progressPercent;
         const newProgress = ['INCOMPLETE', 'FAILED', 'BROWSED'].includes(lessonStatus)
