@@ -362,10 +362,6 @@ assignmentInstancesRouter.get('/', async (req: Request, res: Response) => {
 assignmentInstancesRouter.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const hasPerm = await permissionResolverService.hasPermission(req.user!.id, 'assignments', 'view');
-    if (!hasPerm) {
-      return res.status(403).json({ error: 'Forbidden: Missing required permission "assignments:view".' });
-    }
 
     const instance = await prisma.userAssignmentInstance.findUnique({
       where: {
@@ -391,9 +387,9 @@ assignmentInstancesRouter.get('/:id', async (req: Request, res: Response) => {
     }
 
     if (instance.userId !== req.user!.id) {
-      const hasEditPerm = await permissionResolverService.hasPermission(req.user!.id, 'assignments', 'edit');
-      if (!hasEditPerm) {
-        return res.status(403).json({ error: 'Forbidden: Insufficient permissions to access this assignment instance.' });
+      const hasPerm = await permissionResolverService.hasPermission(req.user!.id, 'assignments', 'view');
+      if (!hasPerm) {
+        return res.status(403).json({ error: 'Forbidden: Missing required permission "assignments:view".' });
       }
     }
 
