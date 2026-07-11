@@ -185,7 +185,7 @@ export const Catalog: React.FC = () => {
 
   // Self-assign all lessons inside a Course that are not already assigned
   const handleSelfAssignCourse = async (course: Course) => {
-    const unassignedLessons = course.courseLessons
+    const unassignedLessons = (course.courseLessons || [])
       .map((cl) => cl.lesson)
       .filter((l) => l.status === 'PUBLISHED' && !isLessonAssigned(l.id));
 
@@ -417,7 +417,7 @@ export const Catalog: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredCourses.map((course) => {
-            const courseLessons = course.courseLessons.map((cl) => cl.lesson);
+            const courseLessons = (course.courseLessons || []).map((cl) => cl.lesson);
             const totalLessons = courseLessons.length;
             const unassignedLessons = courseLessons.filter((l) => !isLessonAssigned(l.id));
             const allAssigned = unassignedLessons.length === 0;
@@ -454,7 +454,7 @@ export const Catalog: React.FC = () => {
                       <p className="text-xs text-slate-400 italic">{t('catalog.noLessonsInCourse')}</p>
                     ) : (
                       <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                        {course.courseLessons.map((cl) => {
+                        {(course.courseLessons || []).map((cl) => {
                           const assigned = isLessonAssigned(cl.lesson.id);
                           return (
                             <div

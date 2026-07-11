@@ -99,7 +99,7 @@ export const ContentManagement: React.FC = () => {
         const fresh = data.find((c: Course) => c.id === selectedCourse.id);
         if (fresh) {
           setSelectedCourse(fresh);
-          setCourseLessons(fresh.courseLessons.map((cl: CourseLesson) => cl.lesson));
+          setCourseLessons((fresh.courseLessons || []).map((cl: CourseLesson) => cl.lesson));
         }
       }
     } catch (err: any) {
@@ -258,7 +258,7 @@ export const ContentManagement: React.FC = () => {
   // Course Lesson Ordering Helper Logic
   const handleSelectCourse = (course: Course) => {
     setSelectedCourse(course);
-    setCourseLessons(course.courseLessons.map((cl) => cl.lesson));
+    setCourseLessons((course.courseLessons || []).map((cl) => cl.lesson));
     setError('');
     setSuccess('');
   };
@@ -477,7 +477,7 @@ export const ContentManagement: React.FC = () => {
                         {course.title}
                       </h4>
                       <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-lg">
-                        {t('content.lessonsCount', { count: course.courseLessons.length })}
+                        {t('content.lessonsCount', { count: (course.courseLessons || []).length })}
                       </span>
                     </div>
                     <p className="text-xs text-slate-400 mt-1">

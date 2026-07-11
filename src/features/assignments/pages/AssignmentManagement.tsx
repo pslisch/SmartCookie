@@ -587,19 +587,19 @@ export const AssignmentManagement: React.FC = () => {
                         </h4>
                         {assignment.isMandatory && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
-                            {t('assignments.management.mandatoryLabel')}
+                            {t('assignments.management.mandatory')}
                           </span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center text-xs text-slate-400 mt-1.5 gap-x-3 gap-y-1">
                         <span className="flex items-center space-x-1">
                           <Users className="h-3.5 w-3.5 text-slate-400" />
-                          <span>{t('assignments.management.targetLabel', { summary: getTargetsSummary(assignment.targets) })}</span>
+                          <span>{t('assignments.management.targetSummary', { summary: getTargetsSummary(assignment.targets) })}</span>
                         </span>
                         <span>&bull;</span>
                         <span>{t('assignments.management.typeLabel', { type: assignment.assignmentType })}</span>
                         <span>&bull;</span>
-                        <span>{t('assignments.management.assignedLabel', { date: new Date(assignment.createdAt).toLocaleDateString() })}</span>
+                        <span>{t('assignments.management.assignedOn', { date: new Date(assignment.createdAt).toLocaleDateString() })}</span>
                       </div>
                     </div>
 
