@@ -21,8 +21,11 @@ import {
   AlertCircle,
   X,
   Loader2,
-  FileCheck
+  FileCheck,
+  Eye
 } from 'lucide-react';
+import { usePreview } from '../../../shared/contexts/PreviewContext';
+import { usePermission } from '../../../shared/hooks/usePermission';
 
 interface ContentTag {
   id: string;
@@ -64,6 +67,24 @@ function getCookie(name: string): string {
 
 export const ContentLibrary: React.FC = () => {
   const { t } = useTranslation();
+
+  const { enterPreview, previewRoleId } = usePreview();
+  const canPreview = usePermission('preview', 'use');
+  const [learnerRole, setLearnerRole] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    if (canPreview) {
+      fetch('/api/preview/eligible-roles')
+        .then((res) => (res.ok ? res.json() : []))
+        .then((roles: Array<{ id: string; name: string }>) => {
+          const found = roles.find((r) => r.name.toLowerCase() === 'learner');
+          if (found) {
+            setLearnerRole(found);
+          }
+        })
+        .catch((err) => console.error('Error finding Learner role:', err));
+    }
+  }, [canPreview]);
 
   // State
   const [contents, setContents] = useState<Content[]>([]);
@@ -270,14 +291,27 @@ export const ContentLibrary: React.FC = () => {
             />
           </div>
 
-          <button
-            onClick={fetchContents}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors"
-            title="Reload content"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span>Reload</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {canPreview && learnerRole && previewRoleId !== learnerRole.id && (
+              <button
+                onClick={() => enterPreview(learnerRole.id, learnerRole.name)}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-750 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors flex items-center"
+                id="preview-as-learner-btn"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                <span>{t('preview.learnerShortcut')}</span>
+              </button>
+            )}
+
+            <button
+              onClick={fetchContents}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors"
+              title="Reload content"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Reload</span>
+            </button>
+          </div>
         </div>
 
         {/* Filter Rows */}

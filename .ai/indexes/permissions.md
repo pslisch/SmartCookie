@@ -56,4 +56,5 @@ Every permission represents a logical action on a module:
 | `content` | `archive` | Soft-delete/Archive SCORM packages | `POST /api/content/:id/archive` | Archive buttons inside SCORM library |
 | `content` | `restore` | Restore archived SCORM packages back to draft status | `POST /api/content/:id/restore` | Restore action in archived content views |
 | `content` | `download-zip` | Download original uploaded ZIP package binary streams | `GET /api/content/:id/download` | Download buttons across library and histories |
+| `preview` | `use` | Use the cosmetic visual preview system to view app as a lower-privileged role | `GET /api/preview/eligible-roles` | Preview banner exit, role selectors in Navbar and Content engines |
 

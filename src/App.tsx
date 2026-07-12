@@ -14,6 +14,7 @@ import { Settings } from './features/rbac/pages/Settings';
 import { Management } from './features/management/pages/Management';
 import { AppGate, useAuth } from './shared/components/AppGate';
 import { usePermission } from './shared/hooks/usePermission';
+import { PreviewProvider } from './shared/contexts/PreviewContext';
 import pkg from '@/package.json';
 
 // Format package.json name dynamically (e.g. "smart-cookie" -> "SmartCookie")
@@ -117,7 +118,9 @@ export default function App() {
 
   return (
     <AppGate>
-      <AppContent appName={appName} />
+      <PreviewProvider>
+        <AppContent appName={appName} />
+      </PreviewProvider>
     </AppGate>
   );
 }

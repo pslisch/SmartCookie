@@ -132,6 +132,27 @@ This restructuring guarantees administrators have single-click access to specifi
 - **Permission Verification & Path Resolution**: When accessing a protected page/route, the application checks permissions against the user's assigned role. If the company-wide global toggle `roleInheritanceEnabled` is active, the system's path resolver crawls recursively up the defined parent-role tree, accumulating permissions dynamically while actively shielding against cyclic loops. Superusers bypass all traversal logic entirely.
 
 
+## 👁️ Frontend-Only Visual Preview (Preview as Role)
+
+SmartCookie includes a sophisticated, secure role preview engine. This tool allows high-privileged administrators to temporarily navigate and test the application's interface as if they were assigned a lower-privileged role, without compromising overall backend security.
+
+### 1. Architectural Philosophy: Cosmetic Override
+The preview system is completely client-side (frontend-only). 
+* **Backend Authorization Integrity:** The actual user session cookie (`sid`) remains untouched and fully secure. Every API call made to the Express backend is authenticated against the user's real database permissions. The backend never trusts or enforces the preview role.
+* **UI-Aware Evaluation:** The frontend `usePermission()` hook is context-aware. When a preview is active, `usePermission` evaluates requirements against the preview role's effective permissions rather than the user's actual permissions.
+* **Superuser Suspension:** The standard Superuser UI bypass (which automatically grants full permission visibility in the interface) is temporarily suspended during active preview mode to ensure the UI accurately mimics the target role's constraints.
+
+### 2. Eligible Roles Gating (Subset Rule)
+To prevent privilege escalation and unauthorized system discovery, administrators can only preview roles that are a **strict subset** of their own effective permission list.
+* **Calculation:** The backend computes the intersection of permissions. If a target role has any permission not currently held by the requesting administrator, it is excluded from eligibility.
+* **Endpoint (`GET /api/preview/eligible-roles`):** Returns the dynamically resolved list of target roles the user is permitted to preview.
+
+### 3. State Management & Lifecycle
+* **PreviewContext:** A global React Context (`src/shared/contexts/PreviewContext.tsx`) manages the active preview state (`previewRoleId`, `previewRoleName`, `previewEffectivePermissions`).
+* **In-Memory Volatility:** To prevent permanent lockouts and visual confusion, the preview state is transient and stored strictly in memory. Refreshing or reloading the browser instantly resets the preview, reverting the user to their full real administrative session.
+* **Banner Gating:** A slim amber banner (`src/shared/components/PreviewBanner.tsx`) is injected at the shell level, notifying the user that a preview is active and providing an "Exit Preview" button.
+
+
 ## 🌐 Internationalization (i18n)
 
 SmartCookie includes a fully configured internationalization engine implemented under `src/shared/i18n/`.

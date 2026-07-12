@@ -14,12 +14,14 @@ import assignmentsRouter, { assignmentInstancesRouter } from './features/assignm
 import contentRouter from './features/assignments/routes/content.routes';
 import contentManagementRouter, { fileRouter as contentFileRouter } from './features/content/routes/content.routes.js';
 import contentAttemptsRouter from './features/content/routes/contentAttempts.routes.js';
+import previewRouter from './features/preview/routes/preview.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
 import './features/organization/organization.permissions';
 import './features/assignments/assignments.permissions';
 import './features/content/content.permissions.js';
+import './features/preview/preview.permissions';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 import { scheduledTasksService } from './shared/scheduler/scheduledTasks.service';
@@ -82,6 +84,7 @@ async function startServer() {
   app.use('/api/content-attempts', contentAttemptsRouter);
   app.use('/content-files', contentFileRouter);
   app.use('/api', contentRouter);
+  app.use('/api', previewRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

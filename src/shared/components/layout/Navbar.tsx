@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tab } from '../../types';
-import { User, Menu, X, BookOpen, Compass, Languages, Settings, LayoutDashboard } from 'lucide-react';
+import { User, Menu, X, BookOpen, Compass, Languages, Settings, LayoutDashboard, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { usePermission } from '../../hooks/usePermission';
 import { useAuth } from '../AppGate';
+import { usePreview } from '../../contexts/PreviewContext';
 
 interface NavbarProps {
   currentTab: Tab;
@@ -40,6 +41,27 @@ export const Navbar: React.FC<NavbarProps> = ({
     usePermission('assignments', 'create-mandatory');
 
   const hasSettingsAccess = !!user?.isSuperuser;
+
+  const canPreview = usePermission('preview', 'use');
+  const [eligibleRoles, setEligibleRoles] = useState<Array<{ id: string; name: string }>>([]);
+  const [showPicker, setShowPicker] = useState(false);
+  const { enterPreview } = usePreview();
+
+  useEffect(() => {
+    if (canPreview) {
+      fetch('/api/preview/eligible-roles')
+        .then((res) => {
+          if (res.ok) return res.json();
+          return [];
+        })
+        .then((data) => {
+          setEligibleRoles(data);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch eligible roles:', err);
+        });
+    }
+  }, [canPreview]);
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -154,6 +176,47 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Side: Account button */}
           <div className="hidden md:flex items-center space-x-4">
+            {canPreview && eligibleRoles.length > 0 && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowPicker(!showPicker)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-blue-600 focus:outline-none"
+                  id="navbar-preview-btn"
+                  title={t('preview.triggerTooltip')}
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+                <AnimatePresence>
+                  {showPicker && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+                      id="preview-picker-dropdown"
+                    >
+                      <div className="px-3 py-2 text-xs font-semibold text-slate-400 border-b border-slate-100 mb-1">
+                        {t('preview.pickerTitle')}
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {eligibleRoles.map((role) => (
+                          <button
+                            key={role.id}
+                            onClick={() => {
+                              enterPreview(role.id, role.name);
+                              setShowPicker(false);
+                            }}
+                            className="flex w-full items-center px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 rounded-md transition duration-150 text-left font-medium"
+                          >
+                            {role.name}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
             <LanguageSwitcher variant="desktop" />
             <button
               className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200"
@@ -241,6 +304,28 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
 
               <div className="border-t border-[#E2E8F0] my-2 pt-2 space-y-1">
+                {canPreview && eligibleRoles.length > 0 && (
+                  <div className="px-4 py-2 space-y-1" id="mobile-preview-picker">
+                    <div className="text-xs font-semibold text-slate-400 mb-1">
+                      {t('preview.pickerTitle')}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {eligibleRoles.map((role) => (
+                        <button
+                          key={role.id}
+                          onClick={() => {
+                            enterPreview(role.id, role.name);
+                            setIsOpen(false);
+                          }}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 rounded-lg transition duration-150"
+                        >
+                          {role.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-base font-semibold text-slate-500 hover:bg-slate-50 transition-colors" id="mobile-language-row">
                   <div className="flex items-center space-x-2.5">
                     <Languages className="h-5 w-5" />

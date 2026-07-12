@@ -154,5 +154,17 @@ Every logged feature should eventually document:
 - **Events**: Completion and performance scoring commits trigger instant rollup calculation and updates to user study progress on completion records.
 - **Dependencies**: Express, Prisma ORM, Node.js, Adm-Zip, xml2js, React, motion/react, lucide-react
 
+### 12. Frontend-Only Visual Preview (Preview as Role)
+- **Description**: Allows privileged administrators to preview the application interface under any lower-privileged role context. The preview is cosmetic-only and manages an in-memory session override on the frontend while keeping the backend authentication intact for secure API communication. It automatically suspends superuser UI bypass checks during the active preview.
+- **Components**: `src/shared/components/PreviewBanner.tsx`, `src/shared/contexts/PreviewContext.tsx`, custom insertions in `src/shared/components/layout/Shell.tsx` and `src/shared/components/layout/Navbar.tsx`
+- **Pages**: Global / Layout-wide preview triggers, shortcut buttons on `src/features/content/pages/ContentLibrary.tsx` and `src/features/content/pages/ContentImportWizard.tsx`
+- **Services**: None (Cosmetic Frontend State)
+- **APIs**: `GET /api/preview/eligible-roles` (returns target roles that are a strict subset of current user's effective permissions), `GET /api/roles/:id/effective-permissions`
+- **Database**: `roles`, `role_permissions`
+- **Permissions**: Gated by `preview:use` permission.
+- **Routes**: `/api/preview/*`
+- **Events**: In-memory state changes reset on tab reload.
+- **Dependencies**: React, Tailwind CSS, Lucide React, Motion
+
 
 

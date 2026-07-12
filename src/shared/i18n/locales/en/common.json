@@ -541,5 +541,14 @@
       "selfAssignCourseError": "Could not assign course lessons.",
       "selfAssignCourseErr": "Error self-assigning course lessons."
     }
+  },
+  "preview": {
+    "banner": "Previewing as: {{roleName}}",
+    "exitButton": "Exit Preview",
+    "triggerTooltip": "Preview as Role",
+    "selectRolePlaceholder": "Select role...",
+    "pickerTitle": "Choose Preview Role",
+    "learnerShortcut": "Preview as Learner",
+    "noRoles": "No eligible roles available"
   }
 }

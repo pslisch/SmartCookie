@@ -18,9 +18,11 @@ import {
   RefreshCw,
   XCircle,
   Clock,
-  Layers
+  Layers,
+  Eye
 } from 'lucide-react';
 import { usePermission } from '../../../shared/hooks/usePermission';
+import { usePreview } from '../../../shared/contexts/PreviewContext';
 
 interface ContentImportWizardProps {
   onClose: () => void;
@@ -44,6 +46,24 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
 }) => {
   const { t } = useTranslation();
   const hasImportPermission = usePermission('content', 'import');
+
+  const { enterPreview, previewRoleId } = usePreview();
+  const canPreview = usePermission('preview', 'use');
+  const [learnerRole, setLearnerRole] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    if (canPreview) {
+      fetch('/api/preview/eligible-roles')
+        .then((res) => (res.ok ? res.json() : []))
+        .then((roles: Array<{ id: string; name: string }>) => {
+          const found = roles.find((r) => r.name.toLowerCase() === 'learner');
+          if (found) {
+            setLearnerRole(found);
+          }
+        })
+        .catch((err) => console.error('Error finding Learner role:', err));
+    }
+  }, [canPreview]);
 
   // Steps: 1 to 8
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -380,6 +400,24 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                   parse, validate, and associate industry-standard SCORM 1.2 elearning packages into your SmartCookie workspace.
                 </p>
               </div>
+
+              {canPreview && learnerRole && previewRoleId !== learnerRole.id && (
+                <div className="flex items-center space-x-3 bg-amber-50 border border-amber-100 rounded-2xl p-4 text-amber-900" id="wizard-learner-shortcut-card">
+                  <Eye className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                  <div className="flex-1 text-xs font-semibold leading-relaxed">
+                    <p className="font-bold text-amber-950">Quick Testing Tip:</p>
+                    <p className="text-amber-800">Want to test how courses look to students? Toggle the Learner Preview mode instantly.</p>
+                  </div>
+                  <button
+                    onClick={() => enterPreview(learnerRole.id, learnerRole.name)}
+                    className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm shrink-0 flex items-center gap-1.5"
+                    id="preview-as-learner-wizard-btn"
+                  >
+                    <Eye className="h-3 w-3" />
+                    <span>{t('preview.learnerShortcut')}</span>
+                  </button>
+                </div>
+              )}
 
               <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 flex gap-4 text-blue-800">
                 <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
