@@ -568,4 +568,55 @@ router.post('/change-email/confirm', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/auth/change-password
+ * Authenticated. Changes the currently logged-in user's password.
+ */
+router.post('/change-password', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword) {
+      return res.status(400).json({ error: 'Current password is required.' });
+    }
+    if (!newPassword) {
+      return res.status(400).json({ error: 'New password is required.' });
+    }
+
+    // 1. Fetch user again with passwordHash from database
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+    });
+    if (!user || !user.passwordHash) {
+      return res.status(404).json({ error: 'User not found or does not have a local password.' });
+    }
+
+    // 2. Verify current password
+    const isCurrentValid = await emailPasswordAuthProvider.verifyPassword(currentPassword, user.passwordHash);
+    if (!isCurrentValid) {
+      return res.status(400).json({ error: 'The current password you entered is incorrect.' });
+    }
+
+    // 3. Validate new password format/strength
+    try {
+      emailPasswordAuthProvider.validatePassword(newPassword);
+    } catch (validationErr: any) {
+      return res.status(400).json({ error: validationErr.message });
+    }
+
+    // 4. Hash new password and save
+    const newPasswordHash = await emailPasswordAuthProvider.hashPassword(newPassword);
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    return res.json({
+      success: true,
+      message: 'Password changed successfully.',
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'An internal error occurred.' });
+  }
+});
+
 export default router;

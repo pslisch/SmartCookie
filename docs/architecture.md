@@ -224,6 +224,20 @@ A fully isolated CSV import coordinator facilitates bulk provisioning of hundred
 * **All-or-Nothing Transaction:** To prevent partial failures and database pollution, the confirmation step executes inside a single Prisma `$transaction`. If even one row fails validation (e.g., duplicate email, invalid format), the entire import is rolled back immediately, leaving the system in a pristine state.
 * **Auto-Assignment Hooks:** Successfully imported users are automatically associated with their respective OUs and Learning Groups, which immediately triggers the target-resolution and assignment-materialization engines to spawn their training curricula.
 
+### 5. Category & Custom Field Builder (Settings)
+SmartCookie implements a comprehensive category and profile field constructor interface:
+* **Secure Gating:** Managed under the `Settings` area (#settings) and gated strictly on the `profile-fields:manage-fields` privilege.
+* **Read-Only System Fields:** Seeded default fields (such as `First Name`, `Last Name`, `Job Title`) are fully visible but their metadata structure is protected on the frontend and locked on the backend. Attempting to delete a system field provides a clear, detailed message on structural dependency.
+* **Granular Field Parameters:** Configures optionality, default values, user editability, and validation regex rules. Role-level editing access uses a simple selection list of existing workspace roles to ensure clean authorization mapping.
+* **No Drag & Drop Ordering:** Follows a simplified layout-safe "move up/down" operational design within category sections to guarantee consistent, accessibility-compliant ordering.
+
+### 6. Required Field Reminder System
+To guarantee tenant-wide data completeness for safety and compliance reporting, a persistent notification engine is established:
+* **Session-Cached Dismissible Banner:** If a user profile misses custom required fields, a highly visual amber banner is mounted on the global viewport layout.
+* **Live Completion Analytics:** Displays the current overall profile completion percentage calculated dynamically by checking all required system and custom fields.
+* **Dismissal Rules:** The user can dismiss the banner for their active session (stored cleanly in `sessionStorage` in the `AppGate`), but the reminder will reappear upon their next login if required fields remain incomplete, ensuring mandatory compliance.
+
+
 ---
 
 ## 🚀 Deployment Targets & Production Topology

@@ -6,6 +6,7 @@ import { Login } from '../../features/auth/pages/Login';
 import { AcceptInvitation } from '../../features/auth/pages/AcceptInvitation';
 import { ForgotPassword } from '../../features/auth/pages/ForgotPassword';
 import { ResetPassword } from '../../features/auth/pages/ResetPassword';
+import { ConfirmEmail } from '../../features/auth/pages/ConfirmEmail';
 
 interface UserIdentity {
   id: string;
@@ -16,6 +17,7 @@ interface UserIdentity {
   status: string;
   roleName: string | null;
   effectivePermissions: string[];
+  incompleteRequiredFields?: string[];
 }
 
 interface AuthContextType {
@@ -58,9 +60,17 @@ export function AppGate({ children }: AppGateProps) {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [publicAction, setPublicAction] = useState<{ action: string; token: string } | null>(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action') || (window.location.pathname === '/activate' || window.location.pathname === '/accept-invitation' ? 'activate' : window.location.pathname === '/reset-password' ? 'reset-password' : null);
+    const action = urlParams.get('action') || (
+      window.location.pathname === '/activate' || window.location.pathname === '/accept-invitation'
+        ? 'activate'
+        : window.location.pathname === '/reset-password'
+        ? 'reset-password'
+        : window.location.pathname === '/confirm-email'
+        ? 'confirm-email'
+        : null
+    );
     const token = urlParams.get('token');
-    if (action && (action === 'activate' || action === 'reset-password') && token) {
+    if (action && (action === 'activate' || action === 'reset-password' || action === 'confirm-email') && token) {
       return { action, token };
     }
     return null;
@@ -215,6 +225,7 @@ export function AppGate({ children }: AppGateProps) {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
+      sessionStorage.removeItem('requiredFieldsBannerDismissed');
       setUser(null);
       setSetupStatus('complete');
     }
@@ -248,6 +259,21 @@ export function AppGate({ children }: AppGateProps) {
           <ResetPassword
             token={publicAction.token}
             onSuccess={async () => {
+              setPublicAction(null);
+              await checkStatusAndSession();
+            }}
+          />
+        </AuthContext.Provider>
+      );
+    }
+    if (publicAction.action === 'confirm-email') {
+      return (
+        <AuthContext.Provider value={authContextValue}>
+          <ConfirmEmail
+            token={publicAction.token}
+            onSuccess={async () => {
+              // Clear the token from URL and go back to login
+              window.history.replaceState({}, document.title, '/');
               setPublicAction(null);
               await checkStatusAndSession();
             }}

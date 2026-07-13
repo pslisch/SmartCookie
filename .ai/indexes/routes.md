@@ -61,8 +61,9 @@ Every listed visual route should eventually document:
 ### 8. System Settings
 - **Path**: Local State Tab & Hash URL (`#settings`)
 - **Component**: `src/features/rbac/pages/Settings.tsx`
-- **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend `usePermission('roles', 'manage')` hook (bounces to `my-lessons` tab if access is unauthorized)
-- **Permissions**: Requires active session with `roles:manage` permission (Superuser bypasses)
+- **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend check for `profile-fields:manage-fields` (bounces to `my-lessons` tab if access is unauthorized)
+- **Permissions**: Requires active session with `profile-fields:manage-fields` permission or Superuser status
+
 
 ### 9. Management Hub
 - **Path**: Local State Tab & Hash URL (`#management`)
@@ -70,4 +71,15 @@ Every listed visual route should eventually document:
 - **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend permission check (bounces to `my-lessons` if no administrative permission)
 - **Permissions**: Requires active session with administrative permissions (e.g., `assignments:view`, `roles:manage`, etc., Superuser bypasses)
 
+### 10. Full User Profile
+- **Path**: Local State Tab & Hash URL (`#profile`)
+- **Component**: `src/features/profiles/pages/FullProfile.tsx`
+- **Guards**: `AppGate` session verification (bounces to login if no active session)
+- **Permissions**: Authenticated user (Status: `ACTIVE`)
+
+### 11. Confirm Email Change
+- **Path**: Custom action segment (`/confirm-email?token=...`)
+- **Component**: `src/features/auth/pages/ConfirmEmail.tsx`
+- **Guards**: Intercepted in `AppGate` as a public action
+- **Permissions**: Public access with valid email-change token
 

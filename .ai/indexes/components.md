@@ -134,4 +134,51 @@ Every registered component should include:
 - **Used By**: `src/features/assignments/pages/AssignmentManagement.tsx`
 - **Dependencies**: React, `motion/react`, Lucide Icons, Recharts (for analytics visualization)
 
+### 16. `ProfileFieldInput`
+- **Location**: `src/shared/components/ProfileFieldInput.tsx`
+- **Purpose**: Dynamic shared input component that renders form controls per profile field type with automatic permission checks, client-side validations, and lock warnings.
+- **Props**:
+  - `field`: `ProfileFieldDefinition` - Metadata defining the profile field rules and types.
+  - `value`: `string` - The current string representation of the value.
+  - `onChange`: `(val: string) => void` - Callback to persist field changes.
+  - `isOwner`: `boolean` (Optional) - Indicates if user is updating their own profile.
+  - `userRoles`: `string[]` (Optional) - Viewing user's role identifiers.
+  - `isSuperuser`: `boolean` (Optional) - Administrator bypass flag.
+  - `disabled`: `boolean` (Optional) - Override force-disabled flag.
+  - `onError`: `(error: string | null) => void` (Optional) - Notifies parent forms of dynamic validation state updates.
+- **Used By**: Full Profile tab, User Management detail views
+- **Dependencies**: React, Lucide Icons, `react-i18next`
+
+### 17. `UsersTab`
+- **Location**: `src/features/organization/components/UsersTab.tsx`
+- **Purpose**: A comprehensive user administration panel providing robust search, multi-faceted filtering (status, roles, organization units), side-sheet detail editing, single-user password reset, and archive/restore operations.
+- **Props**: None (Self-contained tab).
+- **Used By**: `src/features/organization/pages/UserGroupManagement.tsx`
+- **Dependencies**: React, `lucide-react`, `react-i18next`, `ProfileFieldInput`, `BulkImportWizard`
+
+### 18. `BulkImportWizard`
+- **Location**: `src/features/organization/components/BulkImportWizard.tsx`
+- **Purpose**: Multi-step wizard layout for uploading a CSV file to bulk import user accounts. Provides a download template button, a beautiful drag-and-drop file selector, per-row validation reporting, and an all-or-nothing confirmation step.
+- **Props**:
+  - `onClose`: `() => void` - Triggers closing the wizard modal.
+  - `onSuccess`: `() => void` - Callback triggered upon successful database persistence of the batch import.
+- **Used By**: `src/features/organization/components/UsersTab.tsx`
+- **Dependencies**: React, `lucide-react`, `react-i18next`
+
+### 19. `FieldBuilder`
+- **Location**: `src/features/profiles/pages/FieldBuilder.tsx`
+- **Purpose**: Dynamic category and custom field management interface allowing administrator configuration of profile attribute mappings, orderings, types, regex validation rules, default values, and role-based editing authorizations.
+- **Props**: None (Self-contained panel).
+- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Dependencies**: React, Lucide Icons, `motion/react`, `react-i18next`
+
+### 20. `RequiredFieldReminder`
+- **Location**: `src/shared/components/RequiredFieldReminder.tsx`
+- **Purpose**: Dismissible amber layout banner reminding logged-in end-users of missing mandatory fields, calculating completion percentages live and redirecting users directly to the profile view.
+- **Props**:
+  - `onNavigateToProfile`: `() => void` - Callback trigger when redirection is clicked.
+- **Used By**: `src/App.tsx`
+- **Dependencies**: React, Lucide Icons, `motion/react`, `react-i18next`
+
+
 

@@ -12,6 +12,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { usePermission } from '../../hooks/usePermission';
 import { useAuth } from '../AppGate';
 import { usePreview } from '../../contexts/PreviewContext';
+import { QuickProfile } from '../QuickProfile';
 
 interface NavbarProps {
   currentTab: Tab;
@@ -25,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   appName,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showQuickProfile, setShowQuickProfile] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
   
@@ -40,7 +42,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     usePermission('assignments', 'view-reports') || 
     usePermission('assignments', 'create-mandatory');
 
-  const hasSettingsAccess = !!user?.isSuperuser;
+  const canManageFields = usePermission('profile-fields', 'manage-fields');
+  const hasSettingsAccess = !!user?.isSuperuser || canManageFields;
 
   const canPreview = usePermission('preview', 'use');
   const [eligibleRoles, setEligibleRoles] = useState<Array<{ id: string; name: string }>>([]);
@@ -218,13 +221,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
             <LanguageSwitcher variant="desktop" />
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200"
-              id="navbar-account-btn"
-              title={t('nav.account')}
-            >
-              <User className="h-4 w-4" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowQuickProfile(!showQuickProfile)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200"
+                id="navbar-account-btn"
+                title={t('nav.account')}
+              >
+                <User className="h-4 w-4" />
+              </button>
+              <AnimatePresence>
+                {showQuickProfile && (
+                  <QuickProfile
+                    onClose={() => setShowQuickProfile(false)}
+                    onOpenFullProfile={() => handleTabSelect(Tab.Profile)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Hamburger Menu (Mobile) */}
@@ -335,7 +349,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
 
                 <button
-                  className="flex w-full items-center space-x-2.5 rounded-xl px-4 py-3 text-base font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors"
+                  onClick={() => handleTabSelect(Tab.Profile)}
+                  className={`flex w-full items-center space-x-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+                    currentTab === Tab.Profile ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  }`}
                   id="tab-account-mobile"
                 >
                   <User className="h-5 w-5" />

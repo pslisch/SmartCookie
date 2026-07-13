@@ -1,20 +1,14 @@
-# Profiles Feature Module
+# Profiles Feature
 
-This folder is reserved for the frontend representation and components of the user profile and customization suite.
+This feature handles user profile viewing, custom profile fields, notification preferences, security settings, and achievements (certificates/badges).
 
-## Purpose
-The Profiles module handles user profile viewing, custom profile fields editing (with dynamic permission checks), notification preferences, and the administrative bulk import wizard.
-
-While the backend services, database schemas, and JSON APIs are fully materialized in `v1.9.0`, the frontend client-side UI elements are designated as a subsequent, separate task set.
-
-## Planned Frontend Structure
-Once implemented, this module will contain:
-- `components/`: UI components such as `NotificationPreferencesForm`, `ProfileFieldEditor`, and `BulkImportWizard`.
-- `pages/`: Target pages such as `UserProfilePage` and `BulkImportDashboard`.
-- `hooks/`: Custom hooks for fetching and saving user preferences and custom profile fields.
+## Structure
+- `pages/FullProfile.tsx`: The main profile page shell with tabs for Personal Information, Security, Notifications, Account Information, Certificates, and Badges.
+- `services/`: Core backend services for profile definitions and value updates.
+- `routes/`: Express endpoints for profile fetching and editing.
 
 ## Dependencies
-- `@prisma/client` (backend definitions)
-- `react` / `react-dom`
-- `lucide-react` (icons)
-- `motion/react` (animations)
+- React
+- i18next
+- lucide-react
+- motion/react (for animations and tab layout indicators)

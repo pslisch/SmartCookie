@@ -166,10 +166,10 @@ Every logged feature should eventually document:
 - **Events**: In-memory state changes reset on tab reload.
 - **Dependencies**: React, Tailwind CSS, Lucide React, Motion
 
-### 13. Profiles & User Management Extensions (Materialized Backend Services)
-- **Description**: Extends the user entity with first/last name, profile picture, and last login data. Establishes a flexible ProfileFieldDefinition and ProfileFieldValue custom field architecture with seeded system field definitions, role-specific field edit privileges, user notification preferences, and mandatory tenant-wide notification requirements. Includes User Management services for advanced listings, profiling, updating, archiving, and restoring, plus a transactional bulk user import engine.
-- **Components**: None (Backend-only deliverables; Frontend is out-of-scope/follow-up)
-- **Pages**: Follow-up task set (Frontend)
+### 13. Profiles & User Management Extensions (Fully Materialized Client-Server Feature)
+- **Description**: Extends the user entity with first/last name, profile picture, and last login data. Establishes a flexible ProfileFieldDefinition and ProfileFieldValue custom field architecture with seeded system field definitions, role-specific field edit privileges, user notification preferences, and mandatory tenant-wide notification requirements. Includes User Management services for advanced listings, profiling, updating, archiving, and restoring, plus a transactional bulk user import engine. Fully integrated with a production-ready React client interface supporting searching/filtering, detail sheets, custom profile inputs, admin actions (archive/restore choices, password reset), and an all-or-nothing Bulk Import Wizard. Also features an interactive Profile Category and Field Builder for custom form customization, as well as a session-dismissible Required Field completion reminder banner.
+- **Components**: `src/features/organization/components/UsersTab.tsx`, `src/features/organization/components/BulkImportWizard.tsx`, `src/shared/components/ProfileFieldInput.tsx`, `src/shared/components/RequiredFieldReminder.tsx`
+- **Pages**: `src/features/organization/pages/UserGroupManagement.tsx` (Houses "Users" tab), `src/features/profiles/pages/FieldBuilder.tsx` (Profiles Category & Custom Field Builder), `src/features/rbac/pages/Settings.tsx` (Settings Area Hub)
 - **Services**: `UserManagementService` (`server/src/features/auth/services/userManagement.service.ts`), `BulkImportService` (`server/src/features/profiles/services/bulkImport.service.ts`), `ProfileFieldService` (`server/src/features/profiles/services/profileField.service.ts`), `ProfileFieldValueService` (`server/src/features/profiles/services/profileFieldValue.service.ts`), `seedProfileFields` (`server/prisma/seed/profileFieldsSeed.ts`), `scheduledTasksService` (`server/src/shared/scheduler/scheduledTasks.service.ts` updated to respect preferences)
 - **APIs**:
   - `GET /api/users` (paginated list/filter)
@@ -184,9 +184,20 @@ Every logged feature should eventually document:
   - `GET /api/users/bulk-import/template` (generate CSV template)
   - `POST /api/users/bulk-import/validate` (validate CSV dry-run)
   - `POST /api/users/bulk-import/confirm` (all-or-nothing transaction import)
+  - `GET /api/profile-fields/categories` (list categories & fields)
+  - `POST /api/profile-fields/categories` (create category)
+  - `PATCH /api/profile-fields/categories/:id` (rename/reorder category)
+  - `DELETE /api/profile-fields/categories/:id` (delete category)
+  - `POST /api/profile-fields/definitions` (create custom field)
+  - `PATCH /api/profile-fields/definitions/:id` (edit custom field)
+  - `DELETE /api/profile-fields/definitions/:id` (delete custom field)
+  - `POST /api/profile-fields/definitions/:id/move-up` (reorder field up)
+  - `POST /api/profile-fields/definitions/:id/move-down` (reorder field down)
+  - `POST /api/profile-fields/definitions/:id/roles` (assign editing roles)
+  - `GET /api/profile/me/completion` (live profile completion percentage & missing fields)
 - **Database**: `profile_field_categories`, `profile_field_definitions`, `field_editable_by_roles`, `profile_field_values`, `notification_preferences`, `users`, `companies`, `tokens` (Prisma & MariaDB schemas)
 - **Permissions**: `users:view`, `users:create`, `users:edit`, `users:delete`, `profile-fields:manage-categories`, `profile-fields:manage-fields`, and `roles:manage` (for mandatory notifications)
-- **Routes**: `server/src/features/auth/routes/users.routes.ts`, `server/src/features/profiles/routes/notificationPreferences.routes.ts`, `server/src/features/profiles/routes/bulkImport.routes.ts`
+- **Routes**: `server/src/features/auth/routes/users.routes.ts`, `server/src/features/profiles/routes/notificationPreferences.routes.ts`, `server/src/features/profiles/routes/bulkImport.routes.ts`, `server/src/features/profiles/routes/profileField.routes.ts`, `server/src/features/profiles/routes/profile.routes.ts`
 - **Events**: Automated notification triggers check user preferences or company-mandatory lists before mailing.
 - **Dependencies**: Prisma ORM, Node.js, Express, Multer, CSV-parse, bcrypt, Nodemailer
 

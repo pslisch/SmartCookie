@@ -11,4 +11,5 @@ export enum Tab {
   Catalog = 'catalog',
   Management = 'management',
   Settings = 'settings',
+  Profile = 'profile',
 }

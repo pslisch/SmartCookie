@@ -17,6 +17,8 @@ import contentAttemptsRouter from './features/content/routes/contentAttempts.rou
 import previewRouter from './features/preview/routes/preview.routes';
 import notificationPreferencesRouter from './features/profiles/routes/notificationPreferences.routes';
 import bulkImportRouter from './features/profiles/routes/bulkImport.routes';
+import profileRouter from './features/profiles/routes/profile.routes';
+import profileFieldRouter from './features/profiles/routes/profileField.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
@@ -92,6 +94,8 @@ async function startServer() {
   app.use('/api', contentRouter);
   app.use('/api', previewRouter);
   app.use('/api', notificationPreferencesRouter);
+  app.use('/api/profile', profileRouter);
+  app.use('/api/profile-fields', profileFieldRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

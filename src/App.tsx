@@ -12,9 +12,11 @@ import { MyLessons } from './features/lessons/pages/MyLessons';
 import { Catalog } from './features/catalog/pages/Catalog';
 import { Settings } from './features/rbac/pages/Settings';
 import { Management } from './features/management/pages/Management';
+import { FullProfile } from './features/profiles/pages/FullProfile';
 import { AppGate, useAuth } from './shared/components/AppGate';
 import { usePermission } from './shared/hooks/usePermission';
 import { PreviewProvider } from './shared/contexts/PreviewContext';
+import { RequiredFieldReminder } from './shared/components/RequiredFieldReminder';
 import pkg from '@/package.json';
 
 // Format package.json name dynamically (e.g. "smart-cookie" -> "SmartCookie")
@@ -29,21 +31,21 @@ const formatAppName = (rawName: string): string => {
 const getInitialTab = (): Tab => {
   // 1. Check if there was an attempted tab saved before login
   const saved = localStorage.getItem('attemptedTab');
-  if (saved && (saved === 'catalog' || saved === 'my-lessons' || saved === 'settings' || saved === 'management')) {
+  if (saved && (saved === 'catalog' || saved === 'my-lessons' || saved === 'settings' || saved === 'management' || saved === 'profile')) {
     localStorage.removeItem('attemptedTab');
     return saved as Tab;
   }
 
   // 2. Check URL hash
   const hash = window.location.hash.replace('#', '');
-  if (hash && (hash === 'catalog' || hash === 'my-lessons' || hash === 'settings' || hash === 'management')) {
+  if (hash && (hash === 'catalog' || hash === 'my-lessons' || hash === 'settings' || hash === 'management' || hash === 'profile')) {
     return hash as Tab;
   }
 
   // 3. Check query param
   const urlParams = new URLSearchParams(window.location.search);
   const tabParam = urlParams.get('tab');
-  if (tabParam && (tabParam === 'catalog' || tabParam === 'my-lessons' || tabParam === 'settings' || tabParam === 'management')) {
+  if (tabParam && (tabParam === 'catalog' || tabParam === 'my-lessons' || tabParam === 'settings' || tabParam === 'management' || tabParam === 'profile')) {
     return tabParam as Tab;
   }
 
@@ -66,7 +68,8 @@ function AppContent({ appName }: { appName: string }) {
     usePermission('assignments', 'view-reports') || 
     usePermission('assignments', 'create-mandatory');
 
-  const hasSettingsAccess = !!user?.isSuperuser;
+  const canManageFields = usePermission('profile-fields', 'manage-fields');
+  const hasSettingsAccess = !!user?.isSuperuser || canManageFields;
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {
@@ -92,6 +95,8 @@ function AppContent({ appName }: { appName: string }) {
         appName={appName}
       />
 
+      <RequiredFieldReminder onNavigateToProfile={() => setCurrentTab(Tab.Profile)} />
+
       {/* Main Content Area (Expands and fills space, keeping Footer pinned below) */}
       <main className="flex-1" id="main-content-area">
         {currentTab === Tab.MyLessons ? (
@@ -102,6 +107,8 @@ function AppContent({ appName }: { appName: string }) {
           <Management />
         ) : currentTab === Tab.Settings && hasSettingsAccess ? (
           <Settings />
+        ) : currentTab === Tab.Profile ? (
+          <FullProfile />
         ) : (
           <MyLessons />
         )}
