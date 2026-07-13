@@ -17,12 +17,12 @@ router.get('/notification-preferences', requireAuth, async (req: Request, res: R
       where: { userId: req.user!.id },
     });
 
-    const prefMap = new Map<string, boolean>();
+    const prefMap = new Map<NotificationType, boolean>();
     for (const p of userPrefs) {
       prefMap.set(p.notificationType, p.enabled);
     }
 
-    const allTypes = Object.values(NotificationType);
+    const allTypes = Object.values(NotificationType) as NotificationType[];
     const preferences = allTypes.map((type) => ({
       notificationType: type,
       enabled: prefMap.has(type) ? prefMap.get(type)! : true,
