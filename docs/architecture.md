@@ -201,6 +201,31 @@ A daily cron job handles system cleanups and alerts:
 
 ---
 
+## 👥 Profiles, User Management, and Transactional Bulk Import
+
+SmartCookie v1.9.0 introduces advanced tenant-wide user management, fine-grained profile field personalization, self-service notification preferences, and a transactional bulk user import engine.
+
+### 1. Hybrid Schema Design: System vs. Custom Profile Fields
+To achieve exceptional querying performance for standard operations while supporting dynamic customization, the profile system operates on a hybrid storage split:
+* **System Columns (User Table):** Core fields such as `firstName` and `lastName` reside directly on the `User` table for rapid listing, sorting, and authentication profiling.
+* **Custom Fields (EAV Model):** `ProfileFieldDefinition` defines dynamic attributes (e.g. "Department", "Hire Date", "Emergency Contact") with specific types (`TEXT`, `NUMBER`, `DROPDOWN`, etc.). Individual user values are stored in the `ProfileFieldValue` entity, referencing the user and the definition.
+
+### 2. Field-Level Permissions
+Permissions are decoupled from the coarse module/action RBAC model:
+* Every `ProfileFieldDefinition` specifies `editableByUser` (allowing the profile owner self-service editing) and links to permitted roles (`FieldEditableByRole`) who can edit the field on behalf of other users. This allows granular field-level protection (e.g., restricting administrative or compliance fields from user edits while letting managers modify them).
+
+### 3. Notification Preferences and Tenant-Wide Mandates
+* Users have granular self-service control over their subscription preferences across different notification categories (`LESSON_ASSIGNED`, `DUE_SOON`, `OVERDUE`, etc.), stored in `NotificationPreference`.
+* The system supports tenant-wide overrides: a company administrator can set a list of `mandatoryNotificationTypes` on the `Company` settings. If a notification type is mandatory, the system bypasses user-level opt-outs, guaranteeing that critical safety and compliance notices are always delivered.
+
+### 4. Transactional Bulk Import Engine (`BulkImportService`)
+A fully isolated CSV import coordinator facilitates bulk provisioning of hundreds of users in a single operation:
+* **Validation Dry-Runs:** The import flow follows a standard template generation, upload, and dry-run validation sequence. It parses CSV compliance (RFC-4180), checks required system and custom profile fields, and verifies referenced role names, organization units, and learning groups.
+* **All-or-Nothing Transaction:** To prevent partial failures and database pollution, the confirmation step executes inside a single Prisma `$transaction`. If even one row fails validation (e.g., duplicate email, invalid format), the entire import is rolled back immediately, leaving the system in a pristine state.
+* **Auto-Assignment Hooks:** Successfully imported users are automatically associated with their respective OUs and Learning Groups, which immediately triggers the target-resolution and assignment-materialization engines to spawn their training curricula.
+
+---
+
 ## 🚀 Deployment Targets & Production Topology
 
 The production architecture for SmartCookie has been finalized and implemented as a robust, fully automated, self-healing topology on a dedicated Ubuntu VPS.

@@ -35,8 +35,10 @@ Every permission represents a logical action on a module:
 ### 4. Active Permission Controls
 | Module | Action | Purpose | Server Gate | Frontend Element |
 | :--- | :--- | :--- | :--- | :--- |
-| `users` | `create` | Inviting new users/creating accounts | `POST /api/users/invite` | Invite user dialog controls |
-| `users` | `edit` | Resending invitations or admin-resetting passwords | `POST /api/users/:id/resend-invitation`, `POST /api/users/:id/admin-reset-password` | Admin reset password trigger, Resend invite button |
+| `users` | `view` | View user list, paginated directories, and user detail profiles | `GET /api/users`, `GET /api/users/:id` | User Management list, user profile dialog |
+| `users` | `create` | Inviting new users, bulk importing, generating templates, and validating csv files | `POST /api/users/invite`, `POST /api/users/bulk-import/validate`, `POST /api/users/bulk-import/confirm`, `GET /api/users/bulk-import/template` | Invite user controls, Bulk Import wizards |
+| `users` | `edit` | Updating user accounts, resending invitations, or admin-resetting passwords | `PUT /api/users/:id`, `POST /api/users/:id/resend-invitation`, `POST /api/users/:id/admin-reset-password` | Edit User dialog, Admin reset password trigger, Resend invite button |
+| `users` | `delete` | Archiving/soft-deleting and restoring users | `DELETE /api/users/:id`, `POST /api/users/:id/restore` | Archive user button, restore user controls |
 | `roles` | `manage` | Full configuration of role registry, parent hierarchies, and system settings | `/api/roles/*`, `/api/company/settings` | **Settings** Navigation tab & Role Management editor |
 | `organization` | `view` | View organization units, learning groups, and memberships | `GET /api/organization-units`, `GET /api/learning-groups` | Org tree, Learning group selectors |
 | `organization` | `create` | Create organization units and learning groups | `POST /api/organization-units`, `POST /api/learning-groups` | Create unit/group dialogs |
@@ -57,4 +59,6 @@ Every permission represents a logical action on a module:
 | `content` | `restore` | Restore archived SCORM packages back to draft status | `POST /api/content/:id/restore` | Restore action in archived content views |
 | `content` | `download-zip` | Download original uploaded ZIP package binary streams | `GET /api/content/:id/download` | Download buttons across library and histories |
 | `preview` | `use` | Use the cosmetic visual preview system to view app as a lower-privileged role | `GET /api/preview/eligible-roles` | Preview banner exit, role selectors in Navbar and Content engines |
+| `profile-fields` | `manage-categories` | Manage custom profile field categories | - | Category editor interfaces |
+| `profile-fields` | `manage-fields` | Configure and register custom profile field definitions | - | Custom field configuration panel |
 

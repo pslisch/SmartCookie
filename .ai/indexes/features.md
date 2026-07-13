@@ -166,5 +166,29 @@ Every logged feature should eventually document:
 - **Events**: In-memory state changes reset on tab reload.
 - **Dependencies**: React, Tailwind CSS, Lucide React, Motion
 
+### 13. Profiles & User Management Extensions (Materialized Backend Services)
+- **Description**: Extends the user entity with first/last name, profile picture, and last login data. Establishes a flexible ProfileFieldDefinition and ProfileFieldValue custom field architecture with seeded system field definitions, role-specific field edit privileges, user notification preferences, and mandatory tenant-wide notification requirements. Includes User Management services for advanced listings, profiling, updating, archiving, and restoring, plus a transactional bulk user import engine.
+- **Components**: None (Backend-only deliverables; Frontend is out-of-scope/follow-up)
+- **Pages**: Follow-up task set (Frontend)
+- **Services**: `UserManagementService` (`server/src/features/auth/services/userManagement.service.ts`), `BulkImportService` (`server/src/features/profiles/services/bulkImport.service.ts`), `ProfileFieldService` (`server/src/features/profiles/services/profileField.service.ts`), `ProfileFieldValueService` (`server/src/features/profiles/services/profileFieldValue.service.ts`), `seedProfileFields` (`server/prisma/seed/profileFieldsSeed.ts`), `scheduledTasksService` (`server/src/shared/scheduler/scheduledTasks.service.ts` updated to respect preferences)
+- **APIs**:
+  - `GET /api/users` (paginated list/filter)
+  - `GET /api/users/:id` (full detail + profile values)
+  - `PUT /api/users/:id` (update profile & custom fields)
+  - `DELETE /api/users/:id` (archive user)
+  - `POST /api/users/:id/restore` (restore/fresh start user)
+  - `POST /api/users/:id/admin-reset-password` (reset password)
+  - `GET /api/notification-preferences` (fetch self preferences)
+  - `PATCH /api/notification-preferences` (update self preferences)
+  - `PATCH /api/company/mandatory-notification-types` (set mandatory types)
+  - `GET /api/users/bulk-import/template` (generate CSV template)
+  - `POST /api/users/bulk-import/validate` (validate CSV dry-run)
+  - `POST /api/users/bulk-import/confirm` (all-or-nothing transaction import)
+- **Database**: `profile_field_categories`, `profile_field_definitions`, `field_editable_by_roles`, `profile_field_values`, `notification_preferences`, `users`, `companies`, `tokens` (Prisma & MariaDB schemas)
+- **Permissions**: `users:view`, `users:create`, `users:edit`, `users:delete`, `profile-fields:manage-categories`, `profile-fields:manage-fields`, and `roles:manage` (for mandatory notifications)
+- **Routes**: `server/src/features/auth/routes/users.routes.ts`, `server/src/features/profiles/routes/notificationPreferences.routes.ts`, `server/src/features/profiles/routes/bulkImport.routes.ts`
+- **Events**: Automated notification triggers check user preferences or company-mandatory lists before mailing.
+- **Dependencies**: Prisma ORM, Node.js, Express, Multer, CSV-parse, bcrypt, Nodemailer
+
 
 

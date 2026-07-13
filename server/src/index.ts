@@ -15,6 +15,8 @@ import contentRouter from './features/assignments/routes/content.routes';
 import contentManagementRouter, { fileRouter as contentFileRouter } from './features/content/routes/content.routes.js';
 import contentAttemptsRouter from './features/content/routes/contentAttempts.routes.js';
 import previewRouter from './features/preview/routes/preview.routes';
+import notificationPreferencesRouter from './features/profiles/routes/notificationPreferences.routes';
+import bulkImportRouter from './features/profiles/routes/bulkImport.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
@@ -22,8 +24,10 @@ import './features/organization/organization.permissions';
 import './features/assignments/assignments.permissions';
 import './features/content/content.permissions.js';
 import './features/preview/preview.permissions';
+import './features/profiles/profileFields.permissions';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
+import { seedProfileFields } from '../prisma/seed/profileFieldsSeed';
 import { scheduledTasksService } from './shared/scheduler/scheduledTasks.service';
 
 async function startServer() {
@@ -41,6 +45,7 @@ async function startServer() {
   try {
     await syncPermissions();
     await seedSuperuserRoles();
+    await seedProfileFields();
 
     // Run manual DB migrations on startup
     const { prisma } = await import('./shared/db/prisma');
@@ -72,6 +77,7 @@ async function startServer() {
   app.use('/api', csrfProtection);
   app.use('/api/setup', setupRouter);
   app.use('/api/auth', authRouter);
+  app.use('/api/users/bulk-import', bulkImportRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/roles', rolesRouter);
   app.use('/api/permissions', permissionsRouter);
@@ -85,6 +91,7 @@ async function startServer() {
   app.use('/content-files', contentFileRouter);
   app.use('/api', contentRouter);
   app.use('/api', previewRouter);
+  app.use('/api', notificationPreferencesRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

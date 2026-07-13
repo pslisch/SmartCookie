@@ -41,6 +41,13 @@ model User {
   auditLogs          AuditLog[] @relation("UserAuditLogs")
   createdContents    Content[]  @relation("ContentCreator")
 
+  firstName          String?    @map("first_name")
+  lastName           String?    @map("last_name")
+  profilePicturePath String?    @map("profile_picture_path")
+  lastLoginAt        DateTime?  @map("last_login_at")
+  profileFieldValues ProfileFieldValue[]
+  notificationPreferences NotificationPreference[]
+
   @@unique([isSuperuserUnique], name: "is_superuser_unique_idx")
   @@map("users")
 }
@@ -48,56 +55,62 @@ model User {
 enum TokenPurpose {
   INVITATION
   PASSWORD_RESET
+  EMAIL_CHANGE
 }
 
 model Token {
-  id         String       @id @default(uuid())
-  userId     String
-  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash  String       @unique
-  purpose    TokenPurpose
-  expiresAt  DateTime
-  usedAt     DateTime?
-  createdAt  DateTime     @default(now())
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String       @unique
+  purpose      TokenPurpose
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime     @default(now())
+  pendingEmail String?      @map("pending_email")
 
   @@map("tokens")
 }
 
 model Company {
-  id               String    @id @default(uuid())
-  name             String
-  contactInfo      String
-  setupCompletedAt DateTime?
-  roleInheritanceEnabled Boolean @default(false) @map("role_inheritance_enabled")
-  users            User[]
-  roles            Role[]
-  domain           String    @default("")
-  settings         Json?
-  organizationUnits OrganizationUnit[]
-  learningGroups   LearningGroup[]
-  lessons          Lesson[]
-  courses          Course[]
-  assignments      Assignment[]
-  auditLogs        AuditLog[]
-  contentCategories ContentCategory[]
-  contents          Content[]
+  id                         String                   @id @default(uuid())
+  name                       String
+  contactInfo                String
+  setupCompletedAt           DateTime?
+  roleInheritanceEnabled     Boolean                  @default(false) @map("role_inheritance_enabled")
+  users                      User[]
+  roles                      Role[]
+  domain                     String                   @default("")
+  settings                   Json?
+  organizationUnits          OrganizationUnit[]
+  learningGroups             LearningGroup[]
+  lessons                    Lesson[]
+  courses                    Course[]
+  assignments                Assignment[]
+  auditLogs                  AuditLog[]
+  contentCategories          ContentCategory[]
+  contents                   Content[]
+  mandatoryNotificationTypes Json?                    @map("mandatory_notification_types")
+  profileFieldCategories     ProfileFieldCategory[]
+  profileFieldDefinitions    ProfileFieldDefinition[]
 
   @@map("companies")
 }
 
 model Role {
-  id             String           @id @default(uuid())
+  id             String                @id @default(uuid())
   name           String
-  isProtected    Boolean          @default(false) @map("is_protected")
-  parentRoleId   String?          @map("parent_role_id")
-  parentRole     Role?            @relation("RoleInheritance", fields: [parentRoleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  childRoles     Role[]           @relation("RoleInheritance")
-  companyId      String           @map("company_id")
-  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
+  isProtected    Boolean               @default(false) @map("is_protected")
+  parentRoleId   String?               @map("parent_role_id")
+  parentRole     Role?                 @relation("RoleInheritance", fields: [parentRoleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  childRoles     Role[]                @relation("RoleInheritance")
+  companyId      String                @map("company_id")
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
   users          User[]
   permissions    RolePermission[]
+  fieldEditables FieldEditableByRole[]
 
   @@map("roles")
 }
@@ -509,5 +522,97 @@ model ContentAttempt {
   updatedAt                 DateTime               @updatedAt @map("updated_at")
 
   @@map("content_attempts")
+}
+
+model ProfileFieldCategory {
+  id           String                   @id @default(uuid())
+  companyId    String                   @map("company_id")
+  company      Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name         String
+  displayOrder Int                      @map("display_order")
+  fields       ProfileFieldDefinition[]
+
+  @@map("profile_field_categories")
+}
+
+enum ProfileFieldType {
+  TEXT
+  MULTILINE
+  NUMBER
+  EMAIL
+  PHONE
+  DATE
+  CHECKBOX
+  DROPDOWN
+  RADIO
+}
+
+model ProfileFieldDefinition {
+  id                 String                @id @default(uuid())
+  companyId          String                @map("company_id")
+  company            Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  categoryId         String?               @map("category_id")
+  category           ProfileFieldCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  fieldKey           String?               @map("field_key")
+  name               String
+  description        String?               @db.Text
+  fieldType          ProfileFieldType      @map("field_type")
+  required           Boolean               @default(false)
+  visible            Boolean               @default(true)
+  editableByUser     Boolean               @default(true) @map("editable_by_user")
+  displayOrder       Int                   @map("display_order")
+  defaultValue       String?               @map("default_value")
+  validationRules    Json?                 @map("validation_rules")
+  options            Json?
+  isSystemField      Boolean               @default(false) @map("is_system_field")
+  externalSyncLocked Boolean               @default(false) @map("external_sync_locked")
+  editableByRoles    FieldEditableByRole[]
+  values             ProfileFieldValue[]
+
+  @@unique([companyId, fieldKey])
+  @@map("profile_field_definitions")
+}
+
+model FieldEditableByRole {
+  fieldDefinitionId String                 @map("field_definition_id")
+  fieldDefinition   ProfileFieldDefinition @relation(fields: [fieldDefinitionId], references: [id], onDelete: Cascade)
+  roleId            String                 @map("role_id")
+  role              Role                   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([fieldDefinitionId, roleId])
+  @@map("field_editable_by_roles")
+}
+
+model ProfileFieldValue {
+  id                String                 @id @default(uuid())
+  userId            String                 @map("user_id")
+  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fieldDefinitionId String                 @map("field_definition_id")
+  fieldDefinition   ProfileFieldDefinition @relation(fields: [fieldDefinitionId], references: [id], onDelete: Cascade)
+  value             String?                @db.Text
+
+  @@unique([userId, fieldDefinitionId])
+  @@map("profile_field_values")
+}
+
+enum NotificationType {
+  LESSON_ASSIGNED
+  REMINDER
+  DUE_SOON
+  OVERDUE
+  COMPLETION_CONFIRMATION
+  CERTIFICATES
+  SYSTEM_ANNOUNCEMENTS
+}
+
+model NotificationPreference {
+  id               String           @id @default(uuid())
+  userId           String           @map("user_id")
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationType NotificationType @map("notification_type")
+  enabled          Boolean          @default(true)
+
+  @@unique([userId, notificationType])
+  @@map("notification_preferences")
 }
 

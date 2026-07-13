@@ -9,6 +9,7 @@ import { TokenService } from '../../../shared/token/token.service';
 import { TokenPurpose } from '@prisma/client';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 import { mandatoryAssignmentService } from '../../assignments/services/mandatoryAssignment.service';
+import { ProfileFieldValueService } from '../../profiles/services/profileFieldValue.service';
 
 const router = Router();
 
@@ -27,6 +28,12 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
 
     // Reset rate limiter count for this identifier on successful login
     loginRateLimiter.reset(req);
+
+    // Update last login timestamp
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
 
     // Create session in the DB
     const expiresAt = new Date(Date.now() + SESSION_DURATION_MS); // 30 days
@@ -125,6 +132,17 @@ router.get('/session', requireAuth, async (req: Request, res: Response) => {
       effectivePermissions = permissions.map((p) => `${p.module}:${p.action}`);
     }
 
+    let incompleteRequiredFields: string[] = [];
+    if (req.user.companyId) {
+      try {
+        const profileFieldValueService = new ProfileFieldValueService();
+        const completion = await profileFieldValueService.getProfileCompletionPercentage(req.user.id);
+        incompleteRequiredFields = completion.missingFields.map((f) => f.id);
+      } catch (err) {
+        console.error('Error fetching profile completion for session:', err);
+      }
+    }
+
     res.json({
       success: true,
       user: {
@@ -136,6 +154,7 @@ router.get('/session', requireAuth, async (req: Request, res: Response) => {
         status: req.user.status,
         roleName,
         effectivePermissions,
+        incompleteRequiredFields,
       },
     });
   } catch (error) {
@@ -424,6 +443,120 @@ router.post('/reset-password', async (req: Request, res: Response) => {
     const err = error instanceof Error ? error : new Error(String(error));
     const isValidationError =
       err.name === 'PasswordValidationError' ||
+      err.message === 'Invalid token' ||
+      err.message === 'Token already used' ||
+      err.message === 'Token expired' ||
+      err.message === 'Token already used or expired';
+
+    return res.status(isValidationError ? 400 : 500).json({
+      error: err.message || 'An internal error occurred.',
+    });
+  }
+});
+
+/**
+ * POST /api/auth/change-email/request -> { newEmail }
+ * Authenticated route. Validates new email is not in use, generates a token, and sends confirmation email to the NEW email address.
+ */
+router.post('/change-email/request', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { newEmail } = req.body;
+    if (!newEmail || typeof newEmail !== 'string' || !newEmail.trim()) {
+      return res.status(400).json({ error: 'Valid new email is required.' });
+    }
+
+    const normalizedNewEmail = newEmail.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedNewEmail)) {
+      return res.status(400).json({ error: 'Invalid email format.' });
+    }
+
+    if (req.user.email && normalizedNewEmail === req.user.email.toLowerCase()) {
+      return res.status(400).json({ error: 'New email cannot be the same as your current email.' });
+    }
+
+    // Check if the new email is already in use by another user
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedNewEmail },
+    });
+    if (existingUser) {
+      return res.status(400).json({ error: 'This email is already in use by another user.' });
+    }
+
+    // Issue an EMAIL_CHANGE token (expires in 24 hours) with pendingEmail set
+    const token = await TokenService.issue(
+      req.user.id,
+      TokenPurpose.EMAIL_CHANGE,
+      86400, // 24 hours
+      normalizedNewEmail
+    );
+
+    // Send verification email to the new address
+    await emailService.send(normalizedNewEmail, 'email-change-verification', {
+      username: req.user.username || req.user.firstName || normalizedNewEmail,
+      newEmail: normalizedNewEmail,
+      token,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Verification email sent to your new email address.',
+    });
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    return res.status(500).json({ error: err.message || 'An internal error occurred.' });
+  }
+});
+
+/**
+ * POST /api/auth/change-email/confirm -> { token }
+ * Public route. Consumes EMAIL_CHANGE token, updates the email, and invalidates all existing sessions.
+ */
+router.post('/change-email/confirm', async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required.' });
+    }
+
+    // Atomically consume token and get details
+    const { userId, pendingEmail } = await TokenService.consumeWithPendingEmail(token, TokenPurpose.EMAIL_CHANGE);
+
+    if (!pendingEmail) {
+      return res.status(400).json({ error: 'No pending email address associated with this token.' });
+    }
+
+    const normalizedPendingEmail = pendingEmail.toLowerCase();
+
+    // Verify again that the email isn't in use (to handle race conditions)
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedPendingEmail },
+    });
+    if (existingUser) {
+      return res.status(400).json({ error: 'This email is already in use by another user.' });
+    }
+
+    // Update the user's email
+    await prisma.user.update({
+      where: { id: userId },
+      data: { email: normalizedPendingEmail },
+    });
+
+    // Invalidate all sessions for this user (credentials/identity changed)
+    await prisma.session.deleteMany({
+      where: { userId },
+    });
+
+    // Clear session cookie
+    res.clearCookie('sid');
+
+    return res.json({
+      success: true,
+      message: 'Email changed successfully. Please log in again.',
+    });
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    const isValidationError =
       err.message === 'Invalid token' ||
       err.message === 'Token already used' ||
       err.message === 'Token expired' ||

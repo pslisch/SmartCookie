@@ -522,5 +522,29 @@ Every documented endpoint logs:
 - **Used By**: ScormPlayer / AssignmentInstanceReport components
 - **Permissions**: Requires active session with `"assignments:view"` permission.
 
+### 64. Generate Bulk Import Template CSV
+- **Endpoint**: `/api/users/bulk-import/template`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: Text CSV content file with headers for standard and company-required profile fields (200 OK)
+- **Used By**: Bulk Import Wizard
+- **Permissions**: Requires active session with `"users:create"` permission.
+
+### 65. Dry-Run Validate Bulk Import CSV
+- **Endpoint**: `/api/users/bulk-import/validate`
+- **Method**: `POST`
+- **Request**: Multipart file with key `"file"`, or JSON body with `csv` string, or raw CSV text
+- **Response**: `{ results: Array<{ row: number, email: string, valid: boolean, errors: string[] }> }` (200 OK)
+- **Used By**: Bulk Import Wizard (dry-run review page)
+- **Permissions**: Requires active session with `"users:create"` permission.
+
+### 66. Confirm and Bulk-Import Users
+- **Endpoint**: `/api/users/bulk-import/confirm`
+- **Method**: `POST`
+- **Request**: Multipart file with key `"file"`, or JSON body with `csv` string, or raw CSV text
+- **Response**: `{ success: true, count: number }` (200 OK) on success, or `{ error: string, results: [...] }` (422 Unprocessable Entity) on validation failure.
+- **Used By**: Bulk Import Wizard (confirm submit action)
+- **Permissions**: Requires active session with `"users:create"` permission. (Executes inside a secure SQL transaction: either all succeed or none are created).
+
 
 

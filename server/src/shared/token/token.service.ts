@@ -15,7 +15,7 @@ export class TokenService {
    * invalidates any previous unconsumed token of the same (userId, purpose) pair first.
    * Returns the raw token (only time it is available in plaintext).
    */
-  static async issue(userId: string, purpose: TokenPurpose, ttlSeconds: number): Promise<string> {
+  static async issue(userId: string, purpose: TokenPurpose, ttlSeconds: number, pendingEmail?: string): Promise<string> {
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = this.hashToken(rawToken);
     const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
@@ -39,6 +39,7 @@ export class TokenService {
         tokenHash,
         purpose,
         expiresAt,
+        pendingEmail: pendingEmail || null,
       },
     });
 
@@ -87,5 +88,49 @@ export class TokenService {
     }
 
     return token.userId;
+  }
+
+  /**
+   * Hashes the input raw token, looks up by hash, atomically marks it used via
+   * updateMany and checks affected-row count. Returns the associated userId and pendingEmail or throws.
+   */
+  static async consumeWithPendingEmail(rawToken: string, purpose: TokenPurpose): Promise<{ userId: string; pendingEmail: string | null }> {
+    const tokenHash = this.hashToken(rawToken);
+
+    // Look up the token to verify details
+    const token = await prisma.token.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!token || token.purpose !== purpose) {
+      throw new Error('Invalid token');
+    }
+
+    if (token.usedAt !== null) {
+      throw new Error('Token already used');
+    }
+
+    if (token.expiresAt < new Date()) {
+      throw new Error('Token expired');
+    }
+
+    // Atomically mark it as used using updateMany to prevent race conditions
+    const result = await prisma.token.updateMany({
+      where: {
+        tokenHash,
+        purpose,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      data: {
+        usedAt: new Date(),
+      },
+    });
+
+    if (result.count === 0) {
+      throw new Error('Token already used or expired');
+    }
+
+    return { userId: token.userId, pendingEmail: token.pendingEmail };
   }
 }

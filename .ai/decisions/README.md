@@ -202,6 +202,21 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0015] Custom Profile Fields and Transactional Bulk User Provisioning
+- **Status**: Approved
+- **Date**: 2026-07-13
+- **Authors**: AI Coding Agent
+- **Context**: SmartCookie requires a highly flexible system for capturing custom user profile attributes (e.g. "Department", "Hire Date") while preserving speed for core platform listings. Furthermore, administrators need to bulk-provision hundreds of users from a CSV spreadsheet reliably, with zero partial failures.
+- **Decision**:
+  - **Hybrid Profile Storage Split:** Core system fields (first name, last name, profile picture path, last login) are stored as physical columns on the `User` table for rapid sorting and filtering. Dynamic custom attributes are configured via the Entity-Attribute-Value (EAV) pattern using `ProfileFieldCategory`, `ProfileFieldDefinition`, and `ProfileFieldValue` tables.
+  - **Decoupled Field-Level Permissions:** Edit privileges for custom fields are kept independent of RBAC's coarse `module:action` model. Each custom field specifies `editableByUser` (self-service) and is linked to specific authorized role IDs (`FieldEditableByRole`) who can edit it on behalf of other users.
+  - **All-or-Nothing Transactional Bulk Import:** Rather than allowing partial failures (where 80% of rows succeed and 20% fail, leaving the administrator with a messy manual correction process), the CSV bulk-import engine confirms all creations inside a single SQL database transaction (`prisma.$transaction`). If a single row fails validation or constraint checks, the entire batch is rolled back instantly.
+- **Consequences**:
+  - **Positives**: Extreme schema flexibility; fast listing for standard operations; robust granular access to individual profile fields; high-integrity bulk provisioning that guarantees a clean, unpolluted database state.
+  - **Negatives**: Custom field queries require database joins (mitigated by bulk-loading values during details fetching); a single typo in a massive 500-user CSV rolls back the entire bulk operation, necessitating strict validation feedback.
+
+---
+
 ## 🔮 Planned ADRs (updated)
 
 - **ADR-0006: Authentication Strategy**: Detailing the Superuser,

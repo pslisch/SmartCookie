@@ -17,6 +17,10 @@ This index describes the data models, entity relationships, and schemas supporti
   - `companyId` (String, Nullable, Foreign Key to `companies.id`)
   - `roleId` (String, Nullable, Foreign Key to `roles.id` — Superuser bypasses this check)
   - `status` (Enum: `PENDING`, `ACTIVE`, `DISABLED`, `ARCHIVED`, `LOCKED`, Default: `ACTIVE`)
+  - `firstName` (String, Nullable, maps to `first_name`)
+  - `lastName` (String, Nullable, maps to `last_name`)
+  - `profilePicturePath` (String, Nullable, maps to `profile_picture_path`)
+  - `lastLoginAt` (DateTime, Nullable, maps to `last_login_at`)
   - `createdAt` (DateTime, Default: `now()`)
   - `updatedAt` (DateTime, Auto-updated)
 - **Indexes & Constraints**:
@@ -40,11 +44,14 @@ This index describes the data models, entity relationships, and schemas supporti
   - `roleInheritanceEnabled` (Boolean, Default: `false`, enables inheritance hierarchies)
   - `domain` (String, automatically populated from APP_URL on setup)
   - `settings` (Json, Nullable, placeholder for future customizations/integrations)
+  - `mandatoryNotificationTypes` (Json, Nullable, array of mandatory notification type enum values)
 - **Relations**:
   - Has many `User`s (via `users`)
   - Has many `Role`s (via `roles`)
   - Has many `OrganizationUnit`s (via `organizationUnits`)
   - Has many `LearningGroup`s (via `learningGroups`)
+  - Has many `ProfileFieldCategory`s (via `profileFieldCategories`)
+  - Has many `ProfileFieldDefinition`s (via `profileFieldDefinitions`)
 
 ### Organization Units (`organization_units`)
 - **Fields**:
@@ -157,9 +164,10 @@ This index describes the data models, entity relationships, and schemas supporti
   - `id` (String, UUID, Primary Key)
   - `userId` (String, Foreign Key to `users.id`)
   - `tokenHash` (String, Unique, SHA-256 hash of raw token)
-  - `purpose` (Enum: `INVITATION`, `PASSWORD_RESET`)
+  - `purpose` (Enum: `INVITATION`, `PASSWORD_RESET`, `EMAIL_CHANGE`)
   - `expiresAt` (DateTime)
   - `usedAt` (DateTime, Nullable, null = unconsumed)
+  - `pendingEmail` (String, Nullable, holds new email during change flow)
   - `createdAt` (DateTime, Default: `now()`)
 - **Relations**:
   - Belongs to `User` (via `userId`, cascade deletes on token)
@@ -366,10 +374,77 @@ This index describes the data models, entity relationships, and schemas supporti
   - Belongs to `Company` (via `companyId`, cascade on delete)
   - Belongs to `User` as actor (via `actorId`, set null on delete)
 
+### Profile Field Categories (`profile_field_categories`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `name` (String)
+  - `displayOrder` (Int, maps to `display_order`)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Has many `ProfileFieldDefinition`s (via `fields`)
+
+### Profile Field Definitions (`profile_field_definitions`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `categoryId` (String, Nullable, Foreign Key to `profile_field_categories.id`)
+  - `fieldKey` (String, Nullable, maps to `field_key` - unique per company when set)
+  - `name` (String)
+  - `description` (String, Nullable, Text size)
+  - `fieldType` (Enum: `TEXT`, `MULTILINE`, `NUMBER`, `EMAIL`, `PHONE`, `DATE`, `CHECKBOX`, `DROPDOWN`, `RADIO`)
+  - `required` (Boolean)
+  - `visible` (Boolean, Default: `true`)
+  - `editableByUser` (Boolean, Default: `true`, maps to `editable_by_user`)
+  - `displayOrder` (Int, maps to `display_order`)
+  - `defaultValue` (String, Nullable, maps to `default_value`)
+  - `validationRules` (Json, Nullable, maps to `validation_rules`)
+  - `options` (Json, Nullable)
+  - `isSystemField` (Boolean, Default: `false`, maps to `is_system_field`)
+  - `externalSyncLocked` (Boolean, Default: `false`, maps to `external_sync_locked`)
+- **Indexes & Constraints**:
+  - Unique composite index on `(companyId, fieldKey)`
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to `ProfileFieldCategory` (optional, via `categoryId`, set null on delete)
+  - Has many `FieldEditableByRole`s (via `editableByRoles`)
+  - Has many `ProfileFieldValue`s (via `values`)
+
+### Field Editable By Roles (`field_editable_by_roles`)
+- **Fields**:
+  - `fieldDefinitionId` (String, Foreign Key to `profile_field_definitions.id`, Primary Key Part 1)
+  - `roleId` (String, Foreign Key to `roles.id`, Primary Key Part 2)
+- **Relations**:
+  - Belongs to `ProfileFieldDefinition` (via `fieldDefinitionId`, cascade on delete)
+  - Belongs to `Role` (via `roleId`, cascade on delete)
+
+### Profile Field Values (`profile_field_values`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `userId` (String, Foreign Key to `users.id`)
+  - `fieldDefinitionId` (String, Foreign Key to `profile_field_definitions.id`)
+  - `value` (String, Nullable, Text size)
+- **Indexes & Constraints**:
+  - Unique composite index on `(userId, fieldDefinitionId)`
+- **Relations**:
+  - Belongs to `User` (via `userId`, cascade on delete)
+  - Belongs to `ProfileFieldDefinition` (via `fieldDefinitionId`, cascade on delete)
+
+### Notification Preferences (`notification_preferences`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `userId` (String, Foreign Key to `users.id`)
+  - `notificationType` (Enum: `LESSON_ASSIGNED`, `REMINDER`, `DUE_SOON`, `OVERDUE`, `COMPLETION_CONFIRMATION`, `CERTIFICATES`, `SYSTEM_ANNOUNCEMENTS`)
+  - `enabled` (Boolean, Default: `true`)
+- **Indexes & Constraints**:
+  - Unique composite index on `(userId, notificationType)`
+- **Relations**:
+  - Belongs to `User` (via `userId`, cascade on delete)
+
 
 ---
 
-## 🟢 Schema Registry (v1.8.0)
+## 🟢 Schema Registry (v1.9.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
@@ -378,5 +453,6 @@ This index describes the data models, entity relationships, and schemas supporti
 - **v1.5.0**: Synchronized company-level settings toggles (`roleInheritanceEnabled`) and mapped permission relationships across all session and page lifecycles.
 - **v1.6.0**: Multi-Tenant Organization Model MVP. Added `OrganizationUnit`, `LearningGroup`, and `Membership` models. Extended `Company` with `domain` and `settings`. Included strict CHECK constraints and cascading soft-delete triggers.
 - **v1.7.0**: Learning Assignments & Target Resolution Engine. Added `Assignment`, `AssignmentTarget`, `UserAssignmentInstance`, `UserAssignmentInstanceSource`, and `AuditLog` models. Enhanced `UserAssignmentInstance` with `last_reminder_sent_at` column for automated notification tracking. Added cascading soft-deletes and scheduled cleanup tasks.
-- **v1.8.0 (Current)**: Content Engine SCORM 1.2 MVP. Added `Content`, `ContentTag`, `ContentCategory`, and `ContentAttempt` models. Associated `Lesson` model with optional SCORM `Content`. Mapped attempts directly to existing `UserAssignmentInstance`. Added `course_lessons`, `courses`, and `lessons` schemas documentation to Database index.
+- **v1.8.0**: Content Engine SCORM 1.2 MVP. Added `Content`, `ContentTag`, `ContentCategory`, and `ContentAttempt` models. Associated `Lesson` model with optional SCORM `Content`. Mapped attempts directly to existing `UserAssignmentInstance`. Added `course_lessons`, `courses`, and `lessons` schemas documentation to Database index.
+- **v1.9.0 (Current)**: Profiles & User Management Extensions. Added `ProfileFieldCategory`, `ProfileFieldDefinition`, `FieldEditableByRole`, `ProfileFieldValue`, and `NotificationPreference` models. Extended `User` with first/last names, profile picture, and last login. Added `mandatoryNotificationTypes` to `Company`. Added `EMAIL_CHANGE` token purpose and `pendingEmail` to `Token`.
 

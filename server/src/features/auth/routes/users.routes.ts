@@ -2,19 +2,39 @@ import { Router, Request, Response } from 'express';
 import { requirePermission } from '../../../shared/middleware/permission.middleware';
 import { userInvitationService } from '../services/userInvitation.service';
 import { prisma } from '../../../shared/db/prisma';
-import { TokenService } from '../../../shared/token/token.service';
-import { TokenPurpose } from '@prisma/client';
-import { emailService } from '../../../shared/email/email.service';
-import { PASSWORD_RESET_TTL_SECONDS } from '../../../shared/constants';
-import { userReactivationService } from '../services/userReactivation.service';
+import { userManagementService } from '../services/userManagement.service';
 
 const router = Router();
 
 /**
  * GET /api/users
- * Returns a list of active users for the current company.
+ * If the user has users:view permission and requests paginated results or is managing users,
+ * returns a paginated list of users with their name, email, status, role, and organization unit.
+ * Otherwise, falls back to returning the simple active users list (requires organization:view).
  */
-router.get('/', requirePermission('organization', 'view'), async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response, next) => {
+  const reqUser = req.user as any;
+  const hasUsersView = reqUser?.effectivePermissions?.includes('users:view') || reqUser?.isSuperuser;
+  const hasPageQuery = req.query.page !== undefined || req.query.limit !== undefined || req.query.search !== undefined || req.query.status !== undefined || req.query.roleId !== undefined || req.query.organizationUnitId !== undefined;
+
+  if (hasUsersView && (hasPageQuery || !reqUser?.effectivePermissions?.includes('organization:view'))) {
+    try {
+      const filters = {
+        page: req.query.page ? Number(req.query.page) : undefined,
+        limit: req.query.limit ? Number(req.query.limit) : undefined,
+        search: req.query.search as string | undefined,
+        status: req.query.status as string | undefined,
+        roleId: req.query.roleId as string | undefined,
+        organizationUnitId: req.query.organizationUnitId as string | undefined,
+      };
+      const result = await userManagementService.listUsers(req.user!.companyId!, filters);
+      return res.json(result);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message || 'Failed to list users.' });
+    }
+  }
+  next();
+}, requirePermission('organization', 'view'), async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       where: {
@@ -31,6 +51,81 @@ router.get('/', requirePermission('organization', 'view'), async (req: Request, 
     return res.json(users);
   } catch (error: any) {
     return res.status(500).json({ error: error.message || 'Failed to list users.' });
+  }
+});
+
+/**
+ * GET /api/users/:id
+ * Returns a user's full detail, including profile and memberships.
+ * Requires users:view permission.
+ */
+router.get('/:id', requirePermission('users', 'view'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+    const result = await userManagementService.getUserDetail(id, req.user!.id);
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to fetch user details.' });
+  }
+});
+
+/**
+ * PUT /api/users/:id
+ * Updates a user's standard fields and role/org/group assignments.
+ * Requires users:edit permission.
+ */
+router.put('/:id', requirePermission('users', 'edit'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+    const result = await userManagementService.updateUser(id, req.body, req.user!.id);
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to update user.' });
+  }
+});
+
+/**
+ * DELETE /api/users/:id
+ * Archives a user (requires users:delete permission).
+ */
+router.delete('/:id', requirePermission('users', 'delete'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+    const result = await userManagementService.archiveUser(id, req.user!.id);
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to archive user.' });
+  }
+});
+
+/**
+ * POST /api/users/:id/restore
+ * Restores an archived user using UserReactivationService options.
+ * Requires users:delete permission.
+ */
+router.post('/:id/restore', requirePermission('users', 'delete'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { option } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+    if (option !== 'RESTORE' && option !== 'FRESH_START') {
+      return res.status(400).json({ error: 'Option must be RESTORE or FRESH_START.' });
+    }
+    const result = await userManagementService.restoreUser(id, option, req.user!.id);
+    return res.json(result);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to restore user.' });
   }
 });
 
@@ -54,7 +149,6 @@ router.post('/invite', requirePermission('users', 'create'), async (req: Request
       status: 'PENDING',
     });
   } catch (error: any) {
-    // If it's a known domain validation/business rule error, return 400
     if (error.message === 'user already active' || error.message === 'already invited, use resend') {
       return res.status(400).json({ error: error.message });
     }
@@ -89,8 +183,7 @@ router.post('/:id/resend-invitation', requirePermission('users', 'edit'), async 
 /**
  * POST /api/users/:id/admin-reset-password
  * Requires users:edit permission.
- * Same underlying token+email mechanism as forgot-password,
- * triggered by an admin.
+ * Delegates to userManagementService.adminResetPassword.
  */
 router.post('/:id/admin-reset-password', requirePermission('users', 'edit'), async (req: Request, res: Response) => {
   try {
@@ -99,26 +192,7 @@ router.post('/:id/admin-reset-password', requirePermission('users', 'edit'), asy
       return res.status(400).json({ error: 'User ID is required.' });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
-
-    if (user.status !== 'ACTIVE') {
-      return res.status(400).json({ error: 'Cannot reset password for a non-active user.' });
-    }
-
-    // Issue PASSWORD_RESET token
-    const token = await TokenService.issue(user.id, TokenPurpose.PASSWORD_RESET, PASSWORD_RESET_TTL_SECONDS);
-
-    // Send email
-    await emailService.send(user.email, 'password-reset', {
-      username: user.username || user.email,
-      token,
-    });
+    await userManagementService.adminResetPassword(id);
 
     return res.json({
       success: true,
@@ -131,8 +205,8 @@ router.post('/:id/admin-reset-password', requirePermission('users', 'edit'), asy
 
 /**
  * POST /api/users/:id/reactivate
+ * For backwards compatibility with other modules.
  * Requires assignments:edit permission.
- * Reactivates an archived/suspended user with either RESTORE or FRESH_START.
  */
 router.post('/:id/reactivate', requirePermission('assignments', 'edit'), async (req: Request, res: Response) => {
   try {
@@ -147,7 +221,7 @@ router.post('/:id/reactivate', requirePermission('assignments', 'edit'), async (
       return res.status(400).json({ error: 'Option must be RESTORE or FRESH_START.' });
     }
 
-    const result = await userReactivationService.reactivate(id, option, req.user!.id);
+    const result = await userManagementService.restoreUser(id, option, req.user!.id);
     return res.json(result);
   } catch (error: any) {
     return res.status(400).json({ error: error.message || 'Failed to reactivate user.' });
@@ -155,4 +229,3 @@ router.post('/:id/reactivate', requirePermission('assignments', 'edit'), async (
 });
 
 export default router;
-

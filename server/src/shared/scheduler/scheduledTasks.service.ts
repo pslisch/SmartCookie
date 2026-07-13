@@ -2,6 +2,80 @@ import { prisma } from '../db/prisma';
 import { emailService } from '../email/email.service';
 import { permissionResolverService } from '../../features/rbac/services/permissionResolver.service';
 import crypto from 'crypto';
+import { NotificationType } from '@prisma/client';
+
+async function shouldSendNotification(
+  userId: string,
+  companyId: string,
+  type: NotificationType
+): Promise<boolean> {
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { mandatoryNotificationTypes: true },
+  });
+
+  if (company && company.mandatoryNotificationTypes) {
+    const mandatoryList = company.mandatoryNotificationTypes as string[];
+    if (Array.isArray(mandatoryList) && mandatoryList.includes(type)) {
+      return true; // Mandatory company-wide
+    }
+  }
+
+  const pref = await prisma.notificationPreference.findUnique({
+    where: {
+      userId_notificationType: {
+        userId,
+        notificationType: type,
+      },
+    },
+  });
+
+  if (pref) {
+    return pref.enabled;
+  }
+
+  return true; // Defaults to enabled
+}
+
+async function filterNotificationRecipients(emails: Set<string>, type: NotificationType): Promise<string[]> {
+  const emailList = Array.from(emails);
+  if (emailList.length === 0) return [];
+
+  const users = await prisma.user.findMany({
+    where: {
+      email: { in: emailList },
+      status: 'ACTIVE',
+    },
+    select: {
+      id: true,
+      email: true,
+      companyId: true,
+    },
+  });
+
+  const allowedEmails: string[] = [];
+
+  for (const email of emailList) {
+    const user = users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+    if (!user) {
+      allowedEmails.push(email);
+      continue;
+    }
+
+    const companyId = user.companyId;
+    if (!companyId) {
+      allowedEmails.push(email);
+      continue;
+    }
+
+    const shouldSend = await shouldSendNotification(user.id, companyId, type);
+    if (shouldSend) {
+      allowedEmails.push(email);
+    }
+  }
+
+  return allowedEmails;
+}
 
 export class ScheduledTasksService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -179,7 +253,8 @@ export class ScheduledTasksService {
       }
 
       // Send the emails
-      for (const email of recipientEmails) {
+      const allowedRecipients = await filterNotificationRecipients(recipientEmails, 'REMINDER');
+      for (const email of allowedRecipients) {
         try {
           await emailService.send(email, 'group-expiration', {
             groupName: group.name,
@@ -196,7 +271,7 @@ export class ScheduledTasksService {
         data: { reminderSentAt: new Date() }
       });
 
-      console.log(`[Scheduler] Sent expiration reminders for group "${group.name}" to ${recipientEmails.size} recipients.`);
+      console.log(`[Scheduler] Sent expiration reminders for group "${group.name}" to ${allowedRecipients.length} allowed recipients (out of ${recipientEmails.size} total).`);
     }
   }
 
@@ -328,6 +403,14 @@ export class ScheduledTasksService {
     for (const instance of instancesToRemind) {
       if (!instance.user || !instance.user.email) {
         continue;
+      }
+
+      if (instance.user.companyId) {
+        const shouldSend = await shouldSendNotification(instance.user.id, instance.user.companyId, 'REMINDER');
+        if (!shouldSend) {
+          console.log(`[Scheduler] Skipping assignment reminder to ${instance.user.email} due to notification preference.`);
+          continue;
+        }
       }
 
       try {
