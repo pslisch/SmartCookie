@@ -308,7 +308,7 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
                       {t('organization.bulkImport.allValid')}
                     </h4>
                     <p className="text-xs text-green-700 leading-relaxed">
-                      Confirming will safely create these users and assign them their roles, organization units, and learning groups.
+                      {t('organization.bulkImport.allValidDesc')}
                     </p>
                   </div>
                 </div>
