@@ -204,6 +204,30 @@ router.post('/:id/admin-reset-password', requirePermission('users', 'edit'), asy
 });
 
 /**
+ * POST /api/users/:id/admin-reset-mfa
+ * Requires users:edit permission.
+ * Admin action to reset MFA for a user.
+ */
+router.post('/:id/admin-reset-mfa', requirePermission('users', 'edit'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+
+    const { mfaService } = await import('../services/mfa.service');
+    await mfaService.adminResetMfa(id);
+
+    return res.json({
+      success: true,
+      message: 'MFA reset successfully.',
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'An internal error occurred.' });
+  }
+});
+
+/**
  * POST /api/users/:id/reactivate
  * For backwards compatibility with other modules.
  * Requires assignments:edit permission.

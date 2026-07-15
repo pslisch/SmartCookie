@@ -546,5 +546,93 @@ Every documented endpoint logs:
 - **Used By**: Bulk Import Wizard (confirm submit action)
 - **Permissions**: Requires active session with `"users:create"` permission. (Executes inside a secure SQL transaction: either all succeed or none are created).
 
+### 67. MFA Verify Challenge
+- **Endpoint**: `/api/auth/mfa/verify`
+- **Method**: `POST`
+- **Request**: `{ challengeToken, code }`
+- **Response**: `{ success: true, user: { id, username, ... } }` (200 OK)
+- **Used By**: Login screen (MFA challenge step)
+- **Permissions**: Public access (validates challenge token, logs user in and sets session cookie)
+
+### 68. MFA Pending Setup Secret Generation
+- **Endpoint**: `/api/auth/mfa/setup-pending`
+- **Method**: `POST`
+- **Request**: `{ setupToken }`
+- **Response**: `{ success: true, secret, otpauthUrl }` (200 OK)
+- **Used By**: Login forced setup flow
+- **Permissions**: Public access (validates setup token)
+
+### 69. MFA Pending Setup Verification & Enablement
+- **Endpoint**: `/api/auth/mfa/enable-pending`
+- **Method**: `POST`
+- **Request**: `{ setupToken, pendingSecret, code }`
+- **Response**: `{ success: true, recoveryCodes, user: { id, username, ... } }` (200 OK)
+- **Used By**: Login forced setup flow
+- **Permissions**: Public access (consumes setup token, enables MFA on user, returns recovery codes, sets login session)
+
+### 70. Setup Wizard Superuser MFA Generation
+- **Endpoint**: `/api/setup/mfa/setup`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ success: true, secret, otpauthUrl }` (200 OK)
+- **Used By**: Setup Wizard (Step 1.5: Superuser MFA configuration)
+- **Permissions**: Requires active superuser session cookie (`sid`)
+
+### 71. Setup Wizard Superuser MFA Verification & Enablement
+- **Endpoint**: `/api/setup/mfa/verify`
+- **Method**: `POST`
+- **Request**: `{ pendingSecret, code }`
+- **Response**: `{ success: true, recoveryCodes }` (200 OK)
+- **Used By**: Setup Wizard (Step 1.5: Superuser MFA configuration)
+- **Permissions**: Requires active superuser session cookie (`sid`)
+
+### 72. Self-Service MFA Status
+- **Endpoint**: `/api/profile/mfa/status`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ mfaEnabled: boolean, mfaEnabledAt: Date | null }` (200 OK)
+- **Used By**: Profile Security Tab
+- **Permissions**: Active session cookie required
+
+### 73. Self-Service MFA Setup Initiation
+- **Endpoint**: `/api/profile/mfa/setup`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ success: true, secret, otpauthUrl }` (200 OK)
+- **Used By**: Profile Security Tab
+- **Permissions**: Active session cookie required
+
+### 74. Self-Service MFA Enablement
+- **Endpoint**: `/api/profile/mfa/enable`
+- **Method**: `POST`
+- **Request**: `{ pendingSecret, code }`
+- **Response**: `{ success: true, recoveryCodes }` (200 OK)
+- **Used By**: Profile Security Tab
+- **Permissions**: Active session cookie required
+
+### 75. Self-Service MFA Disablement
+- **Endpoint**: `/api/profile/mfa/disable`
+- **Method**: `POST`
+- **Request**: `{ currentPassword }`
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: Profile Security Tab
+- **Permissions**: Active session cookie required
+
+### 76. Self-Service Regenerate Recovery Codes
+- **Endpoint**: `/api/profile/mfa/regenerate-recovery`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ success: true, recoveryCodes }` (200 OK)
+- **Used By**: Profile Security Tab
+- **Permissions**: Active session cookie required
+
+### 77. Admin Reset MFA
+- **Endpoint**: `/api/users/:id/admin-reset-mfa`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ success: true, message: "MFA reset successfully." }` (200 OK)
+- **Used By**: Admin panel / User Management list
+- **Permissions**: Requires active session with `"users:edit"` permission (Superuser bypasses)
+
 
 

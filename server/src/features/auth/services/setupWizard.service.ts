@@ -3,13 +3,14 @@ import { emailPasswordAuthProvider } from './auth.service';
 import { seedSuperuserRoles } from '../../../../prisma/seed/rbacSeed';
 import { roleTemplatesService } from '../../rbac/services/roleTemplates.service';
 
-export type SetupStep = 'superuser' | 'company' | 'org-structure' | 'role-templates' | 'complete';
+export type SetupStep = 'superuser' | 'superuser-mfa' | 'company' | 'org-structure' | 'role-templates' | 'complete';
 
 export class SetupWizardService {
   /**
    * Returns which step is needed next, inferred from database row state:
    * - no superuser row → step "superuser"
-   * - superuser exists but no company is linked/exists → step "company"
+   * - superuser exists but MFA not enabled → step "superuser-mfa"
+   * - superuser exists and MFA enabled but no company is linked/exists → step "company"
    * - company exists but org-structure is not completed → step "org-structure"
    * - company exists but Company.setupCompletedAt is null → step "role-templates"
    * - setupCompletedAt is present → "complete"
@@ -20,6 +21,10 @@ export class SetupWizardService {
     });
     if (!superuser) {
       return 'superuser';
+    }
+
+    if (!superuser.mfaEnabled) {
+      return 'superuser-mfa';
     }
 
     const company = await prisma.company.findFirst();
@@ -110,6 +115,9 @@ export class SetupWizardService {
     if (status === 'superuser') {
       throw new Error('Superuser must be created before completing the company step.');
     }
+    if (status === 'superuser-mfa') {
+      throw new Error('MFA must be configured for the superuser before completing the company step.');
+    }
 
     // Find the superuser to link
     const superuser = await prisma.user.findFirst({
@@ -160,6 +168,9 @@ export class SetupWizardService {
     if (status === 'superuser') {
       throw new Error('Superuser must be created before completing organization setup.');
     }
+    if (status === 'superuser-mfa') {
+      throw new Error('MFA must be configured for the superuser before completing organization setup.');
+    }
     if (status === 'company') {
       throw new Error('Company must be set up before completing organization setup.');
     }
@@ -202,6 +213,9 @@ export class SetupWizardService {
     }
     if (status === 'superuser') {
       throw new Error('Superuser must be created before completing the role templates step.');
+    }
+    if (status === 'superuser-mfa') {
+      throw new Error('MFA must be configured for the superuser before completing the role templates step.');
     }
     if (status === 'company') {
       throw new Error('Company must be set up before completing the role templates step.');

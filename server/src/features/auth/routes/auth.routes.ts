@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
 import { prisma } from '../../../shared/db/prisma';
 import { emailPasswordAuthProvider } from '../services/auth.service';
 import { emailService } from '../../../shared/email/email.service';
@@ -28,6 +29,35 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
 
     // Reset rate limiter count for this identifier on successful login
     loginRateLimiter.reset(req);
+
+    // Check if MFA is required for this user
+    const company = user.companyId ? await prisma.company.findUnique({
+      where: { id: user.companyId },
+    }) : null;
+
+    const isMfaRequired = user.mfaEnabled || 
+      (company && (company.mfaPolicy === 'ENFORCED' || (company.mfaPolicy as string) === 'EVERYONE')) ||
+      (company && (company.mfaPolicy === 'ROLE_BASED' || (company.mfaPolicy as string) === 'SELECTED_ROLES') && user.roleId && (await prisma.mfaPolicyRole.findUnique({
+        where: { companyId_roleId: { companyId: company.id, roleId: user.roleId } }
+      })) !== null);
+
+    if (isMfaRequired) {
+      if (user.mfaEnabled) {
+        const challengeToken = await TokenService.issue(user.id, TokenPurpose.MFA_CHALLENGE, 300);
+        return res.json({
+          success: false,
+          mfaRequired: true,
+          challengeToken,
+        });
+      } else {
+        const setupToken = await TokenService.issue(user.id, TokenPurpose.MFA_CHALLENGE, 300);
+        return res.json({
+          success: false,
+          mfaSetupRequired: true,
+          setupToken,
+        });
+      }
+    }
 
     // Update last login timestamp
     await prisma.user.update({
@@ -89,6 +119,247 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
       return res.status(401).json({ error: err.message });
     }
     res.status(500).json({ error: err.message || 'An internal error occurred.' });
+  }
+});
+
+/**
+ * POST /api/auth/mfa/verify
+ * Request body: { challengeToken, code }
+ */
+router.post('/mfa/verify', loginRateLimiter.middleware, async (req: Request, res: Response) => {
+  try {
+    const { challengeToken, code } = req.body;
+    if (!challengeToken || !code) {
+      return res.status(400).json({ error: 'Challenge token and code are required.' });
+    }
+
+    const userId = await TokenService.consume(challengeToken, TokenPurpose.MFA_CHALLENGE);
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Verify code: TOTP or recovery code
+    let isValid = false;
+    let isRecovery = false;
+
+    if (user.mfaSecretEncrypted) {
+      try {
+        const { decrypt } = await import('../../../shared/crypto/mfaEncryption');
+        const otplib = await import('otplib');
+        const decryptedSecret = decrypt(user.mfaSecretEncrypted);
+        const result = otplib.verifySync({
+          token: code,
+          secret: decryptedSecret,
+        });
+        if (result && result.valid) {
+          isValid = true;
+        }
+      } catch (err) {
+        console.error('Error verifying TOTP:', err);
+      }
+    }
+
+    if (!isValid) {
+      // Check recovery codes
+      const hashedCode = crypto.createHash('sha256').update(code.trim().toUpperCase()).digest('hex');
+      const recoveryCodeRecord = await prisma.mfaRecoveryCode.findFirst({
+        where: {
+          userId,
+          codeHash: hashedCode,
+          usedAt: null,
+        },
+      });
+
+      if (recoveryCodeRecord) {
+        isValid = true;
+        isRecovery = true;
+        await prisma.mfaRecoveryCode.update({
+          where: { id: recoveryCodeRecord.id },
+          data: { usedAt: new Date() },
+        });
+      }
+    }
+
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid verification code.' });
+    }
+
+    // Login succeeded! Update last login
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    // Create session in DB
+    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
+    const session = await prisma.session.create({
+      data: {
+        userId: user.id,
+        expiresAt,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      },
+    });
+
+    // Set cookie
+    res.cookie('sid', session.id, {
+      httpOnly: true,
+      secure: true,
+      signed: true,
+      expires: expiresAt,
+      sameSite: 'lax',
+    });
+
+    let roleName: string | null = null;
+    let effectivePermissions: string[] = [];
+
+    if (user.isSuperuser) {
+      roleName = 'Superuser';
+    } else if (user.roleId) {
+      const role = await prisma.role.findUnique({
+        where: { id: user.roleId },
+      });
+      roleName = role ? role.name : null;
+      const permissions = await permissionResolverService.getEffectivePermissions(user.roleId);
+      effectivePermissions = permissions.map((p) => `${p.module}:${p.action}`);
+    }
+
+    return res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        isSuperuser: user.isSuperuser,
+        recoveryEmail: user.recoveryEmail,
+        companyId: user.companyId,
+        status: user.status,
+        roleName,
+        effectivePermissions,
+      },
+    });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Verification failed.' });
+  }
+});
+
+/**
+ * POST /api/auth/mfa/setup-pending
+ * Request body: { setupToken }
+ */
+router.post('/mfa/setup-pending', async (req: Request, res: Response) => {
+  try {
+    const { setupToken } = req.body;
+    if (!setupToken) {
+      return res.status(400).json({ error: 'Setup token is required.' });
+    }
+
+    const tokenHash = TokenService.hashToken(setupToken);
+    const token = await prisma.token.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!token || token.purpose !== TokenPurpose.MFA_CHALLENGE || token.usedAt !== null || token.expiresAt < new Date()) {
+      return res.status(400).json({ error: 'Invalid, used, or expired setup token.' });
+    }
+
+    const { mfaService } = await import('../services/mfa.service');
+    const { secret, otpauthUrl } = await mfaService.generateSecret(token.userId);
+
+    return res.json({
+      success: true,
+      secret,
+      otpauthUrl,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to generate secret.' });
+  }
+});
+
+/**
+ * POST /api/auth/mfa/enable-pending
+ * Request body: { setupToken, pendingSecret, code }
+ */
+router.post('/mfa/enable-pending', async (req: Request, res: Response) => {
+  try {
+    const { setupToken, pendingSecret, code } = req.body;
+    if (!setupToken || !pendingSecret || !code) {
+      return res.status(400).json({ error: 'Setup token, pending secret, and verification code are required.' });
+    }
+
+    const userId = await TokenService.consume(setupToken, TokenPurpose.MFA_CHALLENGE);
+
+    const { mfaService } = await import('../services/mfa.service');
+    const recoveryCodes = await mfaService.verifyAndEnable(userId, pendingSecret, code);
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Update last login
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    // Create session in DB
+    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
+    const session = await prisma.session.create({
+      data: {
+        userId: user.id,
+        expiresAt,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      },
+    });
+
+    // Set cookie
+    res.cookie('sid', session.id, {
+      httpOnly: true,
+      secure: true,
+      signed: true,
+      expires: expiresAt,
+      sameSite: 'lax',
+    });
+
+    let roleName: string | null = null;
+    let effectivePermissions: string[] = [];
+
+    if (user.isSuperuser) {
+      roleName = 'Superuser';
+    } else if (user.roleId) {
+      const role = await prisma.role.findUnique({
+        where: { id: user.roleId },
+      });
+      roleName = role ? role.name : null;
+      const permissions = await permissionResolverService.getEffectivePermissions(user.roleId);
+      effectivePermissions = permissions.map((p) => `${p.module}:${p.action}`);
+    }
+
+    return res.json({
+      success: true,
+      recoveryCodes,
+      user: {
+        id: user.id,
+        username: user.username,
+        isSuperuser: user.isSuperuser,
+        recoveryEmail: user.recoveryEmail,
+        companyId: user.companyId,
+        status: user.status,
+        roleName,
+        effectivePermissions,
+      },
+    });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'MFA enablement failed.' });
   }
 });
 

@@ -240,6 +240,38 @@ To guarantee tenant-wide data completeness for safety and compliance reporting, 
 
 ---
 
+## 🔐 Multi-Factor Authentication (MFA) & Security Policy Enforcement
+
+SmartCookie implements a comprehensive, robust local Multi-Factor Authentication (MFA) framework using Time-based One-time Passwords (TOTP) to protect administrative and user accounts.
+
+### 1. Cryptographic Secrets Encryption-at-Rest
+To prevent secret token exposure in the event of a database compromise:
+* **AES-256-GCM Encryption:** Plaintext TOTP secrets generated during configuration are encrypted using `AES-256-GCM` keyed by the master `MFA_ENCRYPTION_KEY` environment secret.
+* **Storage Format:** Encrypted secrets are serialized in the `users.mfa_secret_encrypted` column as `ivHex:authTagHex:encryptedHex`. Decryption happens on demand only when validating challenge codes.
+
+### 2. Multi-Stage Token Flow & Security Gates
+Authentication is strictly partitioned during the login lifecycle to block access to un-MFA'd sessions:
+* **MFA_CHALLENGE Stage:** After validating correct credentials for a user who has enrolled in MFA, the server does NOT issue an active session cookie (`sid`). Instead, it generates a single-use, low-privilege `MFA_CHALLENGE` token valid for 5 minutes, which is returned to the client. The client must supply this token and a valid code to `/api/auth/mfa/verify` to receive their actual session.
+* **MFA_SETUP Force-Gate:** If a company-wide security policy mandates MFA for the logging user but they have not yet enrolled, the login route intercepts authentication, minting a low-privilege `MFA_SETUP` token. This token grants temporary access to complete MFA enrollment through a secure portal and blocks access to any other server-side endpoints.
+
+### 3. Tenant-Wide Policy Gating & Custom Role Mapping
+Companies can enforce security compliance dynamically:
+* **MFA Policies:** The company can set its `mfaPolicy` settings parameter to `DISABLED`, `OPTIONAL` (user choice), `ENFORCED` (all users require MFA), or `ROLE_BASED`.
+* **Join Mapping (`mfa_policy_roles`):** Under a `ROLE_BASED` policy, specific roles can be targeted (e.g., locking down the "Supervisor" and "Administrator" roles while leaving "Learners" optional). These relationships are validated in real time during the login pipeline.
+
+### 4. Secure Hashed Recovery Codes
+To preserve login access in the event of offline states:
+* **One-Time Bypass:** Enabling MFA generates 10 unique, cryptographically random, 10-character alphanumeric recovery codes.
+* **One-Way SHA-256 Hashes:** Recovery codes are stored in the database as SHA-256 hashes (`mfa_recovery_codes`). During the challenge phase, the user can submit a recovery code. The backend hashes the submission, performs a lookup, transactionally deletes the matching record if found, and grants full session access. This prevents replay attacks and ensures a code can be used exactly once.
+
+### 5. Privileged Administrative Overrides
+In lost-device scenarios, security continuity is maintained via a dedicated bypass:
+* **Gated Reset:** Administrators holding `users:edit` privileges can trigger `POST /api/users/:id/admin-reset-mfa`.
+* **Transactional De-Enrollment:** This action transactionally disables MFA on the target user (`mfaEnabled = false`) and purges all of their stored recovery codes. On their next login attempt, the user is authorized with password alone and prompted to re-enroll as required by company policies.
+
+
+---
+
 ## 🚀 Deployment Targets & Production Topology
 
 The production architecture for SmartCookie has been finalized and implemented as a robust, fully automated, self-healing topology on a dedicated Ubuntu VPS.

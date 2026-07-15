@@ -69,6 +69,12 @@ async function startServer() {
   if (!sessionSecret && process.env.NODE_ENV === 'production') {
     throw new Error('SESSION_SECRET must be set in production');
   }
+
+  let mfaEncryptionKey = process.env.MFA_ENCRYPTION_KEY;
+  if (!mfaEncryptionKey && process.env.NODE_ENV === 'production') {
+    throw new Error('MFA_ENCRYPTION_KEY must be set in production');
+  }
+
   app.use(cookieParser(sessionSecret || 'smartcookie-secret-fallback'));
 
   // Place API routes before static file handlers

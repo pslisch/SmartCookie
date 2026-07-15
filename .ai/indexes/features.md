@@ -201,5 +201,28 @@ Every logged feature should eventually document:
 - **Events**: Automated notification triggers check user preferences or company-mandatory lists before mailing.
 - **Dependencies**: Prisma ORM, Node.js, Express, Multer, CSV-parse, bcrypt, Nodemailer
 
+### 14. Multi-Factor Authentication (MFA) Core Security System
+- **Description**: Implements a comprehensive, robust local Multi-Factor Authentication (MFA) system utilizing Time-based One-time Passwords (TOTP). Supports encrypted TOTP secrets-at-rest (using AES-256-GCM), a secure two-stage session token flow using `MFA_CHALLENGE` and `MFA_SETUP` tokens, secure SHA-256 hashed one-time recovery codes, flexible tenant-wide MFA policies (including custom role-based mapping rules), and administrative de-enrollment overrides.
+- **Components**: None (Backend only this pass)
+- **Pages**: None (Backend only this pass)
+- **Services**: `MfaService` (`server/src/features/auth/services/mfa.service.ts`)
+- **APIs**:
+  - `POST /api/auth/mfa/verify` (verifies code or recovery code, returns active user session)
+  - `POST /api/auth/mfa/setup-pending` (generates pending secret/URL for unenrolled gated user)
+  - `POST /api/auth/mfa/enable-pending` (verifies pending setup, enables MFA, returns recovery codes)
+  - `GET /api/setup/mfa/setup` (generates superuser setup secret)
+  - `POST /api/setup/mfa/verify` (verifies and enables MFA for the initial superuser)
+  - `GET /api/profile/mfa/status` (self-service MFA status retrieval)
+  - `GET /api/profile/mfa/setup` (self-service secret/URI generation)
+  - `POST /api/profile/mfa/enable` (self-service MFA verification & enablement)
+  - `POST /api/profile/mfa/disable` (self-service MFA disablement requiring password verification)
+  - `POST /api/profile/mfa/regenerate-recovery` (self-service regeneration of recovery codes)
+  - `POST /api/users/:id/admin-reset-mfa` (admin override de-enrollment requiring `users:edit` permission)
+- **Database**: `users`, `companies`, `mfa_recovery_codes`, `mfa_policy_roles`, `tokens` (Prisma & MariaDB schemas)
+- **Permissions**: Public access for login challenges/setup gates; `sid` active session cookie for self-service profiles; active superuser session cookie for setup wizard endpoints; `users:edit` permission for admin de-enrollment.
+- **Routes**: `server/src/features/auth/routes/auth.routes.ts`, `server/src/features/auth/routes/setup.routes.ts`, `server/src/features/profiles/routes/profile.routes.ts`, `server/src/features/auth/routes/users.routes.ts`
+- **Events**: MFA resets or enrollment changes instantly invalidate active login credentials or require multi-stage prompts on subsequent authorization actions.
+- **Dependencies**: Prisma ORM, Node.js, Express, otplib, crypto
+
 
 

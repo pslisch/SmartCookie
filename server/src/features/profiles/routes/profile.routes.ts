@@ -235,4 +235,106 @@ router.get('/me/account-info', requireAuth, async (req: Request, res: Response) 
   }
 });
 
+/**
+ * GET /api/profile/mfa/status
+ * Returns MFA status of current logged-in user.
+ */
+router.get('/mfa/status', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+    return res.json({
+      mfaEnabled: user.mfaEnabled,
+      mfaEnabledAt: user.mfaEnabledAt,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to fetch MFA status.' });
+  }
+});
+
+/**
+ * GET /api/profile/mfa/setup
+ * Generates pending secret and URI.
+ */
+router.get('/mfa/setup', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { mfaService } = await import('../../auth/services/mfa.service');
+    const { secret, otpauthUrl } = await mfaService.generateSecret(req.user!.id);
+    return res.json({
+      success: true,
+      secret,
+      otpauthUrl,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to initiate MFA setup.' });
+  }
+});
+
+/**
+ * POST /api/profile/mfa/enable
+ * Verifies and enables MFA for the user.
+ */
+router.post('/mfa/enable', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { pendingSecret, code } = req.body;
+    if (!pendingSecret || !code) {
+      return res.status(400).json({ error: 'Pending secret and verification code are required.' });
+    }
+
+    const { mfaService } = await import('../../auth/services/mfa.service');
+    const recoveryCodes = await mfaService.verifyAndEnable(req.user!.id, pendingSecret, code);
+
+    return res.json({
+      success: true,
+      recoveryCodes,
+    });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to enable MFA.' });
+  }
+});
+
+/**
+ * POST /api/profile/mfa/disable
+ * Disables MFA requiring current password confirmation.
+ */
+router.post('/mfa/disable', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { currentPassword } = req.body;
+    if (!currentPassword) {
+      return res.status(400).json({ error: 'Current password is required to disable MFA.' });
+    }
+
+    const { mfaService } = await import('../../auth/services/mfa.service');
+    await mfaService.disableMfa(req.user!.id, currentPassword);
+
+    return res.json({
+      success: true,
+    });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || 'Failed to disable MFA.' });
+  }
+});
+
+/**
+ * POST /api/profile/mfa/regenerate-recovery
+ * Regenerates recovery codes for the current user.
+ */
+router.post('/mfa/regenerate-recovery', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { mfaService } = await import('../../auth/services/mfa.service');
+    const recoveryCodes = await mfaService.regenerateRecoveryCodes(req.user!.id);
+
+    return res.json({
+      success: true,
+      recoveryCodes,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to regenerate recovery codes.' });
+  }
+});
+
 export default router;

@@ -90,6 +90,58 @@ router.post('/superuser', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/setup/mfa/setup -> generates a new TOTP secret for the logged-in superuser.
+ * Requires active superuser session.
+ */
+router.get('/mfa/setup', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const status = await setupWizardService.getStatus();
+    if (status !== 'superuser-mfa') {
+      return res.status(400).json({ error: 'MFA setup is not the active step.' });
+    }
+
+    const { mfaService } = await import('../services/mfa.service');
+    const { secret, otpauthUrl } = await mfaService.generateSecret(req.user!.id);
+
+    res.json({
+      success: true,
+      secret,
+      otpauthUrl,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to generate MFA secret.' });
+  }
+});
+
+/**
+ * POST /api/setup/mfa/verify -> verifies and enables MFA for the logged-in superuser.
+ * Requires active superuser session.
+ */
+router.post('/mfa/verify', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const status = await setupWizardService.getStatus();
+    if (status !== 'superuser-mfa') {
+      return res.status(400).json({ error: 'MFA verification is not the active step.' });
+    }
+
+    const { pendingSecret, code } = req.body;
+    if (!pendingSecret || !code) {
+      return res.status(400).json({ error: 'Pending secret and verification code are required.' });
+    }
+
+    const { mfaService } = await import('../services/mfa.service');
+    const recoveryCodes = await mfaService.verifyAndEnable(req.user!.id, pendingSecret, code);
+
+    res.json({
+      success: true,
+      recoveryCodes,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Failed to verify and enable MFA.' });
+  }
+});
+
+/**
  * POST /api/setup/company -> completes company setup step.
  * Requires an active superuser session.
  */

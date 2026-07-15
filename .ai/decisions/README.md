@@ -217,6 +217,23 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0016] Multi-Factor Authentication (MFA) with TOTP & Secrets Encryption
+- **Status**: Approved
+- **Date**: 2026-07-15
+- **Authors**: AI Coding Agent
+- **Context**: SmartCookie requires a highly secure and flexible Multi-Factor Authentication (MFA) system to protect user accounts, especially for high-privileged roles. This system must be customizable per company, handle lost devices securely, and encrypt sensitive TOTP secrets at rest to mitigate database-leak exposure.
+- **Decision**:
+  - **Encryption-at-Rest Requirement**: Realized the project's first cryptographic encryption for values at rest. When MFA is enabled, the TOTP secret is encrypted using AES-256-GCM via the `MFA_ENCRYPTION_KEY` environment secret. The IV, auth tag, and encrypted ciphertext are serialized in the format `ivHex:authTagHex:encryptedHex`. This shields the TOTP secret from compromise even if the database is fully leaked.
+  - **MFA_CHALLENGE and MFA_SETUP Token Patterns**: Designed a secure multi-stage login flow. If a user has MFA enabled, initial credential verification returns a short-lived (5 minutes), single-use `MFA_CHALLENGE` token instead of a session cookie. The user must submit this token with a valid TOTP code to complete authentication. If MFA is mandated by company policy but the user has not enrolled, they receive an `MFA_SETUP` token, forcing them through a secure, single-purpose setup wizard.
+  - **Mandatory-vs-Optional MFA Policy Design**: Supported highly granular tenant-wide MFA policies. Companies can set `mfaPolicy` to `DISABLED`, `OPTIONAL`, `ENFORCED` (all users), or `ROLE_BASED` (users belonging to selected roles mapped via the `mfa_policy_roles` join table). These policies are checked on login, forcing unenrolled matching users to complete TOTP setup before they can establish an active session.
+  - **Single-Use Recovery Codes**: Upon enabling MFA, the user receives 10 random 10-character recovery codes. These are stored as SHA-256 hashes (`mfa_recovery_codes`). During login, a hashed code can be transactionally matched, consumed, and deleted to bypass TOTP exactly once.
+  - **Administrative Fallback**: Implemented an admin reset action (`POST /api/users/:id/admin-reset-mfa` gated on `users:edit` permission) which transactionally disables MFA and purges recovery codes, allowing users to recover from lost devices and re-enroll.
+- **Consequences**:
+  - **Positives**: Complete enterprise-grade protection against compromised credentials; cryptographically secure secrets at rest; robust policy controls; secure lost-device recovery; no storage of plain-text secrets or recovery codes.
+  - **Negatives**: Minor friction during login for gated users; require secure storage and rotation strategy for the master `MFA_ENCRYPTION_KEY`.
+
+---
+
 ## 🔮 Planned ADRs (updated)
 
 - **ADR-0006: Authentication Strategy**: Detailing the Superuser,

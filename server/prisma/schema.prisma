@@ -47,6 +47,10 @@ model User {
   lastLoginAt        DateTime?  @map("last_login_at")
   profileFieldValues ProfileFieldValue[]
   notificationPreferences NotificationPreference[]
+  mfaEnabled          Boolean    @default(false) @map("mfa_enabled")
+  mfaSecretEncrypted  String?    @map("mfa_secret_encrypted")
+  mfaEnabledAt        DateTime?  @map("mfa_enabled_at")
+  mfaRecoveryCodes    MfaRecoveryCode[]
 
   @@unique([isSuperuserUnique], name: "is_superuser_unique_idx")
   @@map("users")
@@ -56,6 +60,7 @@ enum TokenPurpose {
   INVITATION
   PASSWORD_RESET
   EMAIL_CHANGE
+  MFA_CHALLENGE
 }
 
 model Token {
@@ -93,6 +98,8 @@ model Company {
   mandatoryNotificationTypes Json?                    @map("mandatory_notification_types")
   profileFieldCategories     ProfileFieldCategory[]
   profileFieldDefinitions    ProfileFieldDefinition[]
+  mfaPolicy                  MfaPolicy                @default(DISABLED) @map("mfa_policy")
+  mfaPolicyRoles             MfaPolicyRole[]
 
   @@map("companies")
 }
@@ -111,6 +118,7 @@ model Role {
   users          User[]
   permissions    RolePermission[]
   fieldEditables FieldEditableByRole[]
+  mfaPolicyRoles MfaPolicyRole[]
 
   @@map("roles")
 }
@@ -614,5 +622,33 @@ model NotificationPreference {
 
   @@unique([userId, notificationType])
   @@map("notification_preferences")
+}
+
+enum MfaPolicy {
+  DISABLED
+  OPTIONAL
+  ENFORCED
+  ROLE_BASED
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String    @map("code_hash")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("mfa_recovery_codes")
+}
+
+model MfaPolicyRole {
+  companyId String  @map("company_id")
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  roleId    String  @map("role_id")
+  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, roleId])
+  @@map("mfa_policy_roles")
 }
 

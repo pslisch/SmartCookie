@@ -13,7 +13,7 @@ Each reusable service should include:
 
 ---
 
-## 🟢 Active Services (v1.6.0)
+## 🟢 Active Services (v1.7.0)
 
 ### 1. SetupWizardService
 - **Purpose**: Governs company initialization steps and superuser creation.
@@ -49,3 +49,9 @@ Each reusable service should include:
 - **Purpose**: Runs background periodic jobs for purging expired units, expiring temporary groups, and sending approaching expiration reminder emails.
 - **Consumers**: Express entrypoint (`index.ts`)
 - **Dependencies**: Prisma, EmailService
+
+### 8. MfaService
+- **Purpose**: Governs local multi-factor authentication setup, verification, recovery code administration, and disabling.
+- **Consumers**: `auth.routes.ts`, `profile.routes.ts`
+- **Dependencies**: Prisma, otplib, mfaEncryption
+

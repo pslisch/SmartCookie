@@ -21,6 +21,9 @@ This index describes the data models, entity relationships, and schemas supporti
   - `lastName` (String, Nullable, maps to `last_name`)
   - `profilePicturePath` (String, Nullable, maps to `profile_picture_path`)
   - `lastLoginAt` (DateTime, Nullable, maps to `last_login_at`)
+  - `mfaEnabled` (Boolean, Default: `false`, maps to `mfa_enabled`)
+  - `mfaSecretEncrypted` (String, Nullable, maps to `mfa_secret_encrypted`)
+  - `mfaEnabledAt` (DateTime, Nullable, maps to `mfa_enabled_at`)
   - `createdAt` (DateTime, Default: `now()`)
   - `updatedAt` (DateTime, Auto-updated)
 - **Indexes & Constraints**:
@@ -34,6 +37,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - Belongs to `Role` (optional, via `roleId`)
   - Has many `Session`s (via `sessions`)
   - Has many `Token`s (via `tokens`)
+  - Has many `MfaRecoveryCode`s (via `mfaRecoveryCodes`)
 
 ### Companies (`companies`)
 - **Fields**:
@@ -45,6 +49,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - `domain` (String, automatically populated from APP_URL on setup)
   - `settings` (Json, Nullable, placeholder for future customizations/integrations)
   - `mandatoryNotificationTypes` (Json, Nullable, array of mandatory notification type enum values)
+  - `mfaPolicy` (Enum: `DISABLED`, `OPTIONAL`, `ENFORCED`, `ROLE_BASED`, Default: `DISABLED`, maps to `mfa_policy`)
 - **Relations**:
   - Has many `User`s (via `users`)
   - Has many `Role`s (via `roles`)
@@ -52,6 +57,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - Has many `LearningGroup`s (via `learningGroups`)
   - Has many `ProfileFieldCategory`s (via `profileFieldCategories`)
   - Has many `ProfileFieldDefinition`s (via `profileFieldDefinitions`)
+  - Has many `MfaPolicyRole`s (via `mfaPolicyRoles`)
 
 ### Organization Units (`organization_units`)
 - **Fields**:
@@ -164,7 +170,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - `id` (String, UUID, Primary Key)
   - `userId` (String, Foreign Key to `users.id`)
   - `tokenHash` (String, Unique, SHA-256 hash of raw token)
-  - `purpose` (Enum: `INVITATION`, `PASSWORD_RESET`, `EMAIL_CHANGE`)
+  - `purpose` (Enum: `INVITATION`, `PASSWORD_RESET`, `EMAIL_CHANGE`, `MFA_CHALLENGE`)
   - `expiresAt` (DateTime)
   - `usedAt` (DateTime, Nullable, null = unconsumed)
   - `pendingEmail` (String, Nullable, holds new email during change flow)
@@ -441,10 +447,28 @@ This index describes the data models, entity relationships, and schemas supporti
 - **Relations**:
   - Belongs to `User` (via `userId`, cascade on delete)
 
+### MFA Recovery Codes (`mfa_recovery_codes`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `userId` (String, Foreign Key to `users.id`)
+  - `codeHash` (String, SHA-256 hash of raw recovery code)
+  - `usedAt` (DateTime, Nullable)
+  - `createdAt` (DateTime, Default: `now()`)
+- **Relations**:
+  - Belongs to `User` (via `userId`, cascade on delete)
+
+### MFA Policy Roles (`mfa_policy_roles`)
+- **Fields**:
+  - `companyId` (String, Foreign Key to `companies.id`, Primary Key Part 1)
+  - `roleId` (String, Foreign Key to `roles.id`, Primary Key Part 2)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to `Role` (via `roleId`, cascade on delete)
+
 
 ---
 
-## 🟢 Schema Registry (v1.9.0)
+## 🟢 Schema Registry (v1.10.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
@@ -454,5 +478,6 @@ This index describes the data models, entity relationships, and schemas supporti
 - **v1.6.0**: Multi-Tenant Organization Model MVP. Added `OrganizationUnit`, `LearningGroup`, and `Membership` models. Extended `Company` with `domain` and `settings`. Included strict CHECK constraints and cascading soft-delete triggers.
 - **v1.7.0**: Learning Assignments & Target Resolution Engine. Added `Assignment`, `AssignmentTarget`, `UserAssignmentInstance`, `UserAssignmentInstanceSource`, and `AuditLog` models. Enhanced `UserAssignmentInstance` with `last_reminder_sent_at` column for automated notification tracking. Added cascading soft-deletes and scheduled cleanup tasks.
 - **v1.8.0**: Content Engine SCORM 1.2 MVP. Added `Content`, `ContentTag`, `ContentCategory`, and `ContentAttempt` models. Associated `Lesson` model with optional SCORM `Content`. Mapped attempts directly to existing `UserAssignmentInstance`. Added `course_lessons`, `courses`, and `lessons` schemas documentation to Database index.
-- **v1.9.0 (Current)**: Profiles & User Management Extensions. Added `ProfileFieldCategory`, `ProfileFieldDefinition`, `FieldEditableByRole`, `ProfileFieldValue`, and `NotificationPreference` models. Extended `User` with first/last names, profile picture, and last login. Added `mandatoryNotificationTypes` to `Company`. Added `EMAIL_CHANGE` token purpose and `pendingEmail` to `Token`.
+- **v1.9.0**: Profiles & User Management Extensions. Added `ProfileFieldCategory`, `ProfileFieldDefinition`, `FieldEditableByRole`, `ProfileFieldValue`, and `NotificationPreference` models. Extended `User` with first/last names, profile picture, and last login. Added `mandatoryNotificationTypes` to `Company`. Added `EMAIL_CHANGE` token purpose and `pendingEmail` to `Token`.
+- **v1.10.0 (Current)**: Local MFA (TOTP). Added `mfaEnabled`, `mfaSecretEncrypted`, and `mfaEnabledAt` to `User`. Added `MfaRecoveryCode` table. Added `mfaPolicy` enum default `DISABLED` to `Company`. Added `MfaPolicyRole` join table. Added `MFA_CHALLENGE` to `TokenPurpose` enum.
 

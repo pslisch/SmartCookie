@@ -23,6 +23,7 @@ export interface AuthUser {
   companyId: string | null;
   status: string;
   roleId?: string | null;
+  mfaEnabled?: boolean;
 }
 
 export interface AuthCredentials {
@@ -145,6 +146,7 @@ export class EmailPasswordAuthProvider implements AuthProvider {
       companyId: user.companyId,
       status: user.status,
       roleId: user.roleId,
+      mfaEnabled: user.mfaEnabled,
     };
   }
 }
