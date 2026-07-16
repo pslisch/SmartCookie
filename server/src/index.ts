@@ -19,6 +19,7 @@ import notificationPreferencesRouter from './features/profiles/routes/notificati
 import bulkImportRouter from './features/profiles/routes/bulkImport.routes';
 import profileRouter from './features/profiles/routes/profile.routes';
 import profileFieldRouter from './features/profiles/routes/profileField.routes';
+import identityProviderRouter from './features/identity/routes/identityProvider.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
@@ -27,6 +28,7 @@ import './features/assignments/assignments.permissions';
 import './features/content/content.permissions.js';
 import './features/preview/preview.permissions';
 import './features/profiles/profileFields.permissions';
+import './features/identity/identity.permissions';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 import { seedProfileFields } from '../prisma/seed/profileFieldsSeed';
@@ -70,9 +72,9 @@ async function startServer() {
     throw new Error('SESSION_SECRET must be set in production');
   }
 
-  let mfaEncryptionKey = process.env.MFA_ENCRYPTION_KEY;
+  let mfaEncryptionKey = process.env.ENCRYPTION_KEY || process.env.MFA_ENCRYPTION_KEY;
   if (!mfaEncryptionKey && process.env.NODE_ENV === 'production') {
-    throw new Error('MFA_ENCRYPTION_KEY must be set in production');
+    throw new Error('ENCRYPTION_KEY or MFA_ENCRYPTION_KEY must be set in production');
   }
 
   app.use(cookieParser(sessionSecret || 'smartcookie-secret-fallback'));
@@ -102,6 +104,7 @@ async function startServer() {
   app.use('/api', notificationPreferencesRouter);
   app.use('/api/profile', profileRouter);
   app.use('/api/profile-fields', profileFieldRouter);
+  app.use('/api/identity-providers', identityProviderRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

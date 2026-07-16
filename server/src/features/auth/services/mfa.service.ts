@@ -1,7 +1,7 @@
 import * as otplib from 'otplib';
 import crypto from 'crypto';
 import { prisma } from '../../../shared/db/prisma';
-import { encrypt } from '../../../shared/crypto/mfaEncryption';
+import { encrypt } from '../../../shared/crypto/encryption';
 import { emailPasswordAuthProvider } from './auth.service';
 
 export class MfaService {

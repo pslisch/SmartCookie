@@ -272,6 +272,40 @@ In lost-device scenarios, security continuity is maintained via a dedicated bypa
 
 ---
 
+## 🌐 Microsoft Entra ID Integration Architecture
+
+SmartCookie supports enterprise directory integration with Microsoft Entra ID (formerly Azure Active Directory). This integration facilitates connection tests, automatic user provisioning, user status synchronization, and organizational group mappings.
+
+### 1. Dual-Permission OAuth Design & Verification
+The connection validation system utilizes **Application Credentials** (Client Credentials Grant Flow) rather than Delegated permissions to facilitate background/scheduler synchronization tasks.
+* **Diagnostics Flow:** During a connection test (`POST /api/identity-providers/entra/test-connection`), the backend acquires an application access token directly from Azure's token endpoint (`https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token`).
+* **JWT Claims Inspection:** Rather than performing speculative graph calls, the server decodes the token payload locally without verification to inspect the `roles` claim array. It verifies that both `User.Read.All` and `Group.Read.All` permissions are explicitly present in the granted roles. It reports specific status and guidance steps back to the client if any are missing.
+
+### 2. Reconciliation & SyncSource Isolation
+SmartCookie prevents organizational clobbering by strictly separating manually created structures from corporate directory imports.
+* **Sync Source Partitioning:** The `OrganizationUnit` table has a `syncSource` enum of `MANUAL` or `ENTRA_SYNC`.
+* **Reconciliation Rules:** During a synchronization run, only organization units with `syncSource = ENTRA_SYNC` (and mapped via `entraGroupId`) are updated, deleted, or restored. Manual OUs are entirely skipped, allowing custom local units to coexist with corporate directory trees.
+
+### 3. Selective Overwrite Engine
+To accommodate administrative customizations on synced users, individual fields are updated selectively:
+* **`externalSyncLocked` Flag:** Each `ProfileFieldDefinition` has an `externalSyncLocked` property. When set to `true`, the synchronization engine overwrites the field's value with the corresponding property from Entra ID. When `false`, the local database value is skipped, preserving local modifications.
+* **Profile Picture Exception:** As an extra guard, when a user uploads a custom profile photo locally, the system sets `profilePictureManuallySet = true`. This prevents subsequent directory synchronizations from overwriting their customized picture, even if the picture field definition itself is set to lock under external sync.
+
+### 4. Verified App Registration Steps (LMS Admin Guidance)
+For administrators setting up the Microsoft Entra integration, the following steps must be completed inside the Azure Portal:
+1. **Create App Registration:** Navigate to the *Microsoft Entra admin center* > *Applications* > *App registrations* > *New registration*.
+2. **App Details:** Enter a name (e.g., "SmartCookie LMS"), select "Accounts in this organizational directory only" (Single tenant), and click Register (leave Redirect URI empty).
+3. **Capture Credentials:** From the application Overview page, copy the **Application (client) ID** and the **Directory (tenant) ID**.
+4. **Generate Secret:** Go to *Certificates & secrets* > *Client secrets* > *New client secret*. Set an expiration window, click Add, and copy the **Value** of the generated secret immediately (this is the `clientSecret` and is hidden forever after navigation).
+5. **Add Graph API Permissions:** Navigate to *API permissions* > *Add a permission* > *Microsoft Graph*.
+6. **Application Roles:** Select **Application permissions** (do *not* select Delegated permissions). Search for and add:
+   * `User.Read.All` (Required to read profiles of users being synced)
+   * `Group.Read.All` (Required to read groups and sync divisions)
+7. **Grant Admin Consent:** Click the **Grant admin consent for [Your Tenant Name]** button on the permissions summary screen. Without admin consent, token authorization will fail.
+
+
+---
+
 ## 🚀 Deployment Targets & Production Topology
 
 The production architecture for SmartCookie has been finalized and implemented as a robust, fully automated, self-healing topology on a dedicated Ubuntu VPS.

@@ -5,10 +5,11 @@ import { passwordResetTemplate, PasswordResetData } from './templates/passwordRe
 import { groupExpirationTemplate, GroupExpirationData } from './templates/groupExpiration';
 import { assignmentReminderTemplate, AssignmentReminderData } from './templates/assignmentReminder';
 import { emailChangeVerificationTemplate, EmailChangeVerificationData } from './templates/emailChangeVerification';
+import { entraSyncFailureTemplate, EntraSyncFailureData } from './templates/entraSyncFailure';
 
-export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder' | 'email-change-verification';
+export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder' | 'email-change-verification' | 'entra-sync-failure';
 
-export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData | EmailChangeVerificationData;
+export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData | EmailChangeVerificationData | EntraSyncFailureData;
 
 export interface EmailService {
   send(to: string, template: EmailTemplateName, data: EmailTemplateData): Promise<void>;
@@ -88,6 +89,13 @@ class EmailServiceImpl implements EmailService {
       }
       case 'email-change-verification': {
         const rendered = emailChangeVerificationTemplate(data as EmailChangeVerificationData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
+      case 'entra-sync-failure': {
+        const rendered = entraSyncFailureTemplate(data as EntraSyncFailureData);
         subject = rendered.subject;
         text = rendered.text;
         html = rendered.html;

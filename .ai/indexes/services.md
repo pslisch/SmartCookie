@@ -53,5 +53,11 @@ Each reusable service should include:
 ### 8. MfaService
 - **Purpose**: Governs local multi-factor authentication setup, verification, recovery code administration, and disabling.
 - **Consumers**: `auth.routes.ts`, `profile.routes.ts`
-- **Dependencies**: Prisma, otplib, mfaEncryption
+- **Dependencies**: Prisma, otplib, encryption
+
+### 9. EntraGraphClient
+- **Purpose**: Communicates with Microsoft Graph API, handles token exchanges (delegated & application), implements paginated response traversal, and rate limit retries with exponential backoff.
+- **Consumers**: Microsoft Entra ID integration backend services, sync routines, and verification routes
+- **Dependencies**: global fetch, Node.js buffer utilities
+
 

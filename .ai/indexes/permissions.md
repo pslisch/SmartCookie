@@ -61,4 +61,9 @@ Every permission represents a logical action on a module:
 | `preview` | `use` | Use the cosmetic visual preview system to view app as a lower-privileged role | `GET /api/preview/eligible-roles` | Preview banner exit, role selectors in Navbar and Content engines |
 | `profile-fields` | `manage-categories` | Manage custom profile field categories | - | Category editor interfaces |
 | `profile-fields` | `manage-fields` | Configure and register custom profile field definitions | - | Custom field configuration panel |
+| `identity-providers` | `configure` | Full configuration of MS Entra ID connection parameters, tenant ID, client ID, client secret | `POST /api/identity-providers/entra`, `PATCH /api/identity-providers/entra` | Connection wizard setup page |
+| `identity-providers` | `view-config` | Read-only access to identity provider configuration settings (excluding decrypted credentials) | `GET /api/identity-providers/entra` | Identity providers settings page |
+| `identity-providers` | `view-logs` | View and download history logs for Microsoft Entra sync runs | `GET /api/identity-providers/entra/sync-logs`, `GET /api/identity-providers/entra/sync-logs/:id/download` | Sync history panel & logs list |
+| `identity-providers` | `manual-sync` | Trigger an immediate manual synchronization of Microsoft Entra users and groups | `POST /api/identity-providers/entra/sync-now` | "Sync Now" trigger button |
+
 

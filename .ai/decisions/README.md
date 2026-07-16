@@ -234,6 +234,22 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0017] Microsoft Entra ID Directory Synchronization & Selective Overwrite Mechanics
+- **Status**: Approved
+- **Date**: 2026-07-16
+- **Authors**: AI Coding Agent
+- **Context**: SmartCookie requires a highly integrated corporate directory synchronization with Microsoft Entra ID. This connection must handle OAuth token validations, reconcile organizational structures without clobbering manual divisions, respect local user overrides gracefully, and reside in a flexible post-onboarding administrative area.
+- **Decision**:
+  - **Dual-Permission-Type OAuth Design**: Validates connection credentials by executing a read-only Organization info query. It fetches an application token directly from Azure AD's token endpoint and extracts claims to verify `User.Read.All` and `Group.Read.All` application roles inside the JWT payload, rather than relying on interactive user delegates.
+  - **Reconciliation with `syncSource`**: Utilizes a `syncSource` enum (`MANUAL`, `ENTRA_SYNC`) on the `OrganizationUnit` table. Groups synced from Entra are designated as `ENTRA_SYNC` and reconciled (created, renamed, or soft-deleted) based on Azure's states, while manually created organization units are left completely untouched.
+  - **Selective Overwrite Engine**: Leverages the `externalSyncLocked` boolean flag on `ProfileFieldDefinition`. When a profile field's definition has `externalSyncLocked = true`, the synchronization process is allowed to selectively overwrite existing local values. For fields where `externalSyncLocked = false`, the sync engine skips updates, preserving local user edits. As a unique safety gate, `profilePictureManuallySet` on the `User` table is used to prevent the system from overwriting customized user-uploaded photos, even if the photo field definition is locked.
+  - **Settings, Not Setup Wizard Placement**: Chooses to locate the identity provider setup inside the main Settings dashboard under a secure tab, rather than embedding it inside the critical onboarding Setup Wizard. This prevents blocking system initialization with high-friction corporate tenant registry requirements.
+- **Consequences**:
+  - **Positives**: Complete directory synchronization with zero risk of clobbering manual organization hierarchies; local user modifications are protected; lightweight credential testing with clear permission diagnostic arrays.
+  - **Negatives**: Minor sync complexity from managing dual-source entities; requires administrators to register the application correctly in their Entra tenant.
+
+---
+
 ## 🔮 Planned ADRs (updated)
 
 - **ADR-0006: Authentication Strategy**: Detailing the Superuser,

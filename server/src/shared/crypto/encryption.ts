@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 
-let keyString = process.env.MFA_ENCRYPTION_KEY;
+let keyString = process.env.ENCRYPTION_KEY || process.env.MFA_ENCRYPTION_KEY;
 
 if (!keyString && process.env.NODE_ENV === 'production') {
-  throw new Error('MFA_ENCRYPTION_KEY must be set in production');
+  throw new Error('ENCRYPTION_KEY or MFA_ENCRYPTION_KEY must be set in production');
 }
 
 const keyToUse = keyString || 'smartcookie-mfa-encryption-fallback-key-32-chars';

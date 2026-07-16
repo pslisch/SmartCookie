@@ -24,6 +24,8 @@ This index describes the data models, entity relationships, and schemas supporti
   - `mfaEnabled` (Boolean, Default: `false`, maps to `mfa_enabled`)
   - `mfaSecretEncrypted` (String, Nullable, maps to `mfa_secret_encrypted`)
   - `mfaEnabledAt` (DateTime, Nullable, maps to `mfa_enabled_at`)
+  - `entraObjectId` (String, Nullable, unique per company, maps to `entra_object_id`)
+  - `profilePictureManuallySet` (Boolean, Default: `false`, maps to `profile_picture_manually_set`)
   - `createdAt` (DateTime, Default: `now()`)
   - `updatedAt` (DateTime, Auto-updated)
 - **Indexes & Constraints**:
@@ -32,12 +34,14 @@ This index describes the data models, entity relationships, and schemas supporti
   - Raw SQL CHECK constraint: `username IS NOT NULL OR email IS NOT NULL` (guarantees every user has at least one identifier)
   - Raw SQL CHECK constraint: `status <> 'ACTIVE' OR passwordHash IS NOT NULL` (active users must have a password hash)
   - Unique index `users_is_superuser_unique_idx` on database-level virtual column `is_superuser_unique` (guarantees at most one superuser exists)
+  - Unique index on `companyId` + `entraObjectId` (unique per company)
 - **Relations**:
   - Belongs to `Company` (optional, via `companyId`)
   - Belongs to `Role` (optional, via `roleId`)
   - Has many `Session`s (via `sessions`)
   - Has many `Token`s (via `tokens`)
   - Has many `MfaRecoveryCode`s (via `mfaRecoveryCodes`)
+  - Has many triggered `SyncLog`s (via `triggeredSyncLogs`)
 
 ### Companies (`companies`)
 - **Fields**:
@@ -65,11 +69,15 @@ This index describes the data models, entity relationships, and schemas supporti
   - `name` (String)
   - `parentId` (String, Nullable, Foreign Key self-relation)
   - `companyId` (String, Foreign Key to `companies.id`)
+  - `syncSource` (Enum: `MANUAL`, `ENTRA_SYNC`, Default: `MANUAL`, maps to `sync_source`)
+  - `entraGroupId` (String, Nullable, unique per company, maps to `entra_group_id`)
   - `deletedAt` (DateTime, Nullable, soft-deletion timestamp)
   - `permanentDeleteAt` (DateTime, Nullable, timestamp for permanent purging after 14 days)
   - `deletionBatchId` (String, UUID, Nullable, tracks multi-node batch soft-deletes)
   - `createdAt` (DateTime, Default: `now()`)
   - `updatedAt` (DateTime, Auto-updated)
+- **Indexes & Constraints**:
+  - Unique index on `companyId` + `entraGroupId`
 - **Relations**:
   - Belongs to `Company` (via `companyId`)
   - Belongs to parent `OrganizationUnit` (optional, via `parentId`)
@@ -465,10 +473,62 @@ This index describes the data models, entity relationships, and schemas supporti
   - Belongs to `Company` (via `companyId`, cascade on delete)
   - Belongs to `Role` (via `roleId`, cascade on delete)
 
+### Identity Provider Configs (`identity_provider_configs`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `providerType` (Enum: `LOCAL`, `MICROSOFT_ENTRA`)
+  - `enabled` (Boolean, Default: `false`)
+  - `tenantId` (String, Nullable)
+  - `clientId` (String, Nullable)
+  - `clientSecretEncrypted` (String, Nullable)
+  - `redirectUri` (String, Nullable)
+  - `loginMode` (Enum: `LOCAL_ONLY`, `MICROSOFT_ONLY`, `BOTH`, Default: `BOTH`)
+  - `importStrategy` (Enum: `ALL_USERS`, `SELECTED_GROUPS`, `FIRST_LOGIN`, `SELECTED_GROUPS_AND_FIRST_LOGIN`, Default: `FIRST_LOGIN`)
+  - `defaultSyncedUserRoleId` (String, Nullable, Foreign Key to `roles.id`)
+  - `lastSyncAt` (DateTime, Nullable)
+  - `lastSyncStatus` (Enum: `SUCCESS`, `PARTIAL_FAILURE`, `FAILED`, `NEVER_RUN`, Default: `NEVER_RUN`)
+- **Indexes & Constraints**:
+  - Unique composite index on `(companyId, providerType)`
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to default `Role` (via `defaultSyncedUserRoleId`, set null on delete)
+  - Has many `EntraGroupSelection`s (via `entraGroupSelections`)
+
+### Entra Group Selections (`entra_group_selections`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `entraGroupId` (String)
+  - `entraGroupName` (String)
+  - `identityProviderConfigId` (String, Nullable, Foreign Key to `identity_provider_configs.id`)
+- **Indexes & Constraints**:
+  - Unique composite index on `(companyId, entraGroupId)`
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to `IdentityProviderConfig` (via `identityProviderConfigId`, cascade on delete)
+
+### Sync Logs (`sync_logs`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `startedAt` (DateTime, Default: `now()`)
+  - `finishedAt` (DateTime, Nullable)
+  - `status` (Enum: `SUCCESS`, `PARTIAL_FAILURE`, `FAILED`, `NEVER_RUN`)
+  - `usersProcessed` (Int, Default: 0)
+  - `usersFailed` (Int, Default: 0)
+  - `groupsProcessed` (Int, Default: 0)
+  - `errorDetails` (Json, Nullable)
+  - `triggeredBy` (Enum: `SCHEDULED`, `MANUAL`)
+  - `triggeredByUserId` (String, Nullable, Foreign Key to `users.id`)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to triggering `User` (via `triggeredByUserId`, set null on delete)
+
 
 ---
 
-## 🟢 Schema Registry (v1.10.0)
+## 🟢 Schema Registry (v1.11.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
@@ -479,5 +539,7 @@ This index describes the data models, entity relationships, and schemas supporti
 - **v1.7.0**: Learning Assignments & Target Resolution Engine. Added `Assignment`, `AssignmentTarget`, `UserAssignmentInstance`, `UserAssignmentInstanceSource`, and `AuditLog` models. Enhanced `UserAssignmentInstance` with `last_reminder_sent_at` column for automated notification tracking. Added cascading soft-deletes and scheduled cleanup tasks.
 - **v1.8.0**: Content Engine SCORM 1.2 MVP. Added `Content`, `ContentTag`, `ContentCategory`, and `ContentAttempt` models. Associated `Lesson` model with optional SCORM `Content`. Mapped attempts directly to existing `UserAssignmentInstance`. Added `course_lessons`, `courses`, and `lessons` schemas documentation to Database index.
 - **v1.9.0**: Profiles & User Management Extensions. Added `ProfileFieldCategory`, `ProfileFieldDefinition`, `FieldEditableByRole`, `ProfileFieldValue`, and `NotificationPreference` models. Extended `User` with first/last names, profile picture, and last login. Added `mandatoryNotificationTypes` to `Company`. Added `EMAIL_CHANGE` token purpose and `pendingEmail` to `Token`.
-- **v1.10.0 (Current)**: Local MFA (TOTP). Added `mfaEnabled`, `mfaSecretEncrypted`, and `mfaEnabledAt` to `User`. Added `MfaRecoveryCode` table. Added `mfaPolicy` enum default `DISABLED` to `Company`. Added `MfaPolicyRole` join table. Added `MFA_CHALLENGE` to `TokenPurpose` enum.
+- **v1.10.0**: Local MFA (TOTP). Added `mfaEnabled`, `mfaSecretEncrypted`, and `mfaEnabledAt` to `User`. Added `MfaRecoveryCode` table. Added `mfaPolicy` enum default `DISABLED` to `Company`. Added `MfaPolicyRole` join table. Added `MFA_CHALLENGE` to `TokenPurpose` enum.
+- **v1.11.0 (Current)**: Microsoft Entra ID Integration Backend. Added `IdentityProviderConfig`, `EntraGroupSelection`, and `SyncLog` tables. Added `entraObjectId` and `profilePictureManuallySet` to `User` table. Added `syncSource` and `entraGroupId` to `OrganizationUnit` table. Added `SyncSource`, `IdentityProviderType`, `LoginMode`, `ImportStrategy`, `SyncStatus`, and `SyncTriggerType` enums.
+
 

@@ -11,6 +11,7 @@ import { TokenPurpose } from '@prisma/client';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 import { mandatoryAssignmentService } from '../../assignments/services/mandatoryAssignment.service';
 import { ProfileFieldValueService } from '../../profiles/services/profileFieldValue.service';
+import { issueSession } from '../services/sessionHelper';
 
 const router = Router();
 
@@ -59,58 +60,18 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
       }
     }
 
-    // Update last login timestamp
-    await prisma.user.update({
+    const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
     });
-
-    // Create session in the DB
-    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS); // 30 days
-    const session = await prisma.session.create({
-      data: {
-        userId: user.id,
-        expiresAt,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'] as string | undefined,
-      },
-    });
-
-    // Set HTTP-only session cookie
-    res.cookie('sid', session.id, {
-      httpOnly: true,
-      secure: true,
-      signed: true,
-      expires: expiresAt,
-      sameSite: 'lax',
-    });
-
-    let roleName: string | null = null;
-    let effectivePermissions: string[] = [];
-
-    if (user.isSuperuser) {
-      roleName = 'Superuser';
-    } else if (user.roleId) {
-      const role = await prisma.role.findUnique({
-        where: { id: user.roleId },
-      });
-      roleName = role ? role.name : null;
-      const permissions = await permissionResolverService.getEffectivePermissions(user.roleId);
-      effectivePermissions = permissions.map((p) => `${p.module}:${p.action}`);
+    if (!fullUser) {
+      throw new Error('User not found.');
     }
+
+    const sessionResult = await issueSession(fullUser, req, res);
 
     res.json({
       success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        isSuperuser: user.isSuperuser,
-        recoveryEmail: user.recoveryEmail,
-        companyId: user.companyId,
-        status: user.status,
-        roleName,
-        effectivePermissions,
-      },
+      user: sessionResult.user,
     });
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
@@ -149,7 +110,7 @@ router.post('/mfa/verify', loginRateLimiter.middleware, async (req: Request, res
 
     if (user.mfaSecretEncrypted) {
       try {
-        const { decrypt } = await import('../../../shared/crypto/mfaEncryption');
+        const { decrypt } = await import('../../../shared/crypto/encryption');
         const otplib = await import('otplib');
         const decryptedSecret = decrypt(user.mfaSecretEncrypted);
         const result = otplib.verifySync({

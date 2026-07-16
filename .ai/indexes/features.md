@@ -224,5 +224,34 @@ Every logged feature should eventually document:
 - **Events**: MFA resets or enrollment changes instantly invalidate active login credentials or require multi-stage prompts on subsequent authorization actions.
 - **Dependencies**: Prisma ORM, Node.js, Express, otplib, crypto
 
+### 15. Microsoft Entra ID Integration Engine (Fully Materialized Client-Server Feature Backend)
+- **Description**: Connects SmartCookie LMS to Microsoft Entra ID for full identity provider credential validation, connection tests, and automated group and user synchronization. Implements a dual-permission token validator, selective profile property overwrites based on dynamic sync-locking, soft-deletion reconciliation of missing users/groups, and automated lms-manager alert notifications on complete sync failures.
+- **Components**: None (Backend only this pass; frontend forms are follow-up scope)
+- **Pages**: None (Backend only this pass)
+- **Services**:
+  - `EntraSyncService` (`server/src/features/identity/services/entraSync.service.ts`)
+  - `EntraGraphClient` (`server/src/features/identity/providers/entraGraphClient.ts`)
+  - `EntraTokenValidator` (`server/src/features/identity/providers/entraTokenValidator.ts`)
+  - `VerifyTokenValidator` (`server/src/features/identity/providers/verifyTokenValidator.ts`)
+  - `EntraIdAuthProvider` (`server/src/features/identity/providers/entraId.provider.ts`)
+- **APIs**:
+  - `GET /api/identity-providers/entra` (Retrieve connection settings & groups metadata)
+  - `POST /api/identity-providers/entra` (Save/overwrite Entra credentials)
+  - `PATCH /api/identity-providers/entra` (Update login/import strategies and selected sync groups)
+  - `POST /api/identity-providers/entra/test-connection` (Validates tenant/client settings and Graph application roles)
+  - `POST /api/identity-providers/entra/sync-now` (Manual sync trigger)
+  - `GET /api/identity-providers/entra/sync-logs` (Paginated historical sync records list)
+  - `GET /api/identity-providers/entra/sync-logs/:id/download` (Download full sync errors JSON as text attachment)
+- **Database**: `identity_provider_configs`, `entra_group_selections`, `sync_logs`, `users` (`entraObjectId`, `profilePictureManuallySet`), `organization_units` (`syncSource`, `entraGroupId`)
+- **Permissions**:
+  - `identity-providers:view-config`
+  - `identity-providers:configure`
+  - `identity-providers:manual-sync`
+  - `identity-providers:view-logs`
+- **Routes**: `server/src/features/identity/routes/identityProvider.routes.ts`
+- **Events**: Critical sync failures automatically resolve managers holding `identity-providers:view-logs` and trigger automated HTML alerts via `EmailService`.
+- **Dependencies**: Prisma ORM, Node.js, Express, `node-fetch`, `@prisma/client`, `jsonwebtoken`
+
+
 
 

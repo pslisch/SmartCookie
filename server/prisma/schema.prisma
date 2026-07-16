@@ -52,7 +52,12 @@ model User {
   mfaEnabledAt        DateTime?  @map("mfa_enabled_at")
   mfaRecoveryCodes    MfaRecoveryCode[]
 
+  entraObjectId             String?    @map("entra_object_id")
+  profilePictureManuallySet Boolean    @default(false) @map("profile_picture_manually_set")
+  triggeredSyncLogs         SyncLog[]  @relation("SyncLogTriggerer")
+
   @@unique([isSuperuserUnique], name: "is_superuser_unique_idx")
+  @@unique([companyId, entraObjectId])
   @@map("users")
 }
 
@@ -100,6 +105,9 @@ model Company {
   profileFieldDefinitions    ProfileFieldDefinition[]
   mfaPolicy                  MfaPolicy                @default(DISABLED) @map("mfa_policy")
   mfaPolicyRoles             MfaPolicyRole[]
+  identityProviderConfigs    IdentityProviderConfig[]
+  entraGroupSelections       EntraGroupSelection[]
+  syncLogs                   SyncLog[]
 
   @@map("companies")
 }
@@ -119,6 +127,7 @@ model Role {
   permissions    RolePermission[]
   fieldEditables FieldEditableByRole[]
   mfaPolicyRoles MfaPolicyRole[]
+  identityProviderConfigs IdentityProviderConfig[]
 
   @@map("roles")
 }
@@ -172,6 +181,10 @@ model OrganizationUnit {
   assignmentTargets AssignmentTarget[]
   assignmentInstanceSources UserAssignmentInstanceSource[] @relation("SourceOrganizationUnit")
 
+  syncSource        SyncSource         @default(MANUAL) @map("sync_source")
+  entraGroupId      String?            @map("entra_group_id")
+
+  @@unique([companyId, entraGroupId])
   @@map("organization_units")
 }
 
@@ -651,4 +664,93 @@ model MfaPolicyRole {
   @@id([companyId, roleId])
   @@map("mfa_policy_roles")
 }
+
+enum SyncSource {
+  MANUAL
+  ENTRA_SYNC
+}
+
+enum IdentityProviderType {
+  LOCAL
+  MICROSOFT_ENTRA
+}
+
+enum LoginMode {
+  LOCAL_ONLY
+  MICROSOFT_ONLY
+  BOTH
+}
+
+enum ImportStrategy {
+  ALL_USERS
+  SELECTED_GROUPS
+  FIRST_LOGIN
+  SELECTED_GROUPS_AND_FIRST_LOGIN
+}
+
+enum SyncStatus {
+  SUCCESS
+  PARTIAL_FAILURE
+  FAILED
+  NEVER_RUN
+}
+
+enum SyncTriggerType {
+  SCHEDULED
+  MANUAL
+}
+
+model IdentityProviderConfig {
+  id                      String               @id @default(uuid())
+  companyId               String               @map("company_id")
+  company                 Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  providerType            IdentityProviderType @map("provider_type")
+  enabled                 Boolean              @default(false)
+  tenantId                String?              @map("tenant_id")
+  clientId                String?              @map("client_id")
+  clientSecretEncrypted   String?              @map("client_secret_encrypted")
+  redirectUri             String?              @map("redirect_uri")
+  loginMode               LoginMode            @default(BOTH) @map("login_mode")
+  importStrategy          ImportStrategy       @default(FIRST_LOGIN) @map("import_strategy")
+  defaultSyncedUserRoleId String?              @map("default_synced_user_role_id")
+  defaultSyncedUserRole   Role?                @relation(fields: [defaultSyncedUserRoleId], references: [id], onDelete: SetNull)
+  lastSyncAt              DateTime?            @map("last_sync_at")
+  lastSyncStatus          SyncStatus           @default(NEVER_RUN) @map("last_sync_status")
+  entraGroupSelections    EntraGroupSelection[]
+
+  @@unique([companyId, providerType])
+  @@map("identity_provider_configs")
+}
+
+model EntraGroupSelection {
+  id                       String                  @id @default(uuid())
+  companyId                String                  @map("company_id")
+  company                  Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  entraGroupId             String                  @map("entra_group_id")
+  entraGroupName           String                  @map("entra_group_name")
+  identityProviderConfigId String?                 @map("identity_provider_config_id")
+  identityProviderConfig   IdentityProviderConfig? @relation(fields: [identityProviderConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, entraGroupId])
+  @@map("entra_group_selections")
+}
+
+model SyncLog {
+  id                String          @id @default(uuid())
+  companyId         String          @map("company_id")
+  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  startedAt         DateTime        @default(now()) @map("started_at")
+  finishedAt        DateTime?       @map("finished_at")
+  status            SyncStatus      @map("status")
+  usersProcessed    Int             @default(0) @map("users_processed")
+  usersFailed       Int             @default(0) @map("users_failed")
+  groupsProcessed   Int             @default(0) @map("groups_processed")
+  errorDetails      Json?           @map("error_details")
+  triggeredBy       SyncTriggerType @map("triggered_by")
+  triggeredByUserId String?         @map("triggered_by_user_id")
+  triggeredByUser   User?           @relation("SyncLogTriggerer", fields: [triggeredByUserId], references: [id], onDelete: SetNull)
+
+  @@map("sync_logs")
+}
+
 

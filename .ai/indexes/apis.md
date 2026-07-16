@@ -634,5 +634,62 @@ Every documented endpoint logs:
 - **Used By**: Admin panel / User Management list
 - **Permissions**: Requires active session with `"users:edit"` permission (Superuser bypasses)
 
+### 78. Fetch Identity Provider Config
+- **Endpoint**: `/api/identity-providers/entra`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: Sanitized configuration containing `tenantId`, `clientId`, masked client secret, `loginMode`, `importStrategy`, and group selections.
+- **Used By**: Identity Providers configuration screen
+- **Permissions**: `identity-providers:view-config` (LMS Manager, Superuser, etc.)
+
+### 79. Test Identity Provider Connection
+- **Endpoint**: `/api/identity-providers/entra/test-connection`
+- **Method**: `POST`
+- **Request**: `{ tenantId, clientId, clientSecret }`
+- **Response**: `{ success: boolean, allGranted: boolean, permissions: Array<{ permission: string, status: string, explanation: string }> }`
+- **Used By**: Connection wizard test button
+- **Permissions**: `identity-providers:configure` (Superuser only)
+
+### 80. Save Identity Provider Config
+- **Endpoint**: `/api/identity-providers/entra`
+- **Method**: `POST`
+- **Request**: `{ tenantId, clientId, clientSecret }`
+- **Response**: `{ success: true, config: SanitizedConfig }`
+- **Used By**: Connection wizard save button
+- **Permissions**: `identity-providers:configure` (Superuser only)
+
+### 81. Update Identity Provider Settings
+- **Endpoint**: `/api/identity-providers/entra`
+- **Method**: `PATCH`
+- **Request**: `{ loginMode, importStrategy, defaultSyncedUserRoleId, groupSelections: Array<{ id: string, name: string }>, enabled }`
+- **Response**: `{ success: true, config: SanitizedConfig }`
+- **Used By**: Configuration sliders, dropdowns, and group selector
+- **Permissions**: `identity-providers:configure` (Superuser only)
+
+### 82. Trigger Manual Sync Now
+- **Endpoint**: `/api/identity-providers/entra/sync-now`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ status: SyncStatus, usersProcessed: number, usersFailed: number, groupsProcessed: number }`
+- **Used By**: "Sync Now" trigger button
+- **Permissions**: `identity-providers:manual-sync` (User Manager, etc.)
+
+### 83. Get Paginated Sync Logs
+- **Endpoint**: `/api/identity-providers/entra/sync-logs`
+- **Method**: `GET`
+- **Request**: URL query parameters `page` and `limit`
+- **Response**: Paginated sync logs `{ data: SyncLog[], pagination: { page, limit, total, totalPages } }`
+- **Used By**: Sync History table
+- **Permissions**: `identity-providers:view-logs` (LMS Manager, User Manager, etc.)
+
+### 84. Download Sync Log Details
+- **Endpoint**: `/api/identity-providers/entra/sync-logs/:id/download`
+- **Method**: `GET`
+- **Request**: None (returns downloadable txt attachment)
+- **Response**: Error logs txt file content
+- **Used By**: "Download Log" button
+- **Permissions**: `identity-providers:view-logs` (LMS Manager, User Manager, etc.)
+
+
 
 

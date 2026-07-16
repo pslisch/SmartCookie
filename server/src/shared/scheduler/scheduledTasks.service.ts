@@ -3,6 +3,7 @@ import { emailService } from '../email/email.service';
 import { permissionResolverService } from '../../features/rbac/services/permissionResolver.service';
 import crypto from 'crypto';
 import { NotificationType } from '@prisma/client';
+import { entraSyncService } from '../../features/identity/services/entraSync.service';
 
 async function shouldSendNotification(
   userId: string,
@@ -112,6 +113,7 @@ export class ScheduledTasksService {
     await this.purgeExpiredSoftDeletes();
     await this.purgeExpiredAssignments();
     await this.sendBasicReminders();
+    await this.runEntraSync();
     console.log('[Scheduler] All periodic tasks finished.');
   }
 
@@ -429,6 +431,61 @@ export class ScheduledTasksService {
       } catch (err) {
         console.error(`[Scheduler] Failed to send assignment reminder for instance ${instance.id} to ${instance.user.email}:`, err);
       }
+    }
+  }
+
+  async runEntraSync() {
+    console.log('[Scheduler] Checking if Entra Sync is due...');
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // Gate: is it past 03:00?
+    if (currentHour < 3) {
+      console.log(`[Scheduler] Entra sync skipped: current hour (${currentHour}) is before 03:00.`);
+      return;
+    }
+
+    try {
+      // Find all companies with an enabled MICROSOFT_ENTRA configuration
+      const configs = await prisma.identityProviderConfig.findMany({
+        where: {
+          providerType: 'MICROSOFT_ENTRA',
+          enabled: true,
+        },
+      });
+
+      const todayString = now.toDateString();
+
+      for (const config of configs) {
+        const companyId = config.companyId;
+
+        // Check if we already ran scheduled sync today for this company
+        const lastSync = await prisma.syncLog.findFirst({
+          where: {
+            companyId,
+            triggeredBy: 'SCHEDULED',
+          },
+          orderBy: {
+            startedAt: 'desc',
+          },
+        });
+
+        const alreadyRanToday = lastSync && lastSync.startedAt.toDateString() === todayString;
+
+        if (alreadyRanToday) {
+          console.log(`[Scheduler] Entra sync already ran today (${todayString}) for company: ${companyId}`);
+          continue;
+        }
+
+        console.log(`[Scheduler] Executing scheduled Entra sync for company: ${companyId}`);
+        try {
+          await entraSyncService.runSync(companyId, 'SCHEDULED');
+        } catch (err: any) {
+          console.error(`[Scheduler] Entra sync failed for company ${companyId}:`, err);
+        }
+      }
+    } catch (err: any) {
+      console.error('[Scheduler] Error in runEntraSync:', err);
     }
   }
 }
