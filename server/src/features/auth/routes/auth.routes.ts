@@ -36,8 +36,8 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
     }) : null;
 
     const isMfaRequired = user.mfaEnabled || 
-      (company && (company.mfaPolicy === 'ENFORCED' || (company.mfaPolicy as string) === 'EVERYONE')) ||
-      (company && (company.mfaPolicy === 'ROLE_BASED' || (company.mfaPolicy as string) === 'SELECTED_ROLES') && user.roleId && (await prisma.mfaPolicyRole.findUnique({
+      (company && company.mfaPolicy === 'ENFORCED') ||
+      (company && company.mfaPolicy === 'ROLE_BASED' && user.roleId && (await prisma.mfaPolicyRole.findUnique({
         where: { companyId_roleId: { companyId: company.id, roleId: user.roleId } }
       })) !== null);
 
