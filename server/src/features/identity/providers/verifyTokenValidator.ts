@@ -171,6 +171,26 @@ async function runTests() {
     );
   }
 
+  // --- TEST CASE 6: Wrong Tenant ID (tid) ---
+  try {
+    const wrongTidPayload = {
+      sub: 'user-sub-111',
+      oid: 'entra-oid-222',
+      tid: 'wrong-tenant-xyz',
+      aud: clientId,
+      iss: `https://login.microsoftonline.com/${tenantId}/v2.0`,
+      email: 'user@example.com',
+    };
+    const wrongTidToken = await generateToken(wrongTidPayload);
+    await validator.validate(wrongTidToken);
+    assert(false, 'Should reject token with mismatched tenant ID');
+  } catch (error: any) {
+    assert(
+      error.message.includes('Token tenant ID does not match configured tenant'),
+      `Should reject mismatched tenant ID. Got error: "${error.message}"`
+    );
+  }
+
   console.log('\n==================================================');
   console.log(`VERIFICATION SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log('==================================================');

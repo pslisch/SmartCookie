@@ -93,6 +93,11 @@ export class EntraTokenValidator {
       throw new Error(`Invalid token issuer: ${payload.iss}. Expected issuer for tenant ${this.tenantId}`);
     }
 
+    // Step 3b: Validate tenant ID (tid claim)
+    if (payload.tid !== this.tenantId) {
+      throw new Error('Token tenant ID does not match configured tenant');
+    }
+
     // Step 4: Ensure necessary claims are present
     if (!payload.sub) {
       throw new Error('Token is missing subject (sub) claim');

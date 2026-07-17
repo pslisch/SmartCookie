@@ -9,3 +9,8 @@ coverage/
 *.db
 *.sqlite
 
+# Non-npm lockfiles
+bun.lock
+bun.lockb
+yarn.lock
+pnpm-lock.yaml
