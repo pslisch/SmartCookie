@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
 import { 
   Info, CheckCircle2, XCircle, Copy, Check, ChevronRight, HelpCircle, 
@@ -17,6 +18,7 @@ interface EntraSetupProps {
 }
 
 export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
+  const { t } = useTranslation();
   const [subStep, setSubStep] = useState<1 | 2 | 3 | 4>(1);
   const [loginMode, setLoginMode] = useState<'LOCAL_ONLY' | 'MICROSOFT_ONLY' | 'BOTH'>('BOTH');
   const [tenantId, setTenantId] = useState('');
@@ -49,7 +51,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
 
   const handleTestConnection = async () => {
     if (!tenantId.trim() || !clientId.trim() || !clientSecret.trim()) {
-      setErrorMsg('All connection credentials are required to test.');
+      setErrorMsg(t('setupWizard.entra.errors.credentialsRequired'));
       return;
     }
     setErrorMsg('');
@@ -85,7 +87,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       setTestResult({
         success: false,
         allGranted: false,
-        error: err.message || 'Failed to complete connection test.'
+        error: err.message || t('setupWizard.entra.errors.handshakeFailed')
       });
     } finally {
       setTesting(false);
@@ -99,7 +101,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       try {
         await onSkip();
       } catch (err: any) {
-        setErrorMsg(err.message || 'Failed to complete setup choice.');
+        setErrorMsg(err.message || t('setupWizard.entra.errors.failedToCompleteChoice'));
       } finally {
         setSaving(false);
       }
@@ -119,7 +121,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
         clientSecret: clientSecret.trim()
       });
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to save identity provider settings.');
+      setErrorMsg(err.message || t('setupWizard.entra.errors.failedToSave'));
     } finally {
       setSaving(false);
     }
@@ -130,7 +132,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
     try {
       await onSkip();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to skip identity provider step.');
+      setErrorMsg(err.message || t('setupWizard.entra.errors.failedToSkip'));
     } finally {
       setSaving(false);
     }
@@ -149,9 +151,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       {subStep === 1 && (
         <div className="space-y-5" id="entra-step-1">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Choose Identity Setup</h3>
+            <h3 className="text-base font-bold text-slate-900">{t('setupWizard.entra.modeTitle')}</h3>
             <p className="text-xs text-slate-500 mt-1">
-              Select how your employees and administrators will sign in to SmartCookie.
+              {t('setupWizard.entra.modeSubtitle')}
             </p>
           </div>
 
@@ -168,9 +170,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
               />
               <div>
-                <span className="block text-sm font-semibold text-slate-800">Microsoft Entra ID + Local Password (Recommended)</span>
+                <span className="block text-sm font-semibold text-slate-800">{t('setupWizard.entra.modeBothTitle')}</span>
                 <span className="block text-xs text-slate-500 mt-0.5">
-                  Allows users to authenticate seamlessly with their company Microsoft 365 / Entra accounts, while retaining secure local recovery options.
+                  {t('setupWizard.entra.modeBothDesc')}
                 </span>
               </div>
             </label>
@@ -187,9 +189,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
               />
               <div>
-                <span className="block text-sm font-semibold text-slate-800">Microsoft Entra ID Only (Strict SSO)</span>
+                <span className="block text-sm font-semibold text-slate-800">{t('setupWizard.entra.modeMicrosoftOnlyTitle')}</span>
                 <span className="block text-xs text-slate-500 mt-0.5">
-                  Forces all login attempts through your corporate Microsoft single sign-on screen. Standard passwords will be disabled.
+                  {t('setupWizard.entra.modeMicrosoftOnlyDesc')}
                 </span>
               </div>
             </label>
@@ -206,9 +208,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
               />
               <div>
-                <span className="block text-sm font-semibold text-slate-800">Local Accounts Only (Skip SSO Setup)</span>
+                <span className="block text-sm font-semibold text-slate-800">{t('setupWizard.entra.modeLocalOnlyTitle')}</span>
                 <span className="block text-xs text-slate-500 mt-0.5">
-                  Users sign in using email invitations and secure custom passwords. Choose this to skip setting up Microsoft integration now.
+                  {t('setupWizard.entra.modeLocalOnlyDesc')}
                 </span>
               </div>
             </label>
@@ -221,14 +223,14 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
               className="flex-1 inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ChevronRight className="h-4 w-4 mr-1.5" />}
-              {loginMode === 'LOCAL_ONLY' ? 'Confirm & Skip Entra' : 'Continue to Connection Settings'}
+              {loginMode === 'LOCAL_ONLY' ? t('setupWizard.entra.confirmSkipBtn') : t('setupWizard.entra.continueBtn')}
             </button>
             <button
               onClick={handleSkipFlow}
               disabled={saving}
               className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
             >
-              Skip Step
+              {t('setupWizard.entra.skipStepBtn')}
             </button>
           </div>
         </div>
@@ -241,41 +243,41 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
           <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-xs space-y-3.5 text-slate-700">
             <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-2">
               <Globe className="h-4 w-4 text-blue-600" />
-              <span>Microsoft Entra ID App Registration Guide</span>
+              <span>{t('setupWizard.entra.guideTitle')}</span>
             </div>
 
             <ol className="list-decimal pl-4 space-y-2 text-slate-600 leading-relaxed">
               <li>
-                Navigate to the <a href="https://entra.microsoft.com" target="_blank" rel="noreferrer" className="text-blue-600 font-medium underline">Microsoft Entra Admin Center</a>.
+                {t('setupWizard.entra.guideStep1_1')} <a href="https://entra.microsoft.com" target="_blank" rel="noreferrer" className="text-blue-600 font-medium underline">{t('setupWizard.entra.guideStep1_2')}</a>.
               </li>
               <li>
-                Go to <span className="font-semibold text-slate-800">Identity &gt; Applications &gt; App registrations</span>, then click <span className="font-semibold text-slate-800">New registration</span>.
+                {t('setupWizard.entra.guideStep2_1')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep2_2')}</span>{t('setupWizard.entra.guideStep2_3')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep2_4')}</span>.
               </li>
               <li>
-                Provide a name (e.g., <span className="font-mono text-blue-700">SmartCookie LMS</span>) and select <span className="font-semibold text-slate-800">Single tenant</span> or multi-tenant as fits your company.
+                {t('setupWizard.entra.guideStep3_1')} <span className="font-mono text-blue-700">{t('setupWizard.entra.guideStep3_2')}</span>{t('setupWizard.entra.guideStep3_3')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep3_4')}</span> {t('setupWizard.entra.guideStep3_5')}
               </li>
               <li>
-                Under <span className="font-semibold text-slate-800">Redirect URI</span>, select <span className="font-semibold text-slate-800">Web</span> and paste the exact value shown below.
+                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep4_2')}</span>{t('setupWizard.entra.guideStep4_3')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep4_4')}</span> {t('setupWizard.entra.guideStep4_5')}
               </li>
               <li>
-                Under <span className="font-semibold text-slate-800">Certificates & secrets</span>, create a new client secret. Copy the secret <span className="italic text-rose-700 font-semibold">Value</span> immediately (it is only shown once).
+                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep5_1')}</span>{t('setupWizard.entra.guideStep5_2')} <span className="italic text-rose-700 font-semibold">{t('setupWizard.entra.guideStep5_3')}</span> {t('setupWizard.entra.guideStep5_4')}
               </li>
               <li>
-                Under <span className="font-semibold text-slate-800">API permissions</span>, click <span className="font-semibold text-slate-800">Add a permission</span>, choose <span className="font-semibold text-slate-800">Microsoft Graph</span>:
+                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep6_1')}</span>{t('setupWizard.entra.guideStep6_2')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep6_3')}</span>{t('setupWizard.entra.guideStep6_4')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep6_5')}</span>:
                 <ul className="list-disc pl-4 mt-1 space-y-0.5 text-[11px] text-slate-500">
-                  <li><span className="font-semibold text-slate-700">Delegated Permissions:</span> User.Read (default)</li>
-                  <li><span className="font-semibold text-slate-700">Application Permissions:</span> User.Read.All, Group.Read.All</li>
+                  <li><span className="font-semibold text-slate-700">{t('setupWizard.entra.guideStep6_6')}</span> {t('setupWizard.entra.guideStep6_7')}</li>
+                  <li><span className="font-semibold text-slate-700">{t('setupWizard.entra.guideStep6_8')}</span> {t('setupWizard.entra.guideStep6_9')}</li>
                 </ul>
               </li>
               <li>
-                <span className="font-bold text-rose-700">CRITICAL ACTION:</span> Click <span className="font-bold text-slate-800">"Grant admin consent for [Your Tenant]"</span>. Your background directory synchronization will fail until consent is explicitly granted.
+                <span className="font-bold text-rose-700">{t('setupWizard.entra.guideStep7_1')}</span> Click <span className="font-bold text-slate-800">{t('setupWizard.entra.guideStep7_2')}</span>{t('setupWizard.entra.guideStep7_3')}
               </li>
             </ol>
           </div>
 
           {/* COPY REDIRECT URI BLOCK */}
           <div className="rounded-xl border border-blue-100 bg-blue-50/20 p-4 space-y-2">
-            <span className="block text-xs font-bold text-blue-900 uppercase tracking-wider">Redirect Callback URI for Microsoft Entra</span>
+            <span className="block text-xs font-bold text-blue-900 uppercase tracking-wider">{t('setupWizard.entra.redirectUriTitle')}</span>
             <div className="flex items-center space-x-2">
               <input
                 type="text"
@@ -287,7 +289,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 type="button"
                 onClick={copyToClipboard}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                title="Copy Redirect URI"
+                title={t('setupWizard.entra.copyRedirectTooltip')}
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </button>
@@ -298,7 +300,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="tenant-id">
-                Directory (Tenant) ID
+                {t('setupWizard.entra.tenantIdLabel')}
               </label>
               <input
                 type="text"
@@ -313,7 +315,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="client-id">
-                Application (Client) ID
+                {t('setupWizard.entra.clientIdLabel')}
               </label>
               <input
                 type="text"
@@ -328,7 +330,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="client-secret">
-                Client Secret (Value)
+                {t('setupWizard.entra.clientSecretLabel')}
               </label>
               <div className="relative">
                 <input
@@ -357,21 +359,21 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
               className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Back
+              {t('setupWizard.entra.backBtn')}
             </button>
             <button
               onClick={() => setSubStep(3)}
               disabled={!tenantId.trim() || !clientId.trim() || !clientSecret.trim()}
               className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              Continue to Validation
+              {t('setupWizard.entra.continueValidationBtn')}
               <ArrowRight className="h-4 w-4 ml-1.5" />
             </button>
             <button
               onClick={handleSkipFlow}
               className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
             >
-              Skip
+              {t('setupWizard.entra.skipBtn')}
             </button>
           </div>
         </div>
@@ -381,19 +383,19 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       {subStep === 3 && (
         <div className="space-y-6" id="entra-step-3">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Validate Connections & Permissions</h3>
+            <h3 className="text-base font-bold text-slate-900">{t('setupWizard.entra.validateTitle')}</h3>
             <p className="text-xs text-slate-500 mt-1">
-              Before saving, let's verify if your Microsoft Graph credentials and Admin Consents are successfully configured.
+              {t('setupWizard.entra.validateSubtitle')}
             </p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-xs space-y-2 text-slate-600">
             <div className="flex justify-between">
-              <span className="font-semibold text-slate-700">Target Tenant:</span>
+              <span className="font-semibold text-slate-700">{t('setupWizard.entra.targetTenantLabel')}</span>
               <span className="font-mono">{tenantId}</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-semibold text-slate-700">Target Client ID:</span>
+              <span className="font-semibold text-slate-700">{t('setupWizard.entra.targetClientIdLabel')}</span>
               <span className="font-mono">{clientId}</span>
             </div>
           </div>
@@ -401,9 +403,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
           {!testResult && !testing && (
             <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
               <HelpCircle className="h-10 w-10 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-700">Ready to test connection</p>
+              <p className="text-sm font-semibold text-slate-700">{t('setupWizard.entra.readyToTestTitle')}</p>
               <p className="text-xs text-slate-500 mt-0.5 px-6">
-                Clicking the button will initiate an OAuth client handshake using Microsoft Graph API to read token metadata.
+                {t('setupWizard.entra.readyToTestDesc')}
               </p>
             </div>
           )}
@@ -412,8 +414,8 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             <div className="flex flex-col items-center justify-center py-8 bg-slate-50 border border-slate-100 rounded-xl space-y-3">
               <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
               <div className="text-center">
-                <p className="text-sm font-semibold text-slate-800">Contacting Microsoft Graph API...</p>
-                <p className="text-xs text-slate-500">Checking scopes and delegated token capabilities</p>
+                <p className="text-sm font-semibold text-slate-800">{t('setupWizard.entra.testingTitle')}</p>
+                <p className="text-xs text-slate-500">{t('setupWizard.entra.testingSubtitle')}</p>
               </div>
             </div>
           )}
@@ -424,9 +426,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 <div className="rounded-xl border border-emerald-100 bg-emerald-50/20 p-4 flex items-start space-x-3">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-bold text-emerald-900">Connection Handshake Successful</h4>
+                    <h4 className="text-sm font-bold text-emerald-900">{t('setupWizard.entra.handshakeSuccessTitle')}</h4>
                     <p className="text-xs text-emerald-700 mt-0.5">
-                      Your credentials are valid. We successfully received and parsed an authorization token from Microsoft Entra.
+                      {t('setupWizard.entra.handshakeSuccessDesc')}
                     </p>
                   </div>
                 </div>
@@ -434,9 +436,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 <div className="rounded-xl border border-rose-100 bg-rose-50/20 p-4 flex items-start space-x-3">
                   <XCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-bold text-rose-900">Handshake Failed</h4>
+                    <h4 className="text-sm font-bold text-rose-900">{t('setupWizard.entra.handshakeFailedTitle')}</h4>
                     <p className="text-xs text-rose-700 mt-0.5">
-                      {testResult.error || 'The connection could not be established. Please verify your Tenant ID, Client ID, and Secret.'}
+                      {testResult.error || t('setupWizard.entra.handshakeFailedDesc')}
                     </p>
                   </div>
                 </div>
@@ -444,7 +446,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
 
               {testResult.permissions && (
                 <div className="space-y-3">
-                  <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Required API Scopes Checked</span>
+                  <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">{t('setupWizard.entra.scopesCheckedTitle')}</span>
                   <div className="space-y-2.5">
                     {testResult.permissions.map((p, idx) => (
                       <div key={idx} className="rounded-xl border border-slate-150 p-3 bg-white space-y-1.5">
@@ -475,7 +477,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
               className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Back
+              {t('setupWizard.entra.backBtn')}
             </button>
             <button
               onClick={handleTestConnection}
@@ -483,14 +485,14 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
               className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors disabled:opacity-50"
             >
               {testing ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
-              Run Validation Test
+              {t('setupWizard.entra.runValidationTestBtn')}
             </button>
             {testResult?.success && (
               <button
                 onClick={() => setSubStep(4)}
                 className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
               >
-                Next
+                {t('setupWizard.entra.nextBtn')}
                 <ArrowRight className="h-4 w-4 ml-1.5" />
               </button>
             )}
@@ -498,7 +500,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
               onClick={handleSkipFlow}
               className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
             >
-              Skip
+              {t('setupWizard.entra.skipBtn')}
             </button>
           </div>
         </div>
@@ -508,15 +510,15 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       {subStep === 4 && (
         <div className="space-y-6" id="entra-step-4">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Configure Sync & Attribute Mapping</h3>
+            <h3 className="text-base font-bold text-slate-900">{t('setupWizard.entra.mappingTitle')}</h3>
             <p className="text-xs text-slate-500 mt-1">
-              Finalize synchronization behaviors and view how Microsoft user profiles are translated.
+              {t('setupWizard.entra.mappingSubtitle')}
             </p>
           </div>
 
           {/* Sync Strategy Choice */}
           <div className="space-y-3">
-            <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">User Import Strategy</span>
+            <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">{t('setupWizard.entra.importStrategyTitle')}</span>
             
             <div className="space-y-2">
               <label className="flex items-start space-x-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors cursor-pointer">
@@ -529,9 +531,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                   className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="block text-xs font-bold text-slate-800">On-Demand Provisioning (First Login)</span>
+                  <span className="block text-xs font-bold text-slate-800">{t('setupWizard.entra.strategyFirstLoginTitle')}</span>
                   <span className="block text-[11px] text-slate-500 mt-0.5">
-                    User accounts are automatically provisioned the first time they log in via Microsoft SSO.
+                    {t('setupWizard.entra.strategyFirstLoginDesc')}
                   </span>
                 </div>
               </label>
@@ -546,9 +548,9 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                   className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="block text-xs font-bold text-slate-800">Full Directory Synchronization</span>
+                  <span className="block text-xs font-bold text-slate-800">{t('setupWizard.entra.strategyAllUsersTitle')}</span>
                   <span className="block text-[11px] text-slate-500 mt-0.5">
-                    Automatically syncs all Microsoft Entra users down into the SmartCookie local directory on a recurring cycle.
+                    {t('setupWizard.entra.strategyAllUsersDesc')}
                   </span>
                 </div>
               </label>
@@ -559,49 +561,49 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
           <div className="space-y-2.5">
             <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
               <Info className="h-4 w-4 text-blue-600" />
-              <span>Microsoft-to-LMS Attribute Mapping</span>
+              <span>{t('setupWizard.entra.attributeMappingTitle')}</span>
             </div>
 
             <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="p-3">Microsoft Entra field</th>
-                    <th className="p-3">SmartCookie field</th>
-                    <th className="p-3">Fallback Behavior</th>
+                    <th className="p-3">{t('setupWizard.entra.tableHeadEntra')}</th>
+                    <th className="p-3">{t('setupWizard.entra.tableHeadLocal')}</th>
+                    <th className="p-3">{t('setupWizard.entra.tableHeadFallback')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                   <tr>
                     <td className="p-3 font-mono text-blue-600 font-semibold">userPrincipalName</td>
-                    <td className="p-3 font-bold text-slate-800">Username</td>
-                    <td className="p-3 text-slate-400 italic">None (Required)</td>
+                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldUsername')}</td>
+                    <td className="p-3 text-slate-400 italic">{t('setupWizard.entra.tableFallbackNone')}</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-mono text-blue-600 font-semibold">mail</td>
-                    <td className="p-3 font-bold text-slate-800">Primary Email</td>
-                    <td className="p-3 text-slate-500">Falls back to UPN</td>
+                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldEmail')}</td>
+                    <td className="p-3 text-slate-500">{t('setupWizard.entra.tableFallbackUpn')}</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-mono text-blue-600 font-semibold">givenName</td>
-                    <td className="p-3 font-bold text-slate-800">First Name</td>
-                    <td className="p-3 text-slate-500">Defaults to username</td>
+                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldFirstName')}</td>
+                    <td className="p-3 text-slate-500">{t('setupWizard.entra.tableFallbackUsername')}</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-mono text-blue-600 font-semibold">surname</td>
-                    <td className="p-3 font-bold text-slate-800">Last Name</td>
-                    <td className="p-3 text-slate-500">Empty string</td>
+                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldLastName')}</td>
+                    <td className="p-3 text-slate-500">{t('setupWizard.entra.tableFallbackEmpty')}</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-mono text-blue-600 font-semibold">department</td>
-                    <td className="p-3 font-bold text-slate-800">Organizational Unit</td>
-                    <td className="p-3 text-slate-500">Assigned to Root OU</td>
+                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldOu')}</td>
+                    <td className="p-3 text-slate-500">{t('setupWizard.entra.tableFallbackRoot')}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p className="text-[10px] text-slate-400 leading-normal">
-              These mappings are standardized according to enterprise SCIM/OIDC guidelines to ensure consistent, clean directory sync logic, and cannot be custom modified.
+              {t('setupWizard.entra.attributeMappingFooter')}
             </p>
           </div>
 
@@ -612,7 +614,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
               className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Back
+              {t('setupWizard.entra.backBtn')}
             </button>
             <button
               onClick={handleFinalSave}
@@ -620,13 +622,13 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
               className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
-              Save Configuration & Finish
+              {t('setupWizard.entra.saveAndFinishBtn')}
             </button>
             <button
               onClick={handleSkipFlow}
               className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
             >
-              Skip
+              {t('setupWizard.entra.skipBtn')}
             </button>
           </div>
         </div>

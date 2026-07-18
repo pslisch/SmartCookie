@@ -82,6 +82,20 @@ if grep -q "^SESSION_SECRET=\"some-long-random-string" .env; then
     echo_info "Generated a random security SESSION_SECRET inside .env."
 fi
 
+# Also replace placeholder ENCRYPTION_KEY if it has default value
+if grep -q "^ENCRYPTION_KEY=\"some-long-random-string" .env; then
+    RAND_ENC_KEY=$(openssl rand -hex 32)
+    sed -i "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY=\"$RAND_ENC_KEY\"|g" .env
+    echo_info "Generated a random security ENCRYPTION_KEY inside .env."
+fi
+
+# Also replace placeholder MFA_ENCRYPTION_KEY if it has default value
+if grep -q "^MFA_ENCRYPTION_KEY=\"some-long-random-string" .env; then
+    RAND_MFA_KEY=$(openssl rand -hex 32)
+    sed -i "s|^MFA_ENCRYPTION_KEY=.*|MFA_ENCRYPTION_KEY=\"$RAND_MFA_KEY\"|g" .env
+    echo_info "Generated a random security MFA_ENCRYPTION_KEY inside .env."
+fi
+
 # Secure the .env file permissions
 chmod 600 .env
 
