@@ -16,11 +16,10 @@ echo "          SmartCookie Deployment Pre-flight Checks  "
 echo "===================================================="
 
 DOMAIN="$1"
-MAIL_MODE="${2:-new}"
 
 if [ -z "$DOMAIN" ]; then
     echo_error "No domain name provided."
-    echo "Usage: $0 <domain-name> [new|existing]"
+    echo "Usage: $0 <domain-name>"
     exit 1
 fi
 
@@ -46,11 +45,7 @@ fi
 echo_success "Running as user '$(whoami)' with sudo privileges."
 
 # 2. Confirm required commands exist
-if [ "$MAIL_MODE" = "existing" ]; then
-    REQUIRED_CMDS=(node npm mysql apache2ctl certbot git ufw)
-else
-    REQUIRED_CMDS=(node npm mysql apache2ctl docker certbot git ufw)
-fi
+REQUIRED_CMDS=(node npm mysql apache2ctl certbot git ufw)
 MISSING_CMDS=()
 
 for cmd in "${REQUIRED_CMDS[@]}"; do
@@ -58,18 +53,6 @@ for cmd in "${REQUIRED_CMDS[@]}"; do
         MISSING_CMDS+=("$cmd")
     fi
 done
-
-# Check docker compose specifically if on new path
-if [ "$MAIL_MODE" != "existing" ]; then
-    HAS_DOCKER_COMPOSE=false
-    if docker compose version >/dev/null 2>&1; then
-        HAS_DOCKER_COMPOSE=true
-    elif command -v docker-compose >/dev/null 2>&1; then
-        HAS_DOCKER_COMPOSE=true
-    else
-        MISSING_CMDS+=("docker compose")
-    fi
-fi
 
 if [ ${#MISSING_CMDS[@]} -ne 0 ]; then
     echo_error "The following required tools/commands are missing on this server:"
@@ -81,43 +64,12 @@ if [ ${#MISSING_CMDS[@]} -ne 0 ]; then
     echo "Example (on Ubuntu):"
     echo "  sudo apt update"
     echo "  sudo apt install -y nodejs npm mariadb-server apache2 certbot git ufw"
-    if [ "$MAIL_MODE" != "existing" ]; then
-        echo "  # Install Docker per official Docker instructions for Ubuntu."
-    fi
     echo "----------------------------------------------------"
     exit 1
 fi
 echo_success "All required command-line tools are installed."
 
-# 3. Test outbound port 25 (critical SMTP check if on new mail server path)
-if [ "$MAIL_MODE" != "existing" ]; then
-    echo_info "Testing outbound connectivity on port 25 (SMTP)..."
-    # We try to connect to smtp.gmail.com on port 25 with a 5-second timeout
-    if timeout 5 bash -c 'cat < /dev/null > /dev/tcp/smtp.gmail.com/25' 2>/dev/null; then
-        echo_success "Outbound SMTP port 25 is OPEN."
-    else
-        echo_error "Outbound port 25 (SMTP) is BLOCKED by your VPS provider or firewall."
-        echo "========================================================================="
-        echo "                      CRITICAL ACTION REQUIRED                           "
-        echo "========================================================================="
-        echo "SmartCookie uses Postal as an SMTP relay to send transactional emails."
-        echo "Many VPS providers (DigitalOcean, Linode, Vultr, Hetzner, AWS, GCP, etc.)"
-        echo "block outbound port 25 by default to prevent spam."
-        echo ""
-        echo "INSTRUCTIONS:"
-        echo "1. Log in to your VPS provider's control panel."
-        echo "2. Open a support ticket / request to unblock outbound port 25."
-        echo "3. Explain that you are deploying a private, authenticated mail server"
-        echo "   (Postal) for transactional system notifications."
-        echo "4. Once they confirm it has been opened, re-run this pre-flight script."
-        echo "========================================================================="
-        exit 1
-    fi
-else
-    echo_info "Connecting to an existing mail server. Skipping outbound port 25 SMTP check."
-fi
-
-# 4. Confirm the provided domain's DNS A record actually resolves to this server's public IP
+# 3. Confirm the provided domain's DNS A record actually resolves to this server's public IP
 echo_info "Retrieving server's public IP and validating DNS record for '$DOMAIN'..."
 PUBLIC_IP=$(curl -s --max-time 5 https://api.ipify.org || curl -s --max-time 5 https://ifconfig.me || echo "")
 

@@ -60,4 +60,10 @@ Each reusable service should include:
 - **Consumers**: Microsoft Entra ID integration backend services, sync routines, and verification routes
 - **Dependencies**: global fetch, Node.js buffer utilities
 
+### 10. EmailService
+- **Purpose**: Handles rendering and transmission of transaction notification emails, using database-defined company-specific SMTP settings first with secure decryption, falling back to process.env config if not defined.
+- **Consumers**: Auth routes, user invitation service, user management service, profile service, scheduled tasks service
+- **Dependencies**: Prisma, nodemailer, encryption
+
+
 

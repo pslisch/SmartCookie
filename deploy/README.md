@@ -1,29 +1,18 @@
 # SmartCookie LMS - Production Server Installation Tooling
 
-This directory contains the automated, idempotent tooling and documentation necessary to deploy **SmartCookie LMS** on a dedicated Ubuntu VPS behind an Apache reverse proxy, with support for either a fully isolated self-hosted **Postal Mail Server** container stack or connecting to an **existing SMTP mail server**.
+This directory contains the automated, idempotent tooling and documentation necessary to deploy **SmartCookie LMS** on a dedicated Ubuntu VPS behind an Apache reverse proxy.
 
 ---
 
 ## 🚀 The One-Command Installer (Recommended)
 
-To run the entire installation, run the master orchestrator script. It prompts you up-front to choose between installing a new self-hosted mail server (Postal) or connecting to an existing SMTP server:
+To run the entire installation, run the master orchestrator script. It automates system diagnostics, database provisioning, application dependency compilation, Apache reverse proxy routing, Certbot SSL certificate retrieval, and background service setup:
 
 ```bash
-sudo ./deploy/install.sh yourdomain.com
+sudo ./deploy/install.sh yourdomain.com [your-email@example.com]
 ```
 
-### 🛣️ Dual Setup Branches
-
-#### Path A: Set up new self-hosted mail server (Postal)
-* **Pre-flight Check:** Automatically verifies your VPS provider does not block outbound port 25.
-* **Service Setup:** Installs, bootstraps, and starts the containerized Postal mail server.
-* **DNS Guide:** Generates a tailored `deploy/DNS_SETUP.md` with base64-encoded DKIM, SPF, and DMARC records.
-* **Manual Checkpoint:** Pauses for DNS propagation and to let you retrieve the newly generated Postal SMTP credentials before wiring them.
-
-#### Path B: Connect existing external mail server
-* **Pre-flight Check:** Skips Port 25 outbound test and Docker checks entirely (meaningfully faster, no external dependencies).
-* **Live Validation:** Prompts for your SMTP credentials and runs a real SMTP connection test (session handshake and auth) to fail loudly on typos or firewalls.
-* **Zero Delay:** Directly writes verified settings to `.env` and restarts the systemd service. Reaches a fully working instance in one uninterrupted pass!
+Once completed, you do not need to configure anything on the command line. Instead, simply navigate to your domain in the web browser, where the interactive **Setup Wizard** will guide you through setting up your root superuser, Multi-Factor Authentication, company profile, and your external SMTP mail configurations (fully validated and securely stored in the database).
 
 ---
 
@@ -69,8 +58,7 @@ sudo /opt/smartcookie/deploy/uninstall.sh
   - Disables and removes the Apache `smartcookie.conf` site configuration.
   - Deletes `/opt/smartcookie` and all temporary files.
 * **Preservation Scope (What is Preserved):**
-  - **Postal Mail Server container stack is left completely untouched**, allowing it to serve as a standalone, persistent mail service.
-  - Shared services like MySQL, Apache, Node.js, Docker, and firewall (ufw) rules remain completely unaffected.
+  - Shared services like MySQL, Apache, Node.js, and firewall (ufw) rules remain completely unaffected.
 
 ---
 
@@ -81,10 +69,9 @@ If you prefer to run each script individually, or need to troubleshoot a specifi
 ### 1️⃣ `deploy/00-preflight.sh`
 Performs verification checks on your VPS:
 * Confirms standard user with `sudo` access is executing the script (prevents raw `root` over-reach).
-* Verifies mandatory CLI tools exist (omits `docker` requirement if on `existing` mail server path).
-* **Outbound Port 25 Check:** If deploying a new mail server, attempts to connect to Google SMTP on port 25 to check for VPS provider port blocks. Bypassed entirely for existing mail clients.
-* Verifies domain DNS A record resolution.
-* **Run command:** `sudo ./deploy/00-preflight.sh yourdomain.com [new|existing]`
+* Verifies mandatory CLI tools exist.
+* Verifies domain DNS A record resolution matches the public IP to ensure Certbot Let's Encrypt certificates resolve successfully.
+* **Run command:** `sudo ./deploy/00-preflight.sh yourdomain.com`
 
 ### 2️⃣ `deploy/01-setup-database.sh`
 Configures the host MySQL/MariaDB database:
@@ -117,24 +104,11 @@ Integrates the systemd system service:
 * Configures autostart on system boot and automatic restart on crash/failure.
 * **Run command:** `sudo ./deploy/04-setup-service.sh`
 
-### 6️⃣ `deploy/05-setup-mail.sh`
-Configures SMTP credentials or installs self-hosted mail:
-* **new (Postal):** Clones Postal installer, boots MariaDB Docker on port 3307, bootstraps and initializes Postal config, starts Postal services.
-* **existing:** Interactively prompts for Host, Port, Username, Password, and From-Address, runs live nodemailer connection check, and writes verified settings directly to `.env`.
-* **Run command:** `sudo ./deploy/05-setup-mail.sh yourdomain.com [new|existing]`
-
-### 7️⃣ `deploy/06-generate-dns-guide.sh`
-Generates a custom registrar guide (only applicable for new self-hosted Postal setups):
-* Connects to the Postal database and extracts the domain's real private DKIM key.
-* Dynamically derives the matching public RSA key for registrar TXT records.
-* Writes a comprehensive DNS records guide to `deploy/DNS_SETUP.md`.
-* **Run command:** `sudo ./deploy/06-generate-dns-guide.sh yourdomain.com`
-
 ---
 
 ## 🔄 Idempotency & Safe Re-Runs
 
 Every single script is written to be **fully idempotent**. If any script fails or is terminated:
-1. Fix the underlying problem (e.g., install a missing dependency or request VPS provider to open port 25).
+1. Fix the underlying problem (e.g., install a missing dependency).
 2. Re-run the script or re-run `sudo ./deploy/install.sh yourdomain.com`.
 3. The scripts will detect what is already configured (e.g., existing `.env` credentials, existing Apache configurations, or active database containers) and will safely skip over them without losing data or producing destructive conflicts.

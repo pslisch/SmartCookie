@@ -3,7 +3,7 @@ import { emailPasswordAuthProvider } from './auth.service';
 import { seedSuperuserRoles } from '../../../../prisma/seed/rbacSeed';
 import { roleTemplatesService } from '../../rbac/services/roleTemplates.service';
 
-export type SetupStep = 'superuser' | 'superuser-mfa' | 'company' | 'org-structure' | 'role-templates' | 'complete';
+export type SetupStep = 'superuser' | 'superuser-mfa' | 'company' | 'mail-config' | 'identity-provider' | 'org-structure' | 'role-templates' | 'complete';
 
 export class SetupWizardService {
   /**
@@ -11,6 +11,8 @@ export class SetupWizardService {
    * - no superuser row → step "superuser"
    * - superuser exists but MFA not enabled → step "superuser-mfa"
    * - superuser exists and MFA enabled but no company is linked/exists → step "company"
+   * - mail-config is null/incomplete -> step "mail-config"
+   * - identity-provider is null/incomplete -> step "identity-provider"
    * - company exists but org-structure is not completed → step "org-structure"
    * - company exists but Company.setupCompletedAt is null → step "role-templates"
    * - setupCompletedAt is present → "complete"
@@ -30,6 +32,14 @@ export class SetupWizardService {
     const company = await prisma.company.findFirst();
     if (!company) {
       return 'company';
+    }
+
+    if (!company.mailConfigStepCompletedAt) {
+      return 'mail-config';
+    }
+
+    if (!company.identityProviderStepCompletedAt) {
+      return 'identity-provider';
     }
 
     // Check if org-structure step is complete
@@ -174,6 +184,12 @@ export class SetupWizardService {
     if (status === 'company') {
       throw new Error('Company must be set up before completing organization setup.');
     }
+    if (status === 'mail-config') {
+      throw new Error('Email configuration must be completed or skipped before completing organization setup.');
+    }
+    if (status === 'identity-provider') {
+      throw new Error('Identity provider configuration must be completed or skipped before completing organization setup.');
+    }
 
     // Create the top-level OUs
     for (const name of ouNames) {
@@ -219,6 +235,12 @@ export class SetupWizardService {
     }
     if (status === 'company') {
       throw new Error('Company must be set up before completing the role templates step.');
+    }
+    if (status === 'mail-config') {
+      throw new Error('Email configuration must be completed or skipped before completing the role templates step.');
+    }
+    if (status === 'identity-provider') {
+      throw new Error('Identity provider configuration must be completed or skipped before completing the role templates step.');
     }
 
     // Call seedTemplates

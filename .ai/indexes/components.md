@@ -59,13 +59,18 @@ Every registered component should include:
 
 ### 6. `SetupWizard`
 - **Location**: `src/features/auth/pages/SetupWizard.tsx`
-- **Purpose**: A localized, multi-step layout directing system administrators to register a primary superuser account and root company entity.
+- **Purpose**: A localized, multi-step layout directing system administrators to register a primary superuser account, configure MFA, create primary company, set up email SMTP details, configure OIDC / Entra ID, seed divisions/OUs, and seed default roles.
 - **Props**:
-  - `step`: `'superuser' | 'company'` - Active step matching database setup status.
+  - `step`: `'superuser' | 'superuser-mfa' | 'company' | 'mail-config' | 'identity-provider' | 'org-structure' | 'role-templates'` - Active step matching database setup status.
   - `onSuperuserSubmit`: `(username, password, recoveryEmail) => Promise<void>` - Superuser creation trigger.
   - `onCompanySubmit`: `(name, contactInfo) => Promise<void>` - Company registration trigger.
+  - `onMfaSubmit`: `(secret, code) => Promise<{ recoveryCodes: string[] }>` - Verification and recovery code generation.
+  - `onMailConfigSubmit`: `(config) => Promise<void>` - SMTP saving.
+  - `onMailConfigSkip`: `() => Promise<void>` - SMTP bypass.
+  - `onIdentityProviderSubmit`: `(config) => Promise<void>` - OIDC/Entra saving.
+  - `onIdentityProviderSkip`: `() => Promise<void>` - OIDC/Entra bypass.
 - **Used By**: `src/shared/components/AppGate.tsx`
-- **Dependencies**: React, `react-i18next`, `motion/react`, Lucide Icons
+- **Dependencies**: React, `react-i18next`, `motion/react`, `qrcode`, Lucide Icons
 
 ### 7. `Login`
 - **Location**: `src/features/auth/pages/Login.tsx`
@@ -179,6 +184,15 @@ Every registered component should include:
   - `onNavigateToProfile`: `() => void` - Callback trigger when redirection is clicked.
 - **Used By**: `src/App.tsx`
 - **Dependencies**: React, Lucide Icons, `motion/react`, `react-i18next`
+
+### 21. `EntraSetupSteps`
+- **Location**: `src/features/identity/components/EntraSetupSteps.tsx`
+- **Purpose**: Multi-part sub-flow for OIDC / Microsoft Entra ID connection, displaying app registration guidance, copyable redirect callbacks, live test handshakes, API permission checking, sync strategy config, and attribute mappings.
+- **Props**:
+  - `onSave`: `(config) => Promise<void>` - Configuration submit trigger.
+  - `onSkip`: `() => Promise<void>` - Skip action trigger.
+- **Used By**: `src/features/auth/pages/SetupWizard.tsx`
+- **Dependencies**: React, Lucide Icons, `motion/react`
 
 
 

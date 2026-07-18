@@ -6,13 +6,15 @@ import { groupExpirationTemplate, GroupExpirationData } from './templates/groupE
 import { assignmentReminderTemplate, AssignmentReminderData } from './templates/assignmentReminder';
 import { emailChangeVerificationTemplate, EmailChangeVerificationData } from './templates/emailChangeVerification';
 import { entraSyncFailureTemplate, EntraSyncFailureData } from './templates/entraSyncFailure';
+import { prisma } from '../db/prisma';
+import { decrypt } from '../crypto/encryption';
 
 export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder' | 'email-change-verification' | 'entra-sync-failure';
 
 export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData | EmailChangeVerificationData | EntraSyncFailureData;
 
 export interface EmailService {
-  send(to: string, template: EmailTemplateName, data: EmailTemplateData): Promise<void>;
+  send(to: string, template: EmailTemplateName, data: EmailTemplateData, companyId?: string): Promise<void>;
 }
 
 class EmailServiceImpl implements EmailService {
@@ -46,7 +48,7 @@ class EmailServiceImpl implements EmailService {
     }
   }
 
-  async send(to: string, template: EmailTemplateName, data: EmailTemplateData): Promise<void> {
+  async send(to: string, template: EmailTemplateName, data: EmailTemplateData, companyId?: string): Promise<void> {
     let subject = '';
     let text = '';
     let html = '';
@@ -105,9 +107,59 @@ class EmailServiceImpl implements EmailService {
         throw new Error(`Unsupported email template: ${template}`);
     }
 
-    const from = process.env.SMTP_FROM || 'no-reply@smartcookie.ai';
+    // Resolve companyId if not passed explicitly
+    let resolvedCompanyId = companyId;
+    if (!resolvedCompanyId) {
+      try {
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: to },
+              { username: to }
+            ]
+          },
+          select: { companyId: true }
+        });
+        if (user && user.companyId) {
+          resolvedCompanyId = user.companyId;
+        }
+      } catch (err) {
+        console.error('EmailService: Failed to resolve companyId from database lookup:', err);
+      }
+    }
 
-    if (!this.transporter) {
+    let dbTransporter: nodemailer.Transporter | null = null;
+    let fromAddress: string | null = null;
+
+    if (resolvedCompanyId) {
+      try {
+        const config = await prisma.emailConfig.findUnique({
+          where: { companyId: resolvedCompanyId }
+        });
+
+        if (config) {
+          const decryptedPassword = decrypt(config.passwordEncrypted);
+          dbTransporter = nodemailer.createTransport({
+            host: config.host,
+            port: config.port,
+            secure: config.port === 465,
+            auth: {
+              user: config.username,
+              pass: decryptedPassword,
+            }
+          });
+          fromAddress = config.fromAddress;
+          console.log(`EmailService: Using database email configuration for company: ${resolvedCompanyId}`);
+        }
+      } catch (err) {
+        console.error(`EmailService: Failed to load EmailConfig for companyId: ${resolvedCompanyId}. Falling back to default/env transporter.`, err);
+      }
+    }
+
+    const activeTransporter = dbTransporter || this.transporter;
+    const from = fromAddress || process.env.SMTP_FROM || 'no-reply@smartcookie.ai';
+
+    if (!activeTransporter) {
       console.log('--- EMAIL OUTBOX (STUB MODE) ---');
       console.log(`From: ${from}`);
       console.log(`To: ${to}`);
@@ -118,7 +170,7 @@ class EmailServiceImpl implements EmailService {
     }
 
     try {
-      await this.transporter.sendMail({
+      await activeTransporter.sendMail({
         from,
         to,
         subject,

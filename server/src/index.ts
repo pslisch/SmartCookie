@@ -20,6 +20,7 @@ import bulkImportRouter from './features/profiles/routes/bulkImport.routes';
 import profileRouter from './features/profiles/routes/profile.routes';
 import profileFieldRouter from './features/profiles/routes/profileField.routes';
 import identityProviderRouter from './features/identity/routes/identityProvider.routes';
+import emailConfigRouter from './features/profiles/routes/emailConfig.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
@@ -105,6 +106,7 @@ async function startServer() {
   app.use('/api/profile', profileRouter);
   app.use('/api/profile-fields', profileFieldRouter);
   app.use('/api/identity-providers', identityProviderRouter);
+  app.use('/api/company/email-config', emailConfigRouter);
 
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {

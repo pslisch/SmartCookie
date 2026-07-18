@@ -250,6 +250,29 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0018] Database-Stored SMTP Configuration and Setup Wizard Sequence
+- **Status**: Approved
+- **Date**: 2026-07-18
+- **Authors**: AI Coding Agent
+- **Context**: Transactional emails are required right from system initialization. In early designs, SMTP configuration was managed via local `.env` values set interactively during the command-line installation (CLI) process. However, this CLI approach had high friction, was hard to maintain without terminal access, couldn't easily support live visual credential validation, and clashed with a self-service tenant administration model. It also relied on Postal as a default container-based mail server installation, adding heavy Docker and port requirements (e.g., Port 25 checks) to the host.
+- **Decision**:
+  1. **Database-Stored SMTP Configuration**: Superseded the earlier `.env`-based SMTP setup. Configured SMTP parameters are now stored in an `email_configs` database table with the SMTP password encrypted via AES-256-GCM.
+  2. **Reduced CLI Scope**: The CLI installation scripts are narrowed strictly to server bootstrapping: environment setup, local MariaDB database/user provisioning, source dependency compilation, Certbot SSL registration, and systemd service orchestration.
+  3. **Setup Wizard Sequence**: Added SMTP configuration as a native step within the Web onboarding wizard, allowing administrators to configure and validate their SMTP relay with live connection test handshakes before committing credentials.
+  4. **The Final Sequence of the Wizard Steps**:
+     1. **Superuser Credentials (`'superuser'`)**: Creates the initial, unique root superuser account.
+     2. **Superuser MFA (`'superuser-mfa'`)**: Enforces TOTP enrollment for the superuser immediately, showing QR code and single-use recovery codes (unskippable).
+     3. **Company Profile (`'company'`)**: Registers the main organization partition, capturing name and contact info.
+     4. **Mail Configuration (`'mail-config'`)**: Integrates direct SMTP relay connection testing and encrypted storage. This step is fully skippable (for local dev or fallback to `.env`).
+     5. **Identity Provider (`'identity-provider'`)**: Configures Microsoft Entra ID integration. Fully skippable.
+     6. **Organization Structure (`'org-structure'`)**: Provisions default top-level formal organization divisions (OUs).
+     7. **Role Templates (`'role-templates'`)**: Seeds initial enterprise role matrices.
+- **Consequences**:
+  - **Positives**: Extreme ease of use (no CLI prompts for SMTP); immediate live visual credential checks; secure database encryption-at-rest; eliminates the need for self-hosting Postal or validating Port 25 on the VPS.
+  - **Negatives**: The system requires a database query to initialize the `EmailService` (remedied by caching or fast lookup); `.env` SMTP variables act only as a backup.
+
+---
+
 ## 🔮 Planned ADRs (updated)
 
 - **ADR-0006: Authentication Strategy**: Detailing the Superuser,

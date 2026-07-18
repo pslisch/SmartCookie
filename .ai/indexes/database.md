@@ -49,6 +49,8 @@ This index describes the data models, entity relationships, and schemas supporti
   - `name` (String)
   - `contactInfo` (String)
   - `setupCompletedAt` (DateTime, Nullable, set when setup wizard completes)
+  - `mailConfigStepCompletedAt` (DateTime, Nullable, set when email setup step completed/skipped in wizard)
+  - `identityProviderStepCompletedAt` (DateTime, Nullable, set when Entra ID/idp setup step completed/skipped in wizard)
   - `roleInheritanceEnabled` (Boolean, Default: `false`, enables inheritance hierarchies)
   - `domain` (String, automatically populated from APP_URL on setup)
   - `settings` (Json, Nullable, placeholder for future customizations/integrations)
@@ -62,6 +64,21 @@ This index describes the data models, entity relationships, and schemas supporti
   - Has many `ProfileFieldCategory`s (via `profileFieldCategories`)
   - Has many `ProfileFieldDefinition`s (via `profileFieldDefinitions`)
   - Has many `MfaPolicyRole`s (via `mfaPolicyRoles`)
+  - Has one `EmailConfig` (via `emailConfig`)
+
+### Email Configs (`email_configs`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, UUID, Foreign Key to `companies.id`, Unique)
+  - `host` (String, SMTP Server hostname/IP)
+  - `port` (Int, SMTP Port number)
+  - `username` (String, SMTP Username)
+  - `passwordEncrypted` (String, Encrypted SMTP password)
+  - `fromAddress` (String, SMTP From sender address)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`)
 
 ### Organization Units (`organization_units`)
 - **Fields**:

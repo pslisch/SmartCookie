@@ -29,7 +29,7 @@ Every listed visual route should eventually document:
 - **Permissions**: Authenticated user (Status: `ACTIVE`)
 
 ### 3. Setup Wizard
-- **Path**: Captured by setup state logic (`status === 'superuser'` or `status === 'company'`)
+- **Path**: Captured by setup state logic (`status === 'superuser' | 'superuser-mfa' | 'company' | 'mail-config' | 'identity-provider' | 'org-structure' | 'role-templates'`)
 - **Component**: `src/features/auth/pages/SetupWizard.tsx`
 - **Guards**: Auto-redirected by `AppGate` if database status indicates incomplete setup
 - **Permissions**: Anyone (reaches 403 Forbidden once complete)

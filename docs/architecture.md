@@ -320,20 +320,20 @@ The production architecture for SmartCookie has been finalized and implemented a
 |         +-------------------------+                                                                     |
 |         |    Apache Web Server    | <--- Handles SSL Termination (Let's Encrypt) & security headers     |
 |         +-------------------------+                                                                     |
-|            |                      |                                                                     |
-|            | (Proxy /api/* & static)                  | (SMTP Relay / port 25)                          |
-|            v                                          v                                                 |
-|   +-------------------+                     +-------------------+                                       |
-|   |  Node.js Process  |                     | Postal Containers | <--- Mail delivery daemon               |
-|   | (Local port 3000) |                     |  (Local Port 5000)|                                       |
-|   +-------------------+                     +-------------------+                                       |
-|            |                                          |                                                 |
-|            v                                          v                                                 |
-|   +-------------------+                     +-------------------+                                       |
-|   | Host MariaDB Server|                     | Dedicated MariaDB |                                       |
-|   |    (Port 3306)    |                     |  Docker Container |                                       |
-|   |                   |                     |    (Port 3307)    |                                       |
-|   +-------------------+                     +-------------------+                                       |
+|            |                                                                                            |
+|            | (Proxy /api/* & static)                                                                    |
+|            v                                                                                            |
+|   +-------------------+                             +-------------------------+                         |
+|   |  Node.js Process  | --------------------------> | External SMTP Mail Relay| (Sends transactional    |
+|   | (Local port 3000) |  (SMTP handshake & auth)    | (Configured via Wizard) |  emails securely)       |
+|   +-------------------+                             +-------------------------+                         |
+|            |                                                                                            |
+|            v                                                                                            |
+|   +-------------------+                                                                                 |
+|   | Host MariaDB Server|                                                                                |
+|   |    (Port 3306)    |                                                                                 |
+|   |                   |                                                                                 |
+|   +-------------------+                                                                                 |
 |                                                                                                         |
 +---------------------------------------------------------------------------------------------------------+
 ```
@@ -353,11 +353,10 @@ The full-stack Express server runs as a systemd service (`smartcookie.service`) 
 ### 3. Database Layer (Host MariaDB)
 Persistent relational storage is managed via Prisma ORM connecting to the host's native MariaDB server on port `3306`. Connection credentials and secure variables are locked inside `.env` with restricted read permissions (`600`).
 
-### 4. Mail Subsystem (Postal Server Stack)
-To ensure reliable, high-volume transactional email delivery (invitations, password resets, profile security warnings), SmartCookie integrates a private **Postal Mail Server**:
-* **Infrastructure:** Runs as an isolated Docker container stack.
-* **Isolated Database:** Postal runs its own dedicated MariaDB database container. It is mapped to host port **3307** to completely isolate it and prevent port conflicts with SmartCookie's host MariaDB on port 3306.
-* **Authentication:** Integrates SPF, DKIM key signatures derived directly from the database, and strict DMARC rules for exceptional deliverability.
-* **Server PTR (Reverse DNS):** The VPS IP has a custom PTR record pointing back to the mail server hostname (`postal.yourdomain.com`), proving sender validity to major mail providers.
+### 4. Mail Subsystem (External SMTP Relay)
+To ensure reliable, high-volume transactional email delivery (invitations, password resets, profile security warnings), the self-hosted Postal mail server design has been **fully superseded** by an external SMTP relay model:
+* **In-App Web Configuration**: Administrators configure and test their external SMTP service directly within the Setup Wizard or Settings dashboard, bypassing fragile configuration files.
+* **Encrypted Storage**: SMTP relay credentials are saved securely inside the host database in the `email_configs` table, with the password encrypted via AES-256-GCM.
+* **Reduced Host Overhead**: Eliminates the operational complexity, outbound Port 25 firewall blockades, Docker dependencies, and heavy system resource overhead of running containerized local mail servers.
 
 

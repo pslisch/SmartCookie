@@ -175,6 +175,276 @@ router.post('/company', requireAuth, async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/setup/mail-config/test -> tests SMTP mail server connection.
+ * Requires active superuser session. Never persists anything.
+ */
+router.post('/mail-config/test', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user || !user.isSuperuser || user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Forbidden: Requires an active superuser session.' });
+    }
+
+    const { host, port, username, password, fromAddress } = req.body;
+    if (!host || !port || !username || !password || !fromAddress) {
+      return res.status(400).json({ error: 'All mail configuration fields (host, port, username, password, fromAddress) are required.' });
+    }
+
+    const nodemailer = await import('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host,
+      port: Number(port),
+      secure: Number(port) === 465,
+      auth: {
+        user: username,
+        pass: password,
+      },
+    });
+
+    await transporter.verify();
+    res.json({ success: true, message: 'Mail server connection verified successfully.' });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || 'Failed to verify mail server connection.' });
+  }
+});
+
+/**
+ * POST /api/setup/mail-config -> saves email configuration and marks mail-config step complete.
+ * Requires active superuser session.
+ */
+router.post('/mail-config', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user || !user.isSuperuser || user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Forbidden: Requires an active superuser session.' });
+    }
+    if (!user.companyId) {
+      return res.status(400).json({ error: 'User is not associated with any company.' });
+    }
+
+    const { host, port, username, password, fromAddress } = req.body;
+    if (!host || !port || !username || !password || !fromAddress) {
+      return res.status(400).json({ error: 'All mail configuration fields (host, port, username, password, fromAddress) are required.' });
+    }
+
+    const { encrypt } = await import('../../../shared/crypto/encryption');
+    const passwordEncrypted = encrypt(password);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.emailConfig.upsert({
+        where: { companyId: user.companyId! },
+        create: {
+          companyId: user.companyId!,
+          host,
+          port: Number(port),
+          username,
+          passwordEncrypted,
+          fromAddress,
+        },
+        update: {
+          host,
+          port: Number(port),
+          username,
+          passwordEncrypted,
+          fromAddress,
+        }
+      });
+
+      await tx.company.update({
+        where: { id: user.companyId! },
+        data: { mailConfigStepCompletedAt: new Date() }
+      });
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to save mail configuration.' });
+  }
+});
+
+/**
+ * POST /api/setup/mail-config/skip -> skips email configuration step.
+ * Requires active superuser session.
+ */
+router.post('/mail-config/skip', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user || !user.isSuperuser || user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Forbidden: Requires an active superuser session.' });
+    }
+    if (!user.companyId) {
+      return res.status(400).json({ error: 'User is not associated with any company.' });
+    }
+
+    await prisma.company.update({
+      where: { id: user.companyId! },
+      data: { mailConfigStepCompletedAt: new Date() }
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to skip mail configuration.' });
+  }
+});
+
+/**
+ * POST /api/setup/identity-provider/test -> Connection-test for Entra during setup.
+ * Never persists anything.
+ */
+router.post('/identity-provider/test', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user || !user.isSuperuser || user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Forbidden: Requires an active superuser session.' });
+    }
+
+    const { tenantId, clientId, clientSecret } = req.body;
+    if (!tenantId || !clientId || !clientSecret) {
+      return res.status(400).json({ error: 'Tenant ID, Client ID, and Client Secret are required.' });
+    }
+
+    const { EntraGraphClient } = await import('../../identity/providers/entraGraphClient');
+    await EntraGraphClient.validateConnection(tenantId, clientId, clientSecret);
+
+    const client = new EntraGraphClient(tenantId, clientId, clientSecret);
+    const token = await client.acquireApplicationToken();
+    
+    const decodeJwt = (t: string) => {
+      try {
+        const parts = t.split('.');
+        if (parts.length !== 3) return null;
+        const payloadJson = Buffer.from(parts[1], 'base64').toString('utf8');
+        return JSON.parse(payloadJson);
+      } catch {
+        return null;
+      }
+    };
+
+    const payload = decodeJwt(token);
+    const roles: string[] = Array.isArray(payload?.roles) ? payload.roles : [];
+
+    const userReadAllGranted = roles.includes('User.Read.All');
+    const groupReadAllGranted = roles.includes('Group.Read.All');
+
+    const permissions = [
+      {
+        permission: 'User.Read.All',
+        status: userReadAllGranted ? 'Granted' : 'Missing',
+        explanation: userReadAllGranted 
+          ? 'Granted. Required to read Entra user profiles and sync them into LMS.'
+          : 'Missing. Required to read Entra user profiles.'
+      },
+      {
+        permission: 'Group.Read.All',
+        status: groupReadAllGranted ? 'Granted' : 'Missing',
+        explanation: groupReadAllGranted 
+          ? 'Granted. Required to read Entra groups and sync organizational units.'
+          : 'Missing. Required to read Entra groups.'
+      }
+    ];
+
+    const allGranted = userReadAllGranted && groupReadAllGranted;
+
+    res.json({
+      success: true,
+      allGranted,
+      permissions
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      allGranted: false,
+      error: error.message || 'Failed to verify connection.'
+    });
+  }
+});
+
+/**
+ * POST /api/setup/identity-provider -> saves Microsoft Entra configuration and marks identity-provider step complete.
+ * Requires active superuser session.
+ */
+router.post('/identity-provider', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user || !user.isSuperuser || user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Forbidden: Requires an active superuser session.' });
+    }
+    if (!user.companyId) {
+      return res.status(400).json({ error: 'User is not associated with any company.' });
+    }
+
+    const { tenantId, clientId, clientSecret } = req.body;
+    if (!tenantId || !clientId || !clientSecret) {
+      return res.status(400).json({ error: 'Tenant ID, Client ID, and Client Secret are required.' });
+    }
+
+    const { encrypt } = await import('../../../shared/crypto/encryption');
+    const encryptedSecret = encrypt(clientSecret);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.identityProviderConfig.upsert({
+        where: {
+          companyId_providerType: {
+            companyId: user.companyId!,
+            providerType: 'MICROSOFT_ENTRA'
+          }
+        },
+        create: {
+          companyId: user.companyId!,
+          providerType: 'MICROSOFT_ENTRA',
+          enabled: true,
+          tenantId,
+          clientId,
+          clientSecretEncrypted: encryptedSecret,
+          loginMode: 'BOTH',
+          importStrategy: 'FIRST_LOGIN',
+        },
+        update: {
+          tenantId,
+          clientId,
+          clientSecretEncrypted: encryptedSecret,
+          enabled: true
+        }
+      });
+
+      await tx.company.update({
+        where: { id: user.companyId! },
+        data: { identityProviderStepCompletedAt: new Date() }
+      });
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to save identity provider configuration.' });
+  }
+});
+
+/**
+ * POST /api/setup/identity-provider/skip -> skips Microsoft Entra configuration step.
+ * Requires active superuser session.
+ */
+router.post('/identity-provider/skip', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user || !user.isSuperuser || user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Forbidden: Requires an active superuser session.' });
+    }
+    if (!user.companyId) {
+      return res.status(400).json({ error: 'User is not associated with any company.' });
+    }
+
+    await prisma.company.update({
+      where: { id: user.companyId! },
+      data: { identityProviderStepCompletedAt: new Date() }
+    });
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to skip identity provider step.' });
+  }
+});
+
+/**
  * POST /api/setup/org-structure -> completes organizational structure setup step.
  * Requires an active superuser session.
  */

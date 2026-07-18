@@ -22,7 +22,7 @@ interface UserIdentity {
 
 interface AuthContextType {
   user: UserIdentity | null;
-  setupStatus: 'superuser' | 'company' | 'org-structure' | 'role-templates' | 'complete' | null;
+  setupStatus: 'superuser' | 'superuser-mfa' | 'company' | 'mail-config' | 'identity-provider' | 'org-structure' | 'role-templates' | 'complete' | null;
   isLoading: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
@@ -54,7 +54,7 @@ interface AppGateProps {
 
 export function AppGate({ children }: AppGateProps) {
   const { t } = useTranslation();
-   const [setupStatus, setSetupStatus] = useState<'superuser' | 'company' | 'org-structure' | 'role-templates' | 'complete' | null>(null);
+  const [setupStatus, setSetupStatus] = useState<'superuser' | 'superuser-mfa' | 'company' | 'mail-config' | 'identity-provider' | 'org-structure' | 'role-templates' | 'complete' | null>(null);
   const [user, setUser] = useState<UserIdentity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -179,6 +179,71 @@ export function AppGate({ children }: AppGateProps) {
     });
 
     await handleJsonResponse(res, 'Failed to complete company step.');
+    await checkStatusAndSession();
+  };
+
+  const triggerMfaSubmit = async (pendingSecret: string, code: string) => {
+    const res = await fetch('/api/setup/mfa/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCookie('csrfToken'),
+      },
+      body: JSON.stringify({
+        pendingSecret,
+        code,
+      }),
+    });
+    return await handleJsonResponse(res, 'Failed to verify MFA.');
+  };
+
+  const triggerMailConfigSubmit = async (config: { host: string; port: number; username: string; fromAddress: string }) => {
+    const res = await fetch('/api/setup/mail-config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCookie('csrfToken'),
+      },
+      body: JSON.stringify(config),
+    });
+    await handleJsonResponse(res, 'Failed to save mail configuration.');
+    await checkStatusAndSession();
+  };
+
+  const triggerMailConfigSkip = async () => {
+    const res = await fetch('/api/setup/mail-config/skip', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCookie('csrfToken'),
+      },
+    });
+    await handleJsonResponse(res, 'Failed to skip mail configuration.');
+    await checkStatusAndSession();
+  };
+
+  const triggerIdentityProviderSubmit = async (config: { tenantId: string; clientId: string; clientSecret: string }) => {
+    const res = await fetch('/api/setup/identity-provider', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCookie('csrfToken'),
+      },
+      body: JSON.stringify(config),
+    });
+    await handleJsonResponse(res, 'Failed to save identity provider settings.');
+    await checkStatusAndSession();
+  };
+
+  const triggerIdentityProviderSkip = async () => {
+    const res = await fetch('/api/setup/identity-provider/skip', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCookie('csrfToken'),
+      },
+    });
+    await handleJsonResponse(res, 'Failed to skip identity provider settings.');
     await checkStatusAndSession();
   };
 
@@ -317,13 +382,18 @@ export function AppGate({ children }: AppGateProps) {
   }
 
   // Gate 1: Setup Wizard Required
-  if (setupStatus === 'superuser' || setupStatus === 'company' || setupStatus === 'org-structure' || setupStatus === 'role-templates') {
+  if (setupStatus && setupStatus !== 'complete') {
     return (
       <AuthContext.Provider value={authContextValue}>
         <SetupWizard
           step={setupStatus}
           onSuperuserSubmit={triggerSuperuserSubmit}
+          onMfaSubmit={triggerMfaSubmit}
           onCompanySubmit={triggerCompanySubmit}
+          onMailConfigSubmit={triggerMailConfigSubmit}
+          onMailConfigSkip={triggerMailConfigSkip}
+          onIdentityProviderSubmit={triggerIdentityProviderSubmit}
+          onIdentityProviderSkip={triggerIdentityProviderSkip}
           onOrgStructureSubmit={triggerOrgStructureSubmit}
           onRoleTemplatesSubmit={triggerRoleTemplatesSubmit}
         />

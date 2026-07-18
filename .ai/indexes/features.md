@@ -202,9 +202,9 @@ Every logged feature should eventually document:
 - **Dependencies**: Prisma ORM, Node.js, Express, Multer, CSV-parse, bcrypt, Nodemailer
 
 ### 14. Multi-Factor Authentication (MFA) Core Security System
-- **Description**: Implements a comprehensive, robust local Multi-Factor Authentication (MFA) system utilizing Time-based One-time Passwords (TOTP). Supports encrypted TOTP secrets-at-rest (using AES-256-GCM), a secure two-stage session token flow using `MFA_CHALLENGE` and `MFA_SETUP` tokens, secure SHA-256 hashed one-time recovery codes, flexible tenant-wide MFA policies (including custom role-based mapping rules), and administrative de-enrollment overrides.
-- **Components**: None (Backend only this pass)
-- **Pages**: None (Backend only this pass)
+- **Description**: Implements a comprehensive, robust local Multi-Factor Authentication (MFA) system utilizing Time-based One-time Passwords (TOTP). Supports encrypted TOTP secrets-at-rest (using AES-256-GCM), a secure two-stage session token flow using `MFA_CHALLENGE` and `MFA_SETUP` tokens, secure SHA-256 hashed one-time recovery codes, flexible tenant-wide MFA policies (including custom role-based mapping rules), and administrative de-enrollment overrides. Includes a complete web-based wizard integration step for initial superuser MFA configuration.
+- **Components**: `QRCode` (rendering QR codes on frontend via qrcode package)
+- **Pages**: `src/features/auth/pages/SetupWizard.tsx` (Step 1.5: Superuser MFA enrollment)
 - **Services**: `MfaService` (`server/src/features/auth/services/mfa.service.ts`)
 - **APIs**:
   - `POST /api/auth/mfa/verify` (verifies code or recovery code, returns active user session)
@@ -222,12 +222,11 @@ Every logged feature should eventually document:
 - **Permissions**: Public access for login challenges/setup gates; `sid` active session cookie for self-service profiles; active superuser session cookie for setup wizard endpoints; `users:edit` permission for admin de-enrollment.
 - **Routes**: `server/src/features/auth/routes/auth.routes.ts`, `server/src/features/auth/routes/setup.routes.ts`, `server/src/features/profiles/routes/profile.routes.ts`, `server/src/features/auth/routes/users.routes.ts`
 - **Events**: MFA resets or enrollment changes instantly invalidate active login credentials or require multi-stage prompts on subsequent authorization actions.
-- **Dependencies**: Prisma ORM, Node.js, Express, otplib, crypto
-
+- **Dependencies**: Prisma ORM, Node.js, Express, otplib, crypto, qrcode
 ### 15. Microsoft Entra ID Integration Engine (Fully Materialized Client-Server Feature Backend)
 - **Description**: Connects SmartCookie LMS to Microsoft Entra ID for full identity provider credential validation, connection tests, and automated group and user synchronization. Implements a dual-permission token validator, selective profile property overwrites based on dynamic sync-locking, soft-deletion reconciliation of missing users/groups, and automated lms-manager alert notifications on complete sync failures.
-- **Components**: None (Backend only this pass; frontend forms are follow-up scope)
-- **Pages**: None (Backend only this pass)
+- **Components**: `EntraSetupSteps` (`src/features/identity/components/EntraSetupSteps.tsx`)
+- **Pages**: `src/features/auth/pages/SetupWizard.tsx` (Step 4: Identity Provider)
 - **Services**:
   - `EntraSyncService` (`server/src/features/identity/services/entraSync.service.ts`)
   - `EntraGraphClient` (`server/src/features/identity/providers/entraGraphClient.ts`)
