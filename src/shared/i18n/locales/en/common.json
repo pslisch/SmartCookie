@@ -26,10 +26,25 @@
     "placeholderUser": "Enter your username",
     "placeholderIdentifier": "Enter your username or email",
     "placeholderPass": "••••••••",
+    "mfaTitle": "Multi-Factor Verification",
+    "mfaSubtitle": "Enter the 6-digit code from your authenticator app or a recovery code.",
+    "mfaCode": "Verification Code",
+    "placeholderMfa": "e.g. 123456",
+    "mfaVerify": "Verify & Authenticate",
+    "mfaSetupTitle": "Configure Multi-Factor Authentication",
+    "mfaSetupSubtitle": "Your account requires MFA. Scan the QR code with your authenticator app (like Google Authenticator or Duo) and enter the 6-digit code below to set it up.",
+    "mfaSetupSecret": "Manual entry secret:",
+    "mfaSetupVerify": "Verify & Enable MFA",
+    "mfaRecoveryTitle": "Save Recovery Codes",
+    "mfaRecoverySubtitle": "These single-use recovery codes can be used to log in if you lose access to your authenticator app. Store them in a secure location!",
+    "mfaRecoveryButton": "Understood, Continue to Dashboard",
+    "backToLogin": "Back to Login",
     "errors": {
       "fieldsRequired": "All fields are required.",
       "invalidCredentials": "Invalid username or password.",
-      "authenticationFailed": "Authentication failed."
+      "authenticationFailed": "Authentication failed.",
+      "mfaRequired": "MFA is required.",
+      "invalidMfa": "Invalid verification code."
     }
   },
   "setup": {

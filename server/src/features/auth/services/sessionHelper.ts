@@ -28,7 +28,7 @@ export async function issueSession(user: User, req: Request, res: Response) {
     secure: true,
     signed: true,
     expires: expiresAt,
-    sameSite: 'lax',
+    sameSite: 'none',
   });
 
   let roleName: string | null = null;

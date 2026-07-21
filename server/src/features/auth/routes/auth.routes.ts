@@ -173,7 +173,7 @@ router.post('/mfa/verify', loginRateLimiter.middleware, async (req: Request, res
       secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     let roleName: string | null = null;
@@ -288,7 +288,7 @@ router.post('/mfa/enable-pending', async (req: Request, res: Response) => {
       secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     let roleName: string | null = null;
@@ -492,7 +492,7 @@ router.post('/activate', async (req: Request, res: Response) => {
       secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     let roleName: string | null = null;
@@ -641,7 +641,7 @@ router.post('/reset-password', async (req: Request, res: Response) => {
       secure: true,
       signed: true,
       expires: expiresAt,
-      sameSite: 'lax',
+      sameSite: 'none',
     });
 
     let roleName: string | null = null;
