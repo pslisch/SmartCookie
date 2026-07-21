@@ -60,7 +60,7 @@ chmod +x "$SCRIPT_DIR"/*.sh
 # Run Stage-by-Stage with explicit ✓/✗ reporting
 echo "----------------------------------------------------"
 echo_info "STAGE 1: Running Pre-flight verification..."
-if ! "$SCRIPT_DIR/00-preflight.sh" "$DOMAIN"; then
+if ! "$SCRIPT_DIR/00-preflight.sh" "$DOMAIN" "$FAST_MODE"; then
     echo_error "Pre-flight verification failed! Halted."
     exit 1
 fi
@@ -86,7 +86,12 @@ fi
 
 echo "----------------------------------------------------"
 echo_info "STAGE 3: Installing dependencies and building app..."
-if ! "$SCRIPT_DIR/02-install-app.sh"; then
+SC_LOW_MEM=false
+if [ -f /tmp/sc_low_mem ]; then
+    SC_LOW_MEM=true
+    echo_info "Low-memory condition detected. Passing limit-parallelism flag to compiler."
+fi
+if ! SC_LOW_MEM="$SC_LOW_MEM" "$SCRIPT_DIR/02-install-app.sh"; then
     echo_error "App installation or compilation failed! Halted."
     exit 1
 fi

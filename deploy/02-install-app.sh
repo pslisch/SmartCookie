@@ -31,9 +31,17 @@ fi
 
 echo_info "Running npm install..."
 # npm install will trigger 'npm run postinstall' which runs 'prisma generate'
-if ! npm install; then
-    echo_error "npm install failed!"
-    exit 1
+if [ "${SC_LOW_MEM:-false}" = "true" ]; then
+    echo_info "Low-memory mode active: running npm install with JOBS=1 to limit parallel compilation..."
+    if ! JOBS=1 npm install; then
+        echo_error "npm install failed!"
+        exit 1
+    fi
+else
+    if ! npm install; then
+        echo_error "npm install failed!"
+        exit 1
+    fi
 fi
 echo_success "npm dependencies installed and Prisma Client generated."
 

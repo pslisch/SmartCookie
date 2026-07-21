@@ -15,11 +15,19 @@ echo "===================================================="
 echo "          SmartCookie Deployment Pre-flight Checks  "
 echo "===================================================="
 
-DOMAIN="$1"
+DOMAIN=""
+FAST_MODE=false
+for arg in "$@"; do
+    if [ "$arg" = "--fast" ] || [ "$arg" = "true" ]; then
+        FAST_MODE=true
+    elif [ -z "$DOMAIN" ]; then
+        DOMAIN="$arg"
+    fi
+done
 
 if [ -z "$DOMAIN" ]; then
     echo_error "No domain name provided."
-    echo "Usage: $0 <domain-name>"
+    echo "Usage: $0 <domain-name> [--fast]"
     exit 1
 fi
 
@@ -43,6 +51,84 @@ if ! sudo -n true >/dev/null 2>&1; then
     fi
 fi
 echo_success "Running as user '$(whoami)' with sudo privileges."
+
+# 1b. Check system memory and configure swap if needed
+# Clean up any existing low-memory flag
+rm -f /tmp/sc_low_mem
+
+echo_info "Checking system memory..."
+if [ -f /proc/meminfo ]; then
+    MEM_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+    SWAP_KB=$(awk '/SwapTotal/ {print $2}' /proc/meminfo)
+    MEM_MB=$((MEM_KB / 1024))
+    SWAP_MB=$((SWAP_KB / 1024))
+    TOTAL_COMBINED_MB=$((MEM_MB + SWAP_MB))
+    
+    echo_info "System RAM: ${MEM_MB}MB, Active Swap: ${SWAP_MB}MB (Total: ${TOTAL_COMBINED_MB}MB)"
+    
+    # Threshold check: 4GB is 4096MB. Let's use 4000MB as a safe threshold
+    if [ "$TOTAL_COMBINED_MB" -lt 4000 ]; then
+        echo_warning "Low memory condition detected!"
+        touch /tmp/sc_low_mem
+        
+        # Check if we should offer/create swap
+        SWAP_FILE="/swapfile"
+        if grep -q "$SWAP_FILE" /proc/swaps 2>/dev/null; then
+            echo_success "A swap file is already active at $SWAP_FILE."
+        else
+            CREATE_SWAP=false
+            if [ "$FAST_MODE" = "true" ]; then
+                echo_info "Automatically opting to create swap because --fast mode is enabled."
+                CREATE_SWAP=true
+            else
+                echo ""
+                echo "----------------------------------------------------"
+                echo_warning "Memory Warning: Your server has less than 4GB of combined RAM + Swap."
+                echo "Compiling Node.js native dependencies (such as 'argon2') is highly memory"
+                echo "intensive and can cause the system to freeze or kill the process (OOM)."
+                echo "We highly recommend setting up a 2GB swap file to ensure stable compilation."
+                echo "----------------------------------------------------"
+                read -rp "Would you like to automatically create and enable a 2GB swap file? [Y/n]: " response
+                response=${response,,}
+                if [[ "$response" =~ ^(yes|y|)$ ]]; then
+                    CREATE_SWAP=true
+                else
+                    echo_warning "User declined swap creation. Build may fail if memory is exhausted."
+                fi
+            fi
+            
+            if [ "$CREATE_SWAP" = "true" ]; then
+                if [ -f "$SWAP_FILE" ]; then
+                    echo_info "Found existing file at $SWAP_FILE. Enabling it as swap..."
+                    sudo chmod 600 "$SWAP_FILE"
+                    sudo mkswap "$SWAP_FILE"
+                    sudo swapon "$SWAP_FILE"
+                    echo_success "Swap file enabled."
+                else
+                    echo_info "Creating a 2GB swap file at $SWAP_FILE..."
+                    if ! sudo fallocate -l 2G "$SWAP_FILE" 2>/dev/null; then
+                        echo_warning "fallocate failed, falling back to dd..."
+                        sudo dd if=/dev/zero of="$SWAP_FILE" bs=1M count=2048 status=progress
+                    fi
+                    sudo chmod 600 "$SWAP_FILE"
+                    sudo mkswap "$SWAP_FILE"
+                    sudo swapon "$SWAP_FILE"
+                    echo_success "2GB Swap file successfully created and enabled."
+                fi
+                
+                # Persist in fstab
+                if ! grep -q "$SWAP_FILE" /etc/fstab 2>/dev/null; then
+                    echo_info "Persisting swap configuration in /etc/fstab..."
+                    echo "$SWAP_FILE none swap sw 0 0" | sudo tee -a /etc/fstab >/dev/null
+                fi
+            fi
+        fi
+    else
+        echo_success "Memory check passed: Sufficient memory available (${TOTAL_COMBINED_MB}MB)."
+    fi
+else
+    echo_warning "Unable to access /proc/meminfo. Skipping memory/swap checks."
+fi
 
 # 2. Confirm required commands exist
 REQUIRED_CMDS=(node npm mysql apache2ctl certbot git ufw)
