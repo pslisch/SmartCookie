@@ -163,9 +163,13 @@ fi
 
 # 7. Health check with timeout and diagnosis report (TASK 2 Requirement)
 echo_info "Performing live service health check..."
+PORT="3000"
+if [ -f ".env" ] && grep -q "^PORT=" .env; then
+    PORT=$(grep "^PORT=" .env | cut -d'=' -f2- | tr -d '"' | tr -d "'" | tr -d ' ' || echo "3000")
+fi
 HEALTH_SUCCESS=false
 for i in {1..15}; do
-    if curl -s --fail http://localhost:3000/api/health | grep -q "ok"; then
+    if curl -s --fail "http://localhost:$PORT/api/health" | grep -q "ok"; then
         HEALTH_SUCCESS=true
         break
     fi
@@ -200,7 +204,7 @@ else
     echo "========================================================================="
     echo "                      SERVICE HEALTH CHECK FAILURE                       "
     echo "========================================================================="
-    echo "The application did not report healthy at http://localhost:3000/api/health"
+    echo "The application did not report healthy at http://localhost:$PORT/api/health"
     echo "Your database was migrated. A secure pre-update backup exists at:"
     echo "  --> $BACKUP_FILE"
     echo ""

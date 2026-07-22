@@ -191,6 +191,112 @@ else
     fi
 fi
 
+# 4. Detect and select a free port for the application
+echo_info "Detecting application port configuration..."
+
+is_port_in_use() {
+    local port="$1"
+    if command -v ss >/dev/null 2>&1; then
+        ss -tln | awk '{print $4}' | grep -qE "[:.]$port$"
+    elif command -v netstat >/dev/null 2>&1; then
+        netstat -tln | awk '{print $4}' | grep -qE "[:.]$port$"
+    else
+        (echo > "/dev/tcp/127.0.0.1/$port") >/dev/null 2>&1
+    fi
+}
+
+is_port_held_by_smartcookie() {
+    local port="$1"
+    if ! is_port_in_use "$port"; then
+        return 1
+    fi
+    if systemctl is-active --quiet smartcookie.service 2>/dev/null; then
+        local service_pid
+        service_pid=$(systemctl show -p MainPID --value smartcookie.service 2>/dev/null || echo "")
+        if [ -n "$service_pid" ] && [ "$service_pid" -gt 0 ] 2>/dev/null; then
+            if command -v ss >/dev/null 2>&1; then
+                local pids
+                pids=$(sudo ss -tlnp "sport = :$port" 2>/dev/null | grep -oP 'pid=\K[0-9]+' || true)
+                for pid in $pids; do
+                    if [ "$pid" = "$service_pid" ]; then
+                        return 0
+                    fi
+                done
+            fi
+        fi
+    fi
+    if command -v ss >/dev/null 2>&1; then
+        local proc_info
+        proc_info=$(sudo ss -tlnp "sport = :$port" 2>/dev/null || echo "")
+        if [[ "$proc_info" == *"server.cjs"* ]] || [[ "$proc_info" == *"smartcookie"* ]]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Ensure .env file exists
+if [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
+        echo_info "Creating .env from .env.example..."
+        cp .env.example .env
+        chmod 600 .env
+    else
+        touch .env
+        chmod 600 .env
+    fi
+fi
+
+EXISTING_PORT=""
+if grep -q "^PORT=" .env 2>/dev/null; then
+    EXISTING_PORT=$(grep "^PORT=" .env | cut -d'=' -f2- | tr -d '"' | tr -d "'" | tr -d ' ' || echo "")
+fi
+
+SELECTED_PORT=""
+
+if [ -n "$EXISTING_PORT" ] && [[ "$EXISTING_PORT" =~ ^[0-9]+$ ]]; then
+    if ! is_port_in_use "$EXISTING_PORT"; then
+        SELECTED_PORT="$EXISTING_PORT"
+        echo_info "Configured PORT $SELECTED_PORT in .env is free. Reusing it."
+    elif is_port_held_by_smartcookie "$EXISTING_PORT"; then
+        SELECTED_PORT="$EXISTING_PORT"
+        echo_info "Configured PORT $SELECTED_PORT in .env is held by SmartCookie's active instance. Reusing it."
+    else
+        echo_warning "Configured PORT $EXISTING_PORT in .env is currently in use by another process."
+    fi
+fi
+
+if [ -z "$SELECTED_PORT" ]; then
+    echo_info "Scanning port range 3000-3100 for an available free port..."
+    for p in $(seq 3000 3100); do
+        if ! is_port_in_use "$p"; then
+            SELECTED_PORT="$p"
+            break
+        fi
+    done
+
+    if [ -z "$SELECTED_PORT" ]; then
+        echo_error "No free port found in range 3000-3100!"
+        exit 1
+    fi
+
+    if [ "$SELECTED_PORT" -ne 3000 ]; then
+        echo_warning "Default port 3000 is unavailable or in use by another application."
+        echo_success "Automatically selected free port: $SELECTED_PORT"
+    else
+        echo_success "Default port 3000 is free and selected."
+    fi
+fi
+
+# Write or update PORT in .env
+if grep -q "^PORT=" .env; then
+    sed -i "s|^PORT=.*|PORT=$SELECTED_PORT|g" .env
+else
+    echo "PORT=$SELECTED_PORT" >> .env
+fi
+
+echo_success "SmartCookie application port resolved to: $SELECTED_PORT (saved in .env)"
+
 echo "===================================================="
 echo_success "Pre-flight checks passed! Ready to proceed."
 echo "===================================================="

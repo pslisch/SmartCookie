@@ -56,16 +56,24 @@ fi
 
 SERVICE_FILE="/etc/systemd/system/smartcookie.service"
 
+PORT="3000"
+if [ -f ".env" ] && grep -q "^PORT=" .env; then
+    PORT=$(grep "^PORT=" .env | cut -d'=' -f2- | tr -d '"' | tr -d "'" | tr -d ' ' || echo "3000")
+fi
+
 echo_info "Compiling systemd configuration..."
 echo_info "  User:             $REAL_USER"
 echo_info "  Working Dir:      $PROJECT_ROOT"
 echo_info "  Node Executable:  $NODE_PATH"
+echo_info "  Port:             $PORT"
 
 # Perform substitutions from template and write to the systemd folder
 sudo sed \
   -e "s|USER_PLACEHOLDER|$REAL_USER|g" \
   -e "s|WORKING_DIR_PLACEHOLDER|$PROJECT_ROOT|g" \
   -e "s|NODE_PATH_PLACEHOLDER|$NODE_PATH|g" \
+  -e "s|PORT_PLACEHOLDER|$PORT|g" \
+  -e "s|Environment=PORT=3000|Environment=PORT=$PORT|g" \
   "$TEMPLATE_FILE" | sudo tee "$SERVICE_FILE" > /dev/null
 
 # Set correct permissions for security

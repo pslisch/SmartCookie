@@ -51,8 +51,17 @@ fi
 
 VHOST_PATH="/etc/apache2/sites-available/smartcookie.conf"
 
-echo_info "Generating Apache configuration at $VHOST_PATH for '$DOMAIN'..."
-sudo sed "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" "$TEMPLATE_FILE" | sudo tee "$VHOST_PATH" > /dev/null
+PORT="3000"
+if [ -f ".env" ] && grep -q "^PORT=" .env; then
+    PORT=$(grep "^PORT=" .env | cut -d'=' -f2- | tr -d '"' | tr -d "'" | tr -d ' ' || echo "3000")
+fi
+
+echo_info "Generating Apache configuration at $VHOST_PATH for '$DOMAIN' (proxying to port $PORT)..."
+sudo sed \
+  -e "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" \
+  -e "s/PORT_PLACEHOLDER/$PORT/g" \
+  -e "s/127.0.0.1:3000/127.0.0.1:$PORT/g" \
+  "$TEMPLATE_FILE" | sudo tee "$VHOST_PATH" > /dev/null
 
 # 3. Enable site and reload Apache
 echo_info "Enabling SmartCookie VirtualHost..."

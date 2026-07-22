@@ -22,7 +22,7 @@ SyslogIdentifier=smartcookie
 
 # Environment properties
 Environment=NODE_ENV=production
-Environment=PORT=3000
+Environment=PORT=PORT_PLACEHOLDER
 
 [Install]
 WantedBy=multi-user.target
