@@ -88,7 +88,7 @@ if [ -f /proc/meminfo ]; then
                 echo "intensive and can cause the system to freeze or kill the process (OOM)."
                 echo "We highly recommend setting up a 2GB swap file to ensure stable compilation."
                 echo "----------------------------------------------------"
-                read -rp "Would you like to automatically create and enable a 2GB swap file? [Y/n]: " response
+                read -rp "Would you like to automatically create and enable a 2GB swap file? [Y/n]: " response < /dev/tty
                 response=${response,,}
                 if [[ "$response" =~ ^(yes|y|)$ ]]; then
                     CREATE_SWAP=true
