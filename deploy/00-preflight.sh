@@ -205,6 +205,22 @@ is_port_in_use() {
     fi
 }
 
+is_port_in_apache_conf() {
+    local port="$1"
+    local dirs=("/etc/apache2/sites-available" "/etc/apache2/sites-enabled")
+    
+    for dir in "${dirs[@]}"; do
+        if [ -d "$dir" ]; then
+            # Scan files inside the directory, ignoring smartcookie.conf
+            # Check for ProxyPass referencing 127.0.0.1:<port> or localhost:<port>
+            if grep -ri "ProxyPass" "$dir" 2>/dev/null | grep -v "smartcookie.conf" | grep -q -E "127\.0\.0\.1:$port([^0-9]|$)|localhost:$port([^0-9]|$)"; then
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
 is_port_held_by_smartcookie() {
     local port="$1"
     if ! is_port_in_use "$port"; then
@@ -255,33 +271,33 @@ fi
 SELECTED_PORT=""
 
 if [ -n "$EXISTING_PORT" ] && [[ "$EXISTING_PORT" =~ ^[0-9]+$ ]]; then
-    if ! is_port_in_use "$EXISTING_PORT"; then
+    if ! is_port_in_use "$EXISTING_PORT" && ! is_port_in_apache_conf "$EXISTING_PORT"; then
         SELECTED_PORT="$EXISTING_PORT"
-        echo_info "Configured PORT $SELECTED_PORT in .env is free. Reusing it."
+        echo_info "Configured PORT $SELECTED_PORT in .env is free and unclaimed in Apache. Reusing it."
     elif is_port_held_by_smartcookie "$EXISTING_PORT"; then
         SELECTED_PORT="$EXISTING_PORT"
         echo_info "Configured PORT $SELECTED_PORT in .env is held by SmartCookie's active instance. Reusing it."
     else
-        echo_warning "Configured PORT $EXISTING_PORT in .env is currently in use by another process."
+        echo_warning "Configured PORT $EXISTING_PORT in .env is currently in use or claimed in Apache by another application/vhost."
     fi
 fi
 
 if [ -z "$SELECTED_PORT" ]; then
     echo_info "Scanning port range 3000-3100 for an available free port..."
     for p in $(seq 3000 3100); do
-        if ! is_port_in_use "$p"; then
+        if ! is_port_in_use "$p" && ! is_port_in_apache_conf "$p"; then
             SELECTED_PORT="$p"
             break
         fi
     done
 
     if [ -z "$SELECTED_PORT" ]; then
-        echo_error "No free port found in range 3000-3100!"
+        echo_error "No free and unclaimed port found in range 3000-3100!"
         exit 1
     fi
 
     if [ "$SELECTED_PORT" -ne 3000 ]; then
-        echo_warning "Default port 3000 is unavailable or in use by another application."
+        echo_warning "Default port 3000 is unavailable (in use or claimed by another application/vhost)."
         echo_success "Automatically selected free port: $SELECTED_PORT"
     else
         echo_success "Default port 3000 is free and selected."
