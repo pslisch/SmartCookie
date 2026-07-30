@@ -89,7 +89,10 @@
     }
   },
   "appGate": {
-    "verifying": "Verifying security gates..."
+    "verifying": "Verifying security gates...",
+    "statusVerificationTitle": "Verification Failure",
+    "statusVerificationError": "Unable to verify application status - please check server logs and try again",
+    "retry": "Retry"
   },
   "acceptInvitation": {
     "title": "Activate Your Account",

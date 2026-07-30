@@ -159,9 +159,46 @@ sudo mysql -e "FLUSH PRIVILEGES;"
 echo_success "Database '$DROP_DB' and DB user '$DROP_USER' removed successfully."
 
 # 3. Remove Apache VirtualHost config only, reload Apache (Skip gracefully if missing)
-echo_info "Step 3: Removing Apache proxy configuration..."
+echo_info "Step 3: Removing Apache proxy configuration and SSL certificates..."
+
+DETECTED_DOMAIN=""
+if [ -f "/etc/apache2/sites-available/smartcookie.conf" ]; then
+    DETECTED_DOMAIN=$(grep -i "ServerName" /etc/apache2/sites-available/smartcookie.conf | awk '{print $2}' | head -n1 || echo "")
+fi
+
+if [ -n "$DETECTED_DOMAIN" ]; then
+    echo_info "Detected domain '$DETECTED_DOMAIN' for SmartCookie. Cleaning up Certbot certificates..."
+    if command -v certbot >/dev/null 2>&1; then
+        # Check if cert exists in certbot
+        if sudo certbot certificates --cert-name "$DETECTED_DOMAIN" >/dev/null 2>&1; then
+            echo_info "Running certbot delete for cert-name '$DETECTED_DOMAIN'..."
+            sudo certbot delete --cert-name "$DETECTED_DOMAIN" --non-interactive || echo_warning "Failed to delete Certbot certificate '$DETECTED_DOMAIN'."
+        else
+            echo_info "No Certbot certificate found with cert-name '$DETECTED_DOMAIN'. Skipping certbot delete."
+        fi
+    else
+        echo_warning "Certbot utility not installed on system. Skipping certificate cleanup."
+    fi
+fi
+
 if [ -f "/etc/apache2/sites-available/smartcookie.conf" ]; then
     sudo a2dissite smartcookie.conf >/dev/null 2>&1 || true
+    
+    # Remove any certbot-generated SSL vhost files for this site or domain
+    # Certbot usually creates 'smartcookie-le-ssl.conf' or '<domain>-le-ssl.conf'
+    if [ -f "/etc/apache2/sites-available/smartcookie-le-ssl.conf" ]; then
+        sudo a2dissite smartcookie-le-ssl.conf >/dev/null 2>&1 || true
+        sudo rm -f /etc/apache2/sites-available/smartcookie-le-ssl.conf
+        sudo rm -f /etc/apache2/sites-enabled/smartcookie-le-ssl.conf
+        echo_info "Removed certbot-managed SSL configuration 'smartcookie-le-ssl.conf'."
+    fi
+    if [ -n "$DETECTED_DOMAIN" ] && [ -f "/etc/apache2/sites-available/${DETECTED_DOMAIN}-le-ssl.conf" ]; then
+        sudo a2dissite "${DETECTED_DOMAIN}-le-ssl.conf" >/dev/null 2>&1 || true
+        sudo rm -f "/etc/apache2/sites-available/${DETECTED_DOMAIN}-le-ssl.conf"
+        sudo rm -f "/etc/apache2/sites-enabled/${DETECTED_DOMAIN}-le-ssl.conf"
+        echo_info "Removed certbot-managed SSL configuration '${DETECTED_DOMAIN}-le-ssl.conf'."
+    fi
+
     sudo rm -f /etc/apache2/sites-available/smartcookie.conf
     echo_info "Reloading Apache to release site..."
     sudo systemctl reload apache2 || true
@@ -189,6 +226,9 @@ echo "  [✓] $PROJECT_ROOT (Application files, builds, and node_modules)"
 echo "  [✓] /etc/systemd/system/smartcookie.service (Systemd background daemon)"
 echo "  [✓] MySQL database '$DROP_DB' and local user '$DROP_USER'"
 echo "  [✓] Apache VirtualHost configuration 'smartcookie.conf' (site disabled)"
+if [ -n "$DETECTED_DOMAIN" ]; then
+echo "  [✓] Certbot SSL certificate and managed SSL VirtualHost configuration for '$DETECTED_DOMAIN'"
+fi
 echo ""
 echo "FINAL DATABASE BACKUP:"
 echo "  Your final database snapshot remains perfectly preserved at:"

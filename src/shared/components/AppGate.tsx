@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
+import { AlertTriangle } from 'lucide-react';
 import { SetupWizard } from '../../features/auth/pages/SetupWizard';
 import { Login } from '../../features/auth/pages/Login';
 import { AcceptInvitation } from '../../features/auth/pages/AcceptInvitation';
@@ -57,6 +58,7 @@ export function AppGate({ children }: AppGateProps) {
   const [setupStatus, setSetupStatus] = useState<'superuser' | 'superuser-mfa' | 'company' | 'mail-config' | 'identity-provider' | 'org-structure' | 'role-templates' | 'complete' | null>(null);
   const [user, setUser] = useState<UserIdentity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [setupError, setSetupError] = useState<string | null>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [publicAction, setPublicAction] = useState<{ action: string; token: string } | null>(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -78,6 +80,7 @@ export function AppGate({ children }: AppGateProps) {
 
   const checkStatusAndSession = async () => {
     try {
+      setSetupError(null);
       // 1. Check Setup Status
       const setupRes = await fetch('/api/setup/status');
       
@@ -86,7 +89,15 @@ export function AppGate({ children }: AppGateProps) {
         setSetupStatus('complete');
         await fetchSession();
       } else if (setupRes.ok) {
-        const setupData = await setupRes.json();
+        let setupData;
+        try {
+          setupData = await setupRes.json();
+        } catch (jsonErr) {
+          console.error('Failed to parse setup status json:', jsonErr);
+          setSetupError('Unable to parse setup status response');
+          setIsLoading(false);
+          return;
+        }
         setSetupStatus(setupData.status);
         if (setupData.status === 'complete') {
           await fetchSession();
@@ -94,15 +105,14 @@ export function AppGate({ children }: AppGateProps) {
           setIsLoading(false);
         }
       } else {
-        // Fallback
-        setSetupStatus('complete');
-        await fetchSession();
+        // Genuine error path (unexpected status)
+        setSetupError(`Server returned status ${setupRes.status}`);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error in AppGate status checking:', err);
-      // Fallback
-      setSetupStatus('complete');
-      await fetchSession();
+      setSetupError(err instanceof Error ? err.message : String(err));
+      setIsLoading(false);
     }
   };
 
@@ -296,11 +306,17 @@ export function AppGate({ children }: AppGateProps) {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    setSetupError(null);
+    await checkStatusAndSession();
+  };
+
   const authContextValue: AuthContextType = {
     user,
     setupStatus,
     isLoading,
-    refresh: checkStatusAndSession,
+    refresh: handleRefresh,
     logout: handleLogout,
   };
 
@@ -376,6 +392,38 @@ export function AppGate({ children }: AppGateProps) {
             <h1 className="text-xl font-bold tracking-tight text-slate-900">SmartCookie</h1>
             <p className="text-sm text-slate-500 font-medium">{t('appGate.verifying')}</p>
           </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (setupError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 text-slate-800" id="appgate-error-view">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center space-y-6 max-w-md p-6 bg-white rounded-2xl shadow-sm border border-slate-200"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600" id="appgate-error-icon">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <div className="text-center space-y-2">
+            <h1 className="text-lg font-bold tracking-tight text-slate-900" id="appgate-error-title">
+              {t('appGate.statusVerificationTitle', 'Verification Failure')}
+            </h1>
+            <p className="text-sm text-slate-600 font-medium text-center" id="appgate-error-description">
+              {t('appGate.statusVerificationError', 'Unable to verify application status - please check server logs and try again')}
+            </p>
+          </div>
+          <button
+            type="button"
+            id="appgate-retry-button"
+            onClick={handleRefresh}
+            className="w-full inline-flex justify-center items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition"
+          >
+            {t('appGate.retry', 'Retry')}
+          </button>
         </motion.div>
       </div>
     );
