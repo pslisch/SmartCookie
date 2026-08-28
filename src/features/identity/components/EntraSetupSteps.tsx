@@ -41,6 +41,12 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // CSRF token helper
+  const getCsrfToken = () => {
+    const match = document.cookie.match(/csrfToken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+  };
+
   const redirectUri = `${window.location.origin}/api/auth/login/callback`;
 
   const copyToClipboard = () => {
@@ -63,6 +69,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': getCsrfToken()
         },
         body: JSON.stringify({
           tenantId: tenantId.trim(),

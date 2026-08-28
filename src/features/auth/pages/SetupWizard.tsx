@@ -38,6 +38,12 @@ export function SetupWizard({
   const { t } = useTranslation();
   const { refresh } = useAuth();
 
+  // CSRF token helper
+  const getCsrfToken = () => {
+    const match = document.cookie.match(/csrfToken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+  };
+
   // Superuser Form State
   const [suUsername, setSuUsername] = useState('');
   const [suPassword, setSuPassword] = useState('');
@@ -220,6 +226,7 @@ export function SetupWizard({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': getCsrfToken()
         },
         body: JSON.stringify({
           host: smtpHost.trim(),
