@@ -9,26 +9,49 @@ This document serves as the top-level directory map and semantic index of the **
 ### 1. Application Core
 - **`src/`**: Parent directory containing all client-side UI files, features, and runtime resources.
 - **`src/main.tsx`**: Entry point where React renders inside the HTML context.
-- **`src/App.tsx`**: Main visual orchestrator coordinating layout view states and importing features.
+- **`src/App.tsx`**: Main visual orchestrator coordinating layout view states, navigation tabs, and permissions.
 
-### 2. Feature Modules
-- **`src/features/`**: Parent directory for independent and self-contained business logic modules.
-  - **`src/features/lessons/`**: Contains page files, components, and types related to the student hub and enrolled lessons list.
-  - **`src/features/catalog/`**: Holds pages, tracking logic, and curriculum card components for searching/filtering course streams.
+### 2. Feature Modules (Client)
+- **`src/features/`**: Directory for modular business logic and visual features.
+  - **`src/features/auth/`**: Authentication pages (Login, SetupWizard, AcceptInvitation, ForgotPassword, ResetPassword, ConfirmEmail).
+  - **`src/features/lessons/`**: Student hub (My Lessons) displaying assigned and self-assigned courses/lessons.
+  - **`src/features/catalog/`**: Curriculum course catalog with searching, filtering, and self-assignment capabilities.
+  - **`src/features/management/`**: Central administrative oversight dashboard coordinating access to system modules.
+  - **`src/features/organization/`**: Organization Unit tree explorer, Learning Groups, Users tab, and Bulk Import Wizard.
+  - **`src/features/rbac/`**: Role Management matrix, inheritance controls, and System Settings.
+  - **`src/features/assignments/`**: Lesson/Course assignment creation, targeting, reports, and instance status tracking.
+  - **`src/features/content/`**: SCORM Content Library, package upload wizard, and SCORM 1.2 runtime player bridge.
+  - **`src/features/profiles/`**: Full User Profile, custom Field Builder, notification preferences, and MFA security tabs.
+  - **`src/features/identity/`**: Microsoft Entra ID connection wizard, sync status, and group mapping controls.
 
-### 3. Shared Layer
-- **`src/shared/`**: Directory for resources, components, types, and hooks shared across multiple features.
-  - **`src/shared/components/layout/`**: Core shell viewports, persistent headers, sticky navigation bars, and footers.
-  - **`src/shared/types/`**: Common TS definitions, tab selectors, and system enums.
+### 3. Shared Layer (Client)
+- **`src/shared/`**: Resources, components, types, and hooks shared across multiple features.
+  - **`src/shared/components/layout/`**: Shell viewport wrapper, responsive Navbar, sticky Footer, and LanguageSwitcher.
+  - **`src/shared/components/`**: AppGate auth state machine, PreviewBanner, RequiredFieldReminder, ProfileFieldInput, QuickProfile.
+  - **`src/shared/contexts/`**: PreviewContext for cosmetic role previewing.
+  - **`src/shared/hooks/`**: `usePermission` for RBAC permission checks.
+  - **`src/shared/i18n/`**: Internationalization configs and multi-language translation dictionaries.
+  - **`src/shared/types/`**: Common TypeScript definitions, navigation tab enums, and system types.
 
-### 4. Developer Documentation
-- **`docs/`**: Home for standard markdown guidelines created for human developers (Constitution, Coding Standards, etc.).
+### 4. Backend Server Core
+- **`server/`**: Full-stack backend layer containing Express + TypeScript server, middleware, services, and database integration.
+  - **`server/src/index.ts`**: Express application entrypoint, middleware configuration, and API route mounting.
+  - **`server/src/features/`**: Modular backend feature routes, controllers, services, and permission declarations (`auth`, `rbac`, `organization`, `assignments`, `content`, `profiles`, `identity`, `preview`).
+  - **`server/src/shared/`**: Cross-cutting backend infrastructure:
+    - **`server/src/shared/audit/`**: Audit logging service.
+    - **`server/src/shared/crypto/`**: AES-256-GCM encryption utilities for credentials and secrets.
+    - **`server/src/shared/email/`**: Transactional email service supporting tenant SMTP and fallback configs.
+    - **`server/src/shared/middleware/`**: Auth session verification, CSRF validation, permission checks, rate limiters, and error handling.
+    - **`server/src/shared/permissions/`**: Permission registry and database synchronization.
+    - **`server/src/shared/scheduler/`**: Background scheduled task runner for soft-delete purges, group expirations, and email reminders.
+    - **`server/src/shared/token/`**: Secure SHA-256 token generation and validation.
+  - **`server/prisma/`**: Prisma schema (`schema.prisma`), migrations, and seed scripts (`seed.ts`, `profileFieldsSeed.ts`).
 
-### 5. AI Project Metadata
-- **`.ai/`**: Hidden registry and indexing home containing machine-parsable metadata index lists, architecture decision logs, and standard coding templates.
+### 5. Developer Documentation
+- **`docs/`**: Curated markdown guidelines created for human developers (Constitution, Coding Standards, Architecture, UI Guidelines).
 
-### 6. Backend Server Core
-- **`server/`**: Full-stack backend layer containing Express + TypeScript server, middleware, and Prisma ORM schema and migrations.
+### 6. AI Project Metadata
+- **`.ai/`**: Hidden registry and indexing home containing machine-parsable metadata index lists, architecture decision records (`decisions/`), and standard coding templates (`templates/`).
 
 ---
 

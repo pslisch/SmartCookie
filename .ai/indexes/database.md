@@ -105,6 +105,7 @@ This index describes the data models, entity relationships, and schemas supporti
 - **Fields**:
   - `id` (String, UUID, Primary Key)
   - `name` (String)
+  - `type` (Enum: `STATIC`, `DYNAMIC`, Default: `STATIC`)
   - `parentGroupId` (String, Nullable, Foreign Key self-relation)
   - `companyId` (String, Foreign Key to `companies.id`)
   - `isTemporary` (Boolean, Default: `false`)
@@ -212,6 +213,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - `scheduledFor` (DateTime, Nullable)
   - `dueDateDefaultDays` (Int, Nullable)
   - `isMandatory` (Boolean, Default: `false`)
+  - `attemptLimit` (Int, Default: 0)
   - `createdById` (String, Foreign Key to `users.id`)
   - `ownerId` (String, Foreign Key to `users.id`)
   - `status` (Enum: `DRAFT`, `SCHEDULED`, `ACTIVE`, `CANCELLED`, `ARCHIVED`, Default: `DRAFT`)
@@ -253,6 +255,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - `startedAt` (DateTime, Nullable)
   - `completedAt` (DateTime, Nullable)
   - `progressPercent` (Int, Default: 0)
+  - `contentId` (String, Nullable, Foreign Key to `contents.id`)
   - `deletedAt` (DateTime, Nullable, soft-deletion timestamp)
   - `permanentDeleteAt` (DateTime, Nullable, timestamp for permanent purging after 14 days)
   - `deletionBatchId` (String, Nullable, UUID of soft-deletion batch)
@@ -264,6 +267,7 @@ This index describes the data models, entity relationships, and schemas supporti
 - **Relations**:
   - Belongs to `Assignment` (via `assignmentId`, cascade on delete)
   - Belongs to `User` (via `userId`, cascade on delete)
+  - Belongs to `Content` (optional, via `contentId`)
   - Has many `UserAssignmentInstanceSource`s (via `sources`)
   - Has many `ContentAttempt`s (via `contentAttempts`)
 
@@ -338,6 +342,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - `launchFile` (String, file path to load in iframe)
   - `manifestData` (Json, metadata extracted from imsmanifest.xml)
   - `thumbnailPath` (String, Nullable)
+  - `certificateSetting` (String, Default: `"IGNORE"`)
   - `createdById` (String, Foreign Key to `users.id`)
   - `createdAt` (DateTime, Default: `now()`)
   - `updatedAt` (DateTime, Auto-updated)
