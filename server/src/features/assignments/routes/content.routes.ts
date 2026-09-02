@@ -47,6 +47,14 @@ router.get('/lessons', async (req: Request, res: Response) => {
       where: {
         companyId: req.user!.companyId!,
       },
+      include: {
+        content: {
+          include: {
+            tags: true,
+            category: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -76,6 +84,14 @@ router.post('/lessons', async (req: Request, res: Response) => {
         companyId: req.user!.companyId!,
         title,
         status: LessonStatus.DRAFT,
+      },
+      include: {
+        content: {
+          include: {
+            tags: true,
+            category: true,
+          },
+        },
       },
     });
 
@@ -117,6 +133,14 @@ router.patch('/lessons/:id/publish', async (req: Request, res: Response) => {
     const updated = await prisma.lesson.update({
       where: { id },
       data: { status: targetStatus },
+      include: {
+        content: {
+          include: {
+            tags: true,
+            category: true,
+          },
+        },
+      },
     });
 
     return res.json(updated);
@@ -316,8 +340,16 @@ router.put('/lessons/:id/content', async (req: Request, res: Response) => {
     const updated = await prisma.lesson.update({
       where: { id },
       data: {
-        contentId: contentId || null
-      }
+        contentId: contentId || null,
+      },
+      include: {
+        content: {
+          include: {
+            tags: true,
+            category: true,
+          },
+        },
+      },
     });
 
     return res.json(updated);

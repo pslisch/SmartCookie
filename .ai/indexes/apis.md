@@ -447,58 +447,66 @@ Every documented endpoint logs:
 - **Method**: `GET`
 - **Request**: Optional query parameters for filter
 - **Response**: List of `Content` package structures with categories and tags (200 OK)
-- **Used By**: SCORM Content Library Page
+- **Used By**: SCORM Content Management & Package selectors
 - **Permissions**: Requires active session with `"content:view"` permission.
 
-### 55. Import SCORM Package
+### 55. Get SCORM Package Details
+- **Endpoint**: `/api/content/:id`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `Content` package object with tags and category (200 OK)
+- **Used By**: `ScormPreviewPlayer` component
+- **Permissions**: Requires active session with `"content:view"` permission (or active session).
+
+### 56. Import SCORM Package
 - **Endpoint**: `/api/content/import`
 - **Method**: `POST`
 - **Request**: Multipart form containing `package` file (ZIP), `categoryId`, and tags
-- **Response**: Imported `Content` object (201 Created)
-- **Used By**: ContentImportWizard component
+- **Response**: Imported `Content` object (201 Created) — automatically creates a linked `Lesson` record in status `DRAFT`
+- **Used By**: `ContentImportWizard` component
 - **Permissions**: Requires active session with `"content:import"` permission.
 
-### 56. Publish SCORM Package
+### 57. Publish SCORM Package
 - **Endpoint**: `/api/content/:id/publish`
 - **Method**: `POST`
 - **Request**: None
 - **Response**: Updated `Content` object with status `PUBLISHED` (200 OK)
-- **Used By**: SCORM Content Library
+- **Used By**: `ContentManagement` page (detail panel)
 - **Permissions**: Requires active session with `"content:publish"` permission.
 
-### 57. Archive SCORM Package
+### 58. Archive SCORM Package
 - **Endpoint**: `/api/content/:id/archive`
 - **Method**: `POST`
 - **Request**: None
 - **Response**: Updated `Content` object with status `ARCHIVED` (200 OK)
-- **Used By**: SCORM Content Library
+- **Used By**: `ContentManagement` page (detail panel)
 - **Permissions**: Requires active session with `"content:archive"` permission.
 
-### 58. Restore SCORM Package
+### 59. Restore SCORM Package
 - **Endpoint**: `/api/content/:id/restore`
 - **Method**: `POST`
 - **Request**: `{ targetStatus: "DRAFT" | "PUBLISHED" }`
 - **Response**: Updated `Content` object (200 OK)
-- **Used By**: SCORM Content Library
+- **Used By**: `ContentManagement` page (detail panel)
 - **Permissions**: Requires active session with `"content:restore"` permission.
 
-### 59. Download SCORM original ZIP
+### 60. Download SCORM original ZIP
 - **Endpoint**: `/api/content/:id/download`
 - **Method**: `GET`
 - **Request**: None
 - **Response**: Binary stream of the original uploaded `.zip` package (200 OK)
-- **Used By**: SCORM Content Library / Version lists
+- **Used By**: `ContentManagement` page / Version history lists
 - **Permissions**: Requires active session with `"content:download-zip"` permission.
 
-### 60. List SCORM Package Versions
+### 61. List SCORM Package Versions
 - **Endpoint**: `/api/content/:contentGroupId/versions`
 - **Method**: `GET`
 - **Request**: None
 - **Response**: List of all package versions under the same group ID (200 OK)
-- **Used By**: SCORM Content Library Version History Modal
+- **Used By**: `ContentManagement` Version History Modal
 - **Permissions**: Requires active session with `"content:view"` permission.
 
-### 61. Start SCORM Content Attempt
+### 62. Start SCORM Content Attempt
 - **Endpoint**: `/api/content-attempts/start`
 - **Method**: `POST`
 - **Request**: `{ userAssignmentInstanceId }`
@@ -506,7 +514,7 @@ Every documented endpoint logs:
 - **Used By**: ScormPlayer iframe launcher
 - **Permissions**: Requires active session with `"assignments:view"` permission.
 
-### 62. Commit SCORM Content Attempt State
+### 63. Commit SCORM Content Attempt State
 - **Endpoint**: `/api/content-attempts/:id/commit`
 - **Method**: `POST`
 - **Request**: JSON object containing SCORM CMI state (`lessonStatus`, `scoreRaw`, `sessionTimeSeconds`, etc.)
@@ -514,7 +522,7 @@ Every documented endpoint logs:
 - **Used By**: ScormPlayer SCORM 1.2 runtime bridge
 - **Permissions**: Requires active session with `"assignments:view"` permission.
 
-### 63. Fetch Attempt History
+### 64. Fetch Attempt History
 - **Endpoint**: `/api/content-attempts/:instanceId`
 - **Method**: `GET`
 - **Request**: None
@@ -522,7 +530,7 @@ Every documented endpoint logs:
 - **Used By**: ScormPlayer / AssignmentInstanceReport components
 - **Permissions**: Requires active session with `"assignments:view"` permission.
 
-### 64. Generate Bulk Import Template CSV
+### 65. Generate Bulk Import Template CSV
 - **Endpoint**: `/api/users/bulk-import/template`
 - **Method**: `GET`
 - **Request**: None
@@ -530,7 +538,7 @@ Every documented endpoint logs:
 - **Used By**: Bulk Import Wizard
 - **Permissions**: Requires active session with `"users:create"` permission.
 
-### 65. Dry-Run Validate Bulk Import CSV
+### 66. Dry-Run Validate Bulk Import CSV
 - **Endpoint**: `/api/users/bulk-import/validate`
 - **Method**: `POST`
 - **Request**: Multipart file with key `"file"`, or JSON body with `csv` string, or raw CSV text
@@ -538,7 +546,7 @@ Every documented endpoint logs:
 - **Used By**: Bulk Import Wizard (dry-run review page)
 - **Permissions**: Requires active session with `"users:create"` permission.
 
-### 66. Confirm and Bulk-Import Users
+### 67. Confirm and Bulk-Import Users
 - **Endpoint**: `/api/users/bulk-import/confirm`
 - **Method**: `POST`
 - **Request**: Multipart file with key `"file"`, or JSON body with `csv` string, or raw CSV text
@@ -546,7 +554,7 @@ Every documented endpoint logs:
 - **Used By**: Bulk Import Wizard (confirm submit action)
 - **Permissions**: Requires active session with `"users:create"` permission. (Executes inside a secure SQL transaction: either all succeed or none are created).
 
-### 67. MFA Verify Challenge
+### 68. MFA Verify Challenge
 - **Endpoint**: `/api/auth/mfa/verify`
 - **Method**: `POST`
 - **Request**: `{ challengeToken, code }`
@@ -554,7 +562,7 @@ Every documented endpoint logs:
 - **Used By**: Login screen (MFA challenge step)
 - **Permissions**: Public access (validates challenge token, logs user in and sets session cookie)
 
-### 68. MFA Pending Setup Secret Generation
+### 69. MFA Pending Setup Secret Generation
 - **Endpoint**: `/api/auth/mfa/setup-pending`
 - **Method**: `POST`
 - **Request**: `{ setupToken }`
@@ -562,7 +570,7 @@ Every documented endpoint logs:
 - **Used By**: Login forced setup flow
 - **Permissions**: Public access (validates setup token)
 
-### 69. MFA Pending Setup Verification & Enablement
+### 70. MFA Pending Setup Verification & Enablement
 - **Endpoint**: `/api/auth/mfa/enable-pending`
 - **Method**: `POST`
 - **Request**: `{ setupToken, pendingSecret, code }`
@@ -570,7 +578,7 @@ Every documented endpoint logs:
 - **Used By**: Login forced setup flow
 - **Permissions**: Public access (consumes setup token, enables MFA on user, returns recovery codes, sets login session)
 
-### 70. Setup Wizard Superuser MFA Generation
+### 71. Setup Wizard Superuser MFA Generation
 - **Endpoint**: `/api/setup/mfa/setup`
 - **Method**: `GET`
 - **Request**: None
@@ -578,7 +586,7 @@ Every documented endpoint logs:
 - **Used By**: Setup Wizard (Step 1.5: Superuser MFA configuration)
 - **Permissions**: Requires active superuser session cookie (`sid`)
 
-### 71. Setup Wizard Superuser MFA Verification & Enablement
+### 72. Setup Wizard Superuser MFA Verification & Enablement
 - **Endpoint**: `/api/setup/mfa/verify`
 - **Method**: `POST`
 - **Request**: `{ pendingSecret, code }`
@@ -586,7 +594,7 @@ Every documented endpoint logs:
 - **Used By**: Setup Wizard (Step 1.5: Superuser MFA configuration)
 - **Permissions**: Requires active superuser session cookie (`sid`)
 
-### 72. Self-Service MFA Status
+### 73. Self-Service MFA Status
 - **Endpoint**: `/api/profile/mfa/status`
 - **Method**: `GET`
 - **Request**: None
@@ -594,7 +602,7 @@ Every documented endpoint logs:
 - **Used By**: Profile Security Tab
 - **Permissions**: Active session cookie required
 
-### 73. Self-Service MFA Setup Initiation
+### 74. Self-Service MFA Setup Initiation
 - **Endpoint**: `/api/profile/mfa/setup`
 - **Method**: `GET`
 - **Request**: None
@@ -602,7 +610,7 @@ Every documented endpoint logs:
 - **Used By**: Profile Security Tab
 - **Permissions**: Active session cookie required
 
-### 74. Self-Service MFA Enablement
+### 75. Self-Service MFA Enablement
 - **Endpoint**: `/api/profile/mfa/enable`
 - **Method**: `POST`
 - **Request**: `{ pendingSecret, code }`
@@ -610,7 +618,7 @@ Every documented endpoint logs:
 - **Used By**: Profile Security Tab
 - **Permissions**: Active session cookie required
 
-### 75. Self-Service MFA Disablement
+### 76. Self-Service MFA Disablement
 - **Endpoint**: `/api/profile/mfa/disable`
 - **Method**: `POST`
 - **Request**: `{ currentPassword }`
@@ -618,7 +626,7 @@ Every documented endpoint logs:
 - **Used By**: Profile Security Tab
 - **Permissions**: Active session cookie required
 
-### 76. Self-Service Regenerate Recovery Codes
+### 77. Self-Service Regenerate Recovery Codes
 - **Endpoint**: `/api/profile/mfa/regenerate-recovery`
 - **Method**: `POST`
 - **Request**: None
@@ -626,7 +634,7 @@ Every documented endpoint logs:
 - **Used By**: Profile Security Tab
 - **Permissions**: Active session cookie required
 
-### 77. Admin Reset MFA
+### 78. Admin Reset MFA
 - **Endpoint**: `/api/users/:id/admin-reset-mfa`
 - **Method**: `POST`
 - **Request**: None
@@ -634,7 +642,7 @@ Every documented endpoint logs:
 - **Used By**: Admin panel / User Management list
 - **Permissions**: Requires active session with `"users:edit"` permission (Superuser bypasses)
 
-### 78. Fetch Identity Provider Config
+### 79. Fetch Identity Provider Config
 - **Endpoint**: `/api/identity-providers/entra`
 - **Method**: `GET`
 - **Request**: None
@@ -642,7 +650,7 @@ Every documented endpoint logs:
 - **Used By**: Identity Providers configuration screen
 - **Permissions**: `identity-providers:view-config` (LMS Manager, Superuser, etc.)
 
-### 79. Test Identity Provider Connection
+### 80. Test Identity Provider Connection
 - **Endpoint**: `/api/identity-providers/entra/test-connection`
 - **Method**: `POST`
 - **Request**: `{ tenantId, clientId, clientSecret }`
@@ -650,7 +658,7 @@ Every documented endpoint logs:
 - **Used By**: Connection wizard test button
 - **Permissions**: `identity-providers:configure` (Superuser only)
 
-### 80. Save Identity Provider Config
+### 81. Save Identity Provider Config
 - **Endpoint**: `/api/identity-providers/entra`
 - **Method**: `POST`
 - **Request**: `{ tenantId, clientId, clientSecret }`
@@ -658,7 +666,7 @@ Every documented endpoint logs:
 - **Used By**: Connection wizard save button
 - **Permissions**: `identity-providers:configure` (Superuser only)
 
-### 81. Update Identity Provider Settings
+### 82. Update Identity Provider Settings
 - **Endpoint**: `/api/identity-providers/entra`
 - **Method**: `PATCH`
 - **Request**: `{ loginMode, importStrategy, defaultSyncedUserRoleId, groupSelections: Array<{ id: string, name: string }>, enabled }`
@@ -666,7 +674,7 @@ Every documented endpoint logs:
 - **Used By**: Configuration sliders, dropdowns, and group selector
 - **Permissions**: `identity-providers:configure` (Superuser only)
 
-### 82. Trigger Manual Sync Now
+### 83. Trigger Manual Sync Now
 - **Endpoint**: `/api/identity-providers/entra/sync-now`
 - **Method**: `POST`
 - **Request**: None
@@ -674,7 +682,7 @@ Every documented endpoint logs:
 - **Used By**: "Sync Now" trigger button
 - **Permissions**: `identity-providers:manual-sync` (User Manager, etc.)
 
-### 83. Get Paginated Sync Logs
+### 84. Get Paginated Sync Logs
 - **Endpoint**: `/api/identity-providers/entra/sync-logs`
 - **Method**: `GET`
 - **Request**: URL query parameters `page` and `limit`
@@ -682,7 +690,7 @@ Every documented endpoint logs:
 - **Used By**: Sync History table
 - **Permissions**: `identity-providers:view-logs` (LMS Manager, User Manager, etc.)
 
-### 84. Download Sync Log Details
+### 85. Download Sync Log Details
 - **Endpoint**: `/api/identity-providers/entra/sync-logs/:id/download`
 - **Method**: `GET`
 - **Request**: None (returns downloadable txt attachment)

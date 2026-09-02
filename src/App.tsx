@@ -17,6 +17,7 @@ import { AppGate, useAuth } from './shared/components/AppGate';
 import { usePermission } from './shared/hooks/usePermission';
 import { PreviewProvider } from './shared/contexts/PreviewContext';
 import { RequiredFieldReminder } from './shared/components/RequiredFieldReminder';
+import { ScormPreviewPlayer } from './features/content/components/ScormPreviewPlayer';
 import pkg from '@/package.json';
 
 // Format package.json name dynamically (e.g. "smart-cookie" -> "SmartCookie")
@@ -26,6 +27,16 @@ const formatAppName = (rawName: string): string => {
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join('');
+};
+
+const getPreviewContentId = (): string | null => {
+  const pathname = window.location.pathname;
+  const match = pathname.match(/^\/preview\/content\/([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  const params = new URLSearchParams(window.location.search);
+  const qId = params.get('previewContentId');
+  if (qId) return qId;
+  return null;
 };
 
 const getInitialTab = (): Tab => {
@@ -53,6 +64,11 @@ const getInitialTab = (): Tab => {
 };
 
 function AppContent({ appName }: { appName: string }) {
+  const previewContentId = getPreviewContentId();
+  if (previewContentId) {
+    return <ScormPreviewPlayer contentId={previewContentId} />;
+  }
+
   const [currentTab, setCurrentTab] = useState<Tab>(getInitialTab);
   const { user } = useAuth();
   

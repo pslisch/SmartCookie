@@ -110,26 +110,33 @@ Every registered component should include:
 
 ### 12. `ContentManagement`
 - **Location**: `src/features/assignments/pages/ContentManagement.tsx`
-- **Purpose**: Create minimal Lesson and Course stub drafts, toggle publication status, and order lessons inside courses.
+- **Purpose**: Unified Lessons and Course curriculum management page. Provides creation of Lesson and Course stub drafts, SCORM package upload integration via wizard, expandable lesson detail panels for SCORM-linked packages (supporting tagging, categories, publish/archive/restore status lifecycle, version history modal, and ZIP download), plus non-tracked SCORM preview tab launching and placeholder Edit actions.
 - **Props**: None (Self-contained).
 - **Used By**: `src/features/management/pages/Management.tsx`
-- **Dependencies**: React, `react-i18next`, `motion/react`, Lucide Icons
+- **Dependencies**: React, `react-i18next`, `motion/react`, `ContentImportWizard`, Lucide Icons
 
-### 13. `MyLessons`
+### 13. `ScormPreviewPlayer`
+- **Location**: `src/features/content/components/ScormPreviewPlayer.tsx`
+- **Purpose**: Full-screen SCORM 1.2 package preview player running in a separate tab without attempt tracking or database side effects. Injects an in-memory SCORM 1.2 `window.API` bridge into the preview iframe to support package interactivity cleanly.
+- **Props**: None (extracts `contentId` parameter directly from URL path `/preview/content/:contentId`).
+- **Used By**: `src/App.tsx` (intercepted via URL path)
+- **Dependencies**: React, Lucide Icons, Fetch API
+
+### 14. `MyLessons`
 - **Location**: `src/features/lessons/pages/MyLessons.tsx`
 - **Purpose**: Comprehensive dashboard for learners to track and complete assigned studies, view due dates, and manage their self-assigned courses/lessons list.
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx` (via hash navigation)
 - **Dependencies**: React, `motion/react`, Lucide Icons, Fetch API
 
-### 14. `Catalog`
+### 15. `Catalog`
 - **Location**: `src/features/catalog/pages/Catalog.tsx`
 - **Purpose**: Interactive course and lesson curriculum catalog for users to discover and self-assign new learning content.
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx` (via hash navigation)
 - **Dependencies**: React, `motion/react`, Lucide Icons, Fetch API
 
-### 15. `AssignmentInstanceReport`
+### 16. `AssignmentInstanceReport`
 - **Location**: `src/features/assignments/components/AssignmentInstanceReport.tsx`
 - **Purpose**: Rich reporting interface and data visualizer displaying progress, completion statistics, overdue tracking, and member completion records for a specific assignment.
 - **Props**:
@@ -139,7 +146,7 @@ Every registered component should include:
 - **Used By**: `src/features/assignments/pages/AssignmentManagement.tsx`
 - **Dependencies**: React, `motion/react`, Lucide Icons, Recharts (for analytics visualization)
 
-### 16. `ProfileFieldInput`
+### 17. `ProfileFieldInput`
 - **Location**: `src/shared/components/ProfileFieldInput.tsx`
 - **Purpose**: Dynamic shared input component that renders form controls per profile field type with automatic permission checks, client-side validations, and lock warnings.
 - **Props**:
@@ -154,14 +161,14 @@ Every registered component should include:
 - **Used By**: Full Profile tab, User Management detail views
 - **Dependencies**: React, Lucide Icons, `react-i18next`
 
-### 17. `UsersTab`
+### 18. `UsersTab`
 - **Location**: `src/features/organization/components/UsersTab.tsx`
 - **Purpose**: A comprehensive user administration panel providing robust search, multi-faceted filtering (status, roles, organization units), side-sheet detail editing, single-user password reset, and archive/restore operations.
 - **Props**: None (Self-contained tab).
 - **Used By**: `src/features/organization/pages/UserGroupManagement.tsx`
 - **Dependencies**: React, `lucide-react`, `react-i18next`, `ProfileFieldInput`, `BulkImportWizard`
 
-### 18. `BulkImportWizard`
+### 19. `BulkImportWizard`
 - **Location**: `src/features/organization/components/BulkImportWizard.tsx`
 - **Purpose**: Multi-step wizard layout for uploading a CSV file to bulk import user accounts. Provides a download template button, a beautiful drag-and-drop file selector, per-row validation reporting, and an all-or-nothing confirmation step.
 - **Props**:
@@ -170,14 +177,14 @@ Every registered component should include:
 - **Used By**: `src/features/organization/components/UsersTab.tsx`
 - **Dependencies**: React, `lucide-react`, `react-i18next`
 
-### 19. `FieldBuilder`
+### 20. `FieldBuilder`
 - **Location**: `src/features/profiles/pages/FieldBuilder.tsx`
 - **Purpose**: Dynamic category and custom field management interface allowing administrator configuration of profile attribute mappings, orderings, types, regex validation rules, default values, and role-based editing authorizations.
 - **Props**: None (Self-contained panel).
 - **Used By**: `src/features/rbac/pages/Settings.tsx`
 - **Dependencies**: React, Lucide Icons, `motion/react`, `react-i18next`
 
-### 20. `RequiredFieldReminder`
+### 21. `RequiredFieldReminder`
 - **Location**: `src/shared/components/RequiredFieldReminder.tsx`
 - **Purpose**: Dismissible amber layout banner reminding logged-in end-users of missing mandatory fields, calculating completion percentages live and redirecting users directly to the profile view.
 - **Props**:
@@ -185,7 +192,7 @@ Every registered component should include:
 - **Used By**: `src/App.tsx`
 - **Dependencies**: React, Lucide Icons, `motion/react`, `react-i18next`
 
-### 21. `EntraSetupSteps`
+### 22. `EntraSetupSteps`
 - **Location**: `src/features/identity/components/EntraSetupSteps.tsx`
 - **Purpose**: Multi-part sub-flow for OIDC / Microsoft Entra ID connection, displaying app registration guidance, copyable redirect callbacks, live test handshakes, API permission checking, sync strategy config, and attribute mappings.
 - **Props**:

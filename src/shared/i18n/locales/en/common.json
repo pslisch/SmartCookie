@@ -181,6 +181,8 @@
     "managePermissionsBtn": "Manage Permissions",
     "manageDirectoryBtn": "Manage Directory",
     "manageAssignmentsBtn": "Manage Assignments",
+    "subtabDispatcher": "Assignments & Distribution",
+    "subtabCatalog": "Course & Lesson Catalog",
     "placeholder": "Assignment Management feature is coming in Task 5."
   },
   "rbac": {
@@ -528,6 +530,32 @@
     "addLessonToCourse": "Add Lesson to Course",
     "allLessonsInCourse": "All lessons are already in this course.",
     "selectCourseFirst": "Select a Course first to view/manage its lesson structure and order.",
+    "importScormBtn": "Import SCORM Package",
+    "scormBadge": "SCORM 1.2",
+    "previewBtn": "Preview",
+    "previewTooltip": "Preview SCORM package in a new tab",
+    "previewDisabledTooltip": "No SCORM package linked to preview",
+    "editBtn": "Edit",
+    "editTooltip": "Lesson Builder (Coming Soon)",
+    "detailsBtn": "Details",
+    "hideDetailsBtn": "Hide Details",
+    "noLinkedScorm": "No SCORM package is linked to this lesson.",
+    "versionHistoryBtn": "Version History",
+    "downloadZipBtn": "Download ZIP",
+    "archiveContentBtn": "Archive",
+    "restoreContentBtn": "Restore",
+    "publishContentBtn": "Publish Content",
+    "versionLabel": "Version {{version}}",
+    "authorLabel": "Author: {{author}}",
+    "languageLabel": "Language: {{language}}",
+    "noDescription": "No description provided.",
+    "versionHistoryModal": {
+      "title": "Version History",
+      "uploaded": "Uploaded: {{date}}",
+      "noVersions": "No versions found.",
+      "closeBtn": "Close",
+      "mvpNote": "Interactive visual differential comparison between versions is deferred. Older ZIP download is provided to compare package source trees manually."
+    },
     "createModal": {
       "newLessonTitle": "Create New Lesson",
       "newCourseTitle": "Create New Course",
@@ -552,7 +580,14 @@
       "togglePublishErr": "Failed to toggle status.",
       "saveCourseLessonsSuccess": "Lessons inside Course \"{{title}}\" saved successfully.",
       "saveCourseLessonsError": "Failed to save course lessons.",
-      "saveCourseLessonsErr": "Failed to update course lessons."
+      "saveCourseLessonsErr": "Failed to update course lessons.",
+      "publishContentSuccess": "\"{{title}}\" published successfully!",
+      "archiveContentSuccess": "\"{{title}}\" archived successfully!",
+      "restoreContentSuccess": "\"{{title}}\" restored to Draft status!",
+      "publishContentErr": "Error publishing content.",
+      "archiveContentErr": "Error archiving content.",
+      "restoreContentErr": "Error restoring content.",
+      "fetchVersionsErr": "Error fetching version history."
     }
   },
   "myLessons": {
@@ -639,6 +674,18 @@
     "pickerTitle": "Choose Preview Role",
     "learnerShortcut": "Preview as Learner",
     "noRoles": "No eligible roles available"
+  },
+  "previewPlayer": {
+    "loadingPackage": "Preparing your SCORM preview player...",
+    "loadFailedTitle": "Preview Unavailable",
+    "packageNotFound": "The requested content package could not be found.",
+    "closeBtn": "Close",
+    "closeTooltip": "Close Preview",
+    "tryAgainBtn": "Try Again",
+    "nonTrackedNotice": "Non-tracked sandbox preview (no records will be saved)",
+    "badgePreview": "Preview Mode",
+    "fetchError": "Failed to load content package for preview.",
+    "iframeTitle": "SCORM Preview: {{title}}"
   },
   "profileFields": {
     "errors": {

@@ -11,7 +11,6 @@ import { RoleManagement } from '../../rbac/pages/RoleManagement';
 import { UserGroupManagement } from '../../organization/pages/UserGroupManagement';
 import { AssignmentManagement } from '../../assignments/pages/AssignmentManagement';
 import { ContentManagement } from '../../assignments/pages/ContentManagement';
-import { ContentLibrary } from '../../content/pages/ContentLibrary';
 import { useAuth } from '../../../shared/components/AppGate';
 import { usePermission } from '../../../shared/hooks/usePermission';
 
@@ -19,7 +18,7 @@ export const Management: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [view, setView] = useState<'hub' | 'roles' | 'organization' | 'assignments'>('hub');
-  const [assignmentsSubTab, setAssignmentsSubTab] = useState<'dispatcher' | 'catalog' | 'library'>('dispatcher');
+  const [assignmentsSubTab, setAssignmentsSubTab] = useState<'dispatcher' | 'catalog'>('dispatcher');
 
   const hasRolesManage = usePermission('roles', 'manage');
   
@@ -201,7 +200,7 @@ export const Management: React.FC = () => {
               }`}
               id="subtab-dispatcher"
             >
-              Assignments & Distribution
+              {t('management.subtabDispatcher')}
             </button>
             <button
               onClick={() => setAssignmentsSubTab('catalog')}
@@ -212,27 +211,14 @@ export const Management: React.FC = () => {
               }`}
               id="subtab-catalog"
             >
-              Course & Lesson Catalog
-            </button>
-            <button
-              onClick={() => setAssignmentsSubTab('library')}
-              className={`pb-2 text-sm font-bold border-b-2 transition-all ${
-                assignmentsSubTab === 'library'
-                  ? 'border-blue-600 text-slate-800'
-                  : 'border-transparent text-slate-400 hover:text-slate-600'
-              }`}
-              id="subtab-content-library"
-            >
-              SCORM Content Library
+              {t('management.subtabCatalog')}
             </button>
           </div>
 
           {assignmentsSubTab === 'dispatcher' ? (
             <AssignmentManagement />
-          ) : assignmentsSubTab === 'catalog' ? (
-            <ContentManagement />
           ) : (
-            <ContentLibrary />
+            <ContentManagement />
           )}
         </div>
       )}

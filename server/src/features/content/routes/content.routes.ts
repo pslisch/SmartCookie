@@ -93,6 +93,34 @@ router.get('/:contentGroupId/versions', requirePermission('content', 'view'), as
 });
 
 /**
+ * GET /api/content/:id
+ * Retrieve a single content package by ID
+ */
+router.get('/:id', requirePermission('content', 'view'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const content = await prisma.content.findFirst({
+      where: {
+        id,
+        companyId: req.user!.companyId!
+      },
+      include: {
+        tags: true,
+        category: true
+      }
+    });
+
+    if (!content) {
+      return res.status(404).json({ error: 'Content not found.' });
+    }
+
+    return res.json(content);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to retrieve content package.' });
+  }
+});
+
+/**
  * POST /api/content/import
  * Multipart - zip + metadata fields
  */

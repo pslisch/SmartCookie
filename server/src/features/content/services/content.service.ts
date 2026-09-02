@@ -90,33 +90,65 @@ export class ContentService {
       const finalAuthor = metadata.author?.trim() || manifestInfo.author || null;
       const finalLanguage = metadata.language?.trim() || manifestInfo.language || null;
       
-      // Create Content record in DB
-      const content = await prisma.content.create({
-        data: {
-          id: contentId,
-          companyId: metadata.companyId,
-          providerType: 'SCORM_1_2',
-          title: finalTitle,
-          description: finalDescription,
-          categoryId: metadata.categoryId || null,
-          author: finalAuthor,
-          language: finalLanguage,
-          version,
-          contentGroupId,
-          status: 'DRAFT',
-          storagePathZip: zipPath,
-          storagePathExtracted: extractedDir,
-          launchFile: manifestInfo.launchFile,
-          manifestData: manifestInfo.rawManifest as any,
-          certificateSetting: metadata.certificateSetting || 'IGNORE',
-          createdById,
-          tags: metadata.tags && metadata.tags.length > 0 ? {
-            create: metadata.tags.map(tag => ({ tag }))
-          } : undefined
-        },
-        include: {
-          tags: true
+      // Create Content record in DB and ensure linked Lesson exists
+      const content = await prisma.$transaction(async (tx) => {
+        const createdContent = await tx.content.create({
+          data: {
+            id: contentId,
+            companyId: metadata.companyId,
+            providerType: 'SCORM_1_2',
+            title: finalTitle,
+            description: finalDescription,
+            categoryId: metadata.categoryId || null,
+            author: finalAuthor,
+            language: finalLanguage,
+            version,
+            contentGroupId,
+            status: 'DRAFT',
+            storagePathZip: zipPath,
+            storagePathExtracted: extractedDir,
+            launchFile: manifestInfo.launchFile,
+            manifestData: manifestInfo.rawManifest as any,
+            certificateSetting: metadata.certificateSetting || 'IGNORE',
+            createdById,
+            tags: metadata.tags && metadata.tags.length > 0 ? {
+              create: metadata.tags.map(tag => ({ tag }))
+            } : undefined
+          },
+          include: {
+            tags: true
+          }
+        });
+
+        // Check if an existing lesson is already linked to this contentGroupId
+        let existingLesson = null;
+        if (versionBehavior === 'REPLACE' && existingContentGroupId) {
+          const contentsInGroup = await tx.content.findMany({
+            where: { contentGroupId: existingContentGroupId },
+            select: { id: true }
+          });
+          const ids = contentsInGroup.map(c => c.id);
+          existingLesson = await tx.lesson.findFirst({
+            where: {
+              contentId: { in: ids },
+              companyId: metadata.companyId
+            }
+          });
         }
+
+        // If no lesson is linked yet, auto-create a linked Lesson in DRAFT status
+        if (!existingLesson) {
+          await tx.lesson.create({
+            data: {
+              companyId: metadata.companyId,
+              title: finalTitle,
+              status: 'DRAFT',
+              contentId: createdContent.id
+            }
+          });
+        }
+
+        return createdContent;
       });
       
       return {

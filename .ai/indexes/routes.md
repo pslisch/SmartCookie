@@ -83,3 +83,9 @@ Every listed visual route should eventually document:
 - **Guards**: Intercepted in `AppGate` as a public action
 - **Permissions**: Public access with valid email-change token
 
+### 12. SCORM Content Preview Player
+- **Path**: Full-screen standalone URL (`/preview/content/:contentId`)
+- **Component**: `src/features/content/components/ScormPreviewPlayer.tsx`
+- **Guards**: Intercepted in `App.tsx` before main shell rendering; provides untracked in-memory preview
+- **Permissions**: Authenticated session with `content:view` permission
+
