@@ -273,6 +273,16 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [AUDIT-2026-09-06] Repository State Audit & Documentation Sync
+- **Status**: Completed / Ground Truth Reconciled
+- **Date**: 2026-09-06
+- **Authors**: AI Coding Agent
+- **File**: [`repo-state-audit-2026-09-06.md`](./repo-state-audit-2026-09-06.md)
+- **Context**: Resolves reported conflict between legacy v1.0.0 foundation documentation (`docs/README.md`, `metadata.json`) and the mature full-stack LMS described in project handover documentation.
+- **Outcome**: Confirmed all 13 major feature domains (Auth, SetupWizard, RBAC, OUs & Learning Groups, Assignments, SCORM 1.2, EAV Profiles & Bulk Import, MFA with TOTP/AES-256-GCM, Entra ID, Theme & Branding with 28 design tokens) are fully implemented and operational across frontend (`src/features/*`) and backend (`server/src/features/*`). Established remediation roadmap for outdated docs.
+
+---
+
 ## 🔮 Planned ADRs (updated)
 
 - **ADR-0006: Authentication Strategy**: Detailing the Superuser,
