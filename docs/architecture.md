@@ -153,6 +153,74 @@ To prevent privilege escalation and unauthorized system discovery, administrator
 * **Banner Gating:** A slim amber banner (`src/shared/components/PreviewBanner.tsx`) is injected at the shell level, notifying the user that a preview is active and providing an "Exit Preview" button.
 
 
+## 🎨 Theming & CSS Custom Property Tokens
+
+SmartCookie implements an enterprise multi-tenant branding and theming architecture based on Tailwind CSS v4 and native CSS custom properties.
+
+### 1. The `@theme` Token Pattern (Architectural Convention)
+Rather than hardcoding arbitrary color utilities (e.g. `bg-blue-600`, `text-slate-900`) across component templates, all styling is standardized on **semantic design tokens** declared via Tailwind v4's `@theme` directive in `src/index.css`.
+
+* **Compile-Time Utility Generation**: Declaring custom properties within `@theme` (such as `--color-btn-primary-bg: #2563eb;`) automatically instructs Tailwind v4 to generate utility classes (`bg-btn-primary-bg`, `text-btn-primary-bg`, `border-btn-primary-bg`, `ring-btn-primary-bg`) that compile directly to `var(--color-btn-primary-bg)`.
+* **Zero Visual Regression**: Canonical baseline values from the master token audit are assigned as compile-time defaults. In the absence of a tenant override, the application renders with pixel-perfect fidelity to the default Smart Cookie design system.
+* **Single-Point Runtime Re-theming**: Because utility classes compile to CSS variables rather than hardcoded hex values, the runtime theme provider can re-theme the entire application dynamically via simple root-level `document.documentElement.style.setProperty()` calls without triggering per-component React re-renders.
+
+### 2. Semantic Token Master Specification
+The design system defines exactly 28 semantic color tokens organized into 8 functional groups, plus a base font size variable:
+* **Navigation/Header**: `--color-nav-bg`, `--color-nav-text`, `--color-nav-text-active`
+* **Text/Headings**: `--color-text-heading`, `--color-text-body`, `--color-text-muted`, `--color-text-inverse`
+* **Buttons**: `--color-btn-primary-bg`, `--color-btn-primary-hover`, `--color-btn-primary-text`
+* **Forms/Inputs**: `--color-input-border`, `--color-input-border-focus`
+* **Cards/Panels**: `--color-card-bg`, `--color-card-border`, `--color-card-header-bg`
+* **Links**: `--color-link-primary`, `--color-link-hover`
+* **Status/Feedback**: `--color-status-success-bg`, `--color-status-success-text`, `--color-status-warning-bg`, `--color-status-warning-text`, `--color-status-error-bg`, `--color-status-error-text`, `--color-status-info-bg`, `--color-status-info-text`
+* **Backgrounds**: `--color-bg-app`, `--color-bg-subtle`, `--color-bg-overlay`
+* **Typography Scaling**: `--font-size-base` (defaults to `16px`) for base typographic scaling across tenant viewports.
+
+### 3. Separation of Concerns & Architecture Pipeline
+* **Token Declaration (`src/index.css`)**: Pure CSS variables declared within Tailwind v4 `@theme` block and `[data-theme="dark"]` selector block.
+* **Token Consumption**: All UI components strictly consume semantic token utility classes (`bg-btn-primary-bg`, `border-card-border`, `text-text-heading`, etc.).
+* **Runtime Resolution**: The cascading resolution engine (`ThemeResolutionService`) evaluates priority and computes concrete token maps on the server.
+* **Runtime Application**: `ThemeRuntimeContext` on the client fetches resolved tokens, injects custom `@font-face` rules, applies root CSS variables to `document.documentElement`, and manages display mode.
+
+### 4. Cascading Resolution Hierarchy
+When a client requests the resolved theme via `GET /api/themes/resolved`, the resolution service evaluates:
+1. **Test Override**: If a `testThemeId` query param, `themeTestOverrideId` cookie, or session override is present and valid for the company, its tokens take precedence.
+2. **Company Active Theme**: The current `ACTIVE` theme assigned to the tenant.
+3. **Smart Cookie Default Theme**: The immutable, canonical system theme seeded per tenant.
+
+**Per-Token Fallback Guarantee**: Every token is resolved independently. If a custom theme specifies only a subset of the 28 color tokens or omits font slots, the missing values automatically inherit from the Smart Cookie Default theme. The client is guaranteed non-null, concrete CSS custom properties.
+
+### 5. Concurrency Control & Theme Lock Engine
+To prevent race conditions and conflicting edits when multiple administrators manage themes:
+- **ThemeLock Model**: Tracks `themeId`, `userId`, `lockType` (`EDIT` | `TEST`), and `lockedAt` timestamp.
+- **Single-Editor Constraint**: Only one user may hold an `EDIT` lock on a given theme at a time. Other users attempting to edit encounter a 423 Locked response with details on who holds the lock and when it expires.
+- **Heartbeat & Stealing**: The client emits periodic heartbeat requests (`POST /api/themes/:id/lock`) every 15–20 seconds. If no heartbeat is received within 30 seconds, the lock is deemed stale and can be automatically acquired by another session.
+- **Safe Release**: Unloading or navigating away from the editor releases the lock via `DELETE /api/themes/:id/lock`.
+
+### 6. Ephemeral Test Mode & Live Preview
+- **Zero Impact on End Users**: Administrators can test unactivated or draft themes across the live application shell. The test override is stored strictly in the administrator's browser `sessionStorage` (`themeTestOverrideId`), leaving all other tenant learners and managers on the active theme.
+- **ThemeTestBanner**: A sticky top banner indicates that test mode is active, displaying the theme name and providing an instantaneous "Exit Test Mode" action.
+- **Split-Screen Live Preview**: Within `ThemeEditor`, the `LivePreviewPane` renders an interactive visual simulation of the platform (header, navigation, cards, tables, inputs, buttons, status badges) that updates in real time as colors, fonts, or base font sizes change.
+
+### 7. Custom Font & Typography Subsystem
+- **8 Typography Slots**: Granular font assignments for `general`, `nav`, `headings`, `buttons`, `forms`, `cards`, `links`, and `status`.
+- **Font Storage & Ingestion**: Custom fonts are uploaded via `multipart/form-data`, stored safely on disk under `uploads/fonts/`, and served via immutable caching headers (`Cache-Control: public, max-age=31536000, immutable`).
+- **Metadata Extraction (`fontkit`)**: When a font file (WOFF, WOFF2, TTF, OTF) is uploaded, the server uses `fontkit` to inspect magic bytes, validate file integrity, and extract PostScript family name, font weight, style, and format.
+- **Dynamic `@font-face` Injection**: `ThemeRuntimeContext` generates and mounts `<style>` tags with `@font-face` rules for active custom fonts, complete with resilient fallback stacks (e.g. `Inter, system-ui, sans-serif`).
+- **Deletion Safeguards (`FontReplacementModal`)**: Attempting to delete a font in use by any theme triggers a reference check. Administrators must select a replacement font to migrate affected theme slots before the font is deleted.
+
+### 8. Scheduled Activation & Failure Recovery
+- **Lifecycle States**: `DRAFT` (editable, unreleased) → `READY` (validated for release) → `SCHEDULED` (queued for automatic deployment) → `ACTIVE` (live for all users).
+- **Atomic Promotion**: Promoting a theme to `ACTIVE` atomically demotes the existing active theme to `READY` in a single database transaction.
+- **Automated Scheduler**: A background task runner evaluates scheduled activations whose timestamp has elapsed, validating font availability before activating.
+- **Failure Recovery**: If a scheduled activation encounters missing resources, the theme is not activated, status remains `READY`, failure metadata is recorded (`scheduledActivationFailedAt`, `reason`), and a notification banner is displayed with a manual dismiss trigger.
+
+### 9. Dark Mode Architecture
+- **Dual Token Storage**: Each `Theme` record stores standard `colorValues` alongside optional `darkColorValues` (28 tokens each).
+- **Canonical Dark Tokens**: Baseline dark mode values are declared in `src/index.css` under the `[data-theme="dark"]` selector block.
+- **Client-Side Toggle**: The active display mode (`light` vs. `dark`) is stored locally in browser `localStorage` (`smartcookie-display-mode`) and defaults to the user's operating system `prefers-color-scheme`. Toggling swaps the active CSS variable set without requiring database writes or network round-trips.
+
+
 ## 🌐 Internationalization (i18n)
 
 SmartCookie includes a fully configured internationalization engine implemented under `src/shared/i18n/`.

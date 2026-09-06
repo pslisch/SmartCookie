@@ -58,19 +58,19 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant }) =
     <div className="relative inline-block text-left" ref={containerRef} id={`language-switcher-container-${variant}`}>
       <button
         onClick={handleToggle}
-        className="flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:bg-slate-100"
+        className="flex h-9 items-center justify-center rounded-lg border border-card-border bg-card-bg px-3 text-text-body transition-colors hover:bg-card-header-bg hover:text-text-heading focus:outline-none focus:ring-2 focus:ring-input-border-focus/20 active:bg-bg-subtle"
         aria-haspopup="true"
         aria-expanded={isOpen}
         id={`language-switcher-btn-${variant}`}
         title={t('nav.changeLanguage')}
       >
-        <Languages className="h-4 w-4 mr-1.5 text-slate-500" />
+        <Languages className="h-4 w-4 mr-1.5 text-text-muted" />
         <span className="text-xs font-semibold uppercase">{currentLanguage}</span>
       </button>
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-40 origin-top-right rounded-lg border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-none z-50"
+          className="absolute right-0 mt-2 w-40 origin-top-right rounded-lg border border-card-border bg-card-bg p-1 shadow-lg ring-1 ring-black/5 focus:outline-none z-50"
           role="menu"
           aria-orientation="vertical"
           aria-labelledby={`language-switcher-btn-${variant}`}
@@ -84,14 +84,14 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant }) =
                 onClick={() => selectLanguage(lang.code)}
                 className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium transition-colors ${
                   isSelected
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-status-info-bg text-link-primary'
+                    : 'text-text-body hover:bg-card-header-bg hover:text-text-heading'
                 }`}
                 role="menuitem"
                 id={`lang-option-${lang.code}-${variant}`}
               >
                 <span>{lang.label}</span>
-                {isSelected && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                {isSelected && <Check className="h-3.5 w-3.5 text-link-primary" />}
               </button>
             );
           })}

@@ -1,6 +1,7 @@
 import { prisma } from '../../../shared/db/prisma';
 import { emailPasswordAuthProvider } from './auth.service';
 import { seedSuperuserRoles } from '../../../../prisma/seed/rbacSeed';
+import { seedThemes } from '../../../../prisma/seed/themeSeed';
 import { roleTemplatesService } from '../../rbac/services/roleTemplates.service';
 
 export type SetupStep = 'superuser' | 'superuser-mfa' | 'company' | 'mail-config' | 'identity-provider' | 'org-structure' | 'role-templates' | 'complete';
@@ -163,8 +164,9 @@ export class SetupWizardService {
     // Run the RBAC seeding to create the Superuser Role for this company and assign it to this user
     try {
       await seedSuperuserRoles();
+      await seedThemes(company.id);
     } catch (err) {
-      console.error('Failed to seed superuser role during company setup step:', err);
+      console.error('Failed to seed superuser role or theme during company setup step:', err);
     }
 
     return company;

@@ -250,6 +250,40 @@ Every logged feature should eventually document:
 - **Routes**: `server/src/features/identity/routes/identityProvider.routes.ts`
 - **Events**: Critical sync failures automatically resolve managers holding `identity-providers:view-logs` and trigger automated HTML alerts via `EmailService`.
 - **Dependencies**: Prisma ORM, Node.js, Express, `node-fetch`, `@prisma/client`, `jsonwebtoken`
+### 16. Theme & Branding System (Complete Full-Stack Architecture)
+- **Description**: Comprehensive tenant visual customizer and runtime theming system. Features server-side cascading resolution (`Test Override` > `Company Active Theme` > `Smart Cookie Default Theme`), real-time split-screen visual editor for 28 semantic color tokens across Light and Dark palettes, 8 typography slot bindings, concurrent editing/testing lock heartbeat engine (30s TTL), custom font file uploads with `fontkit` binary inspection and cascading font replacement, ephemeral session test mode, immediate or scheduled theme activation with automated failure recovery, and dynamic CSS custom property injection without page re-renders.
+- **Components**:
+  - `ThemeManagement` (`src/features/theme/pages/ThemeManagement.tsx`)
+  - `ThemeEditor` (`src/features/theme/pages/ThemeEditor.tsx`)
+  - `ThemeTestBanner` (`src/features/theme/components/ThemeTestBanner.tsx`)
+  - `ColorEditorTab` (`src/features/theme/components/ColorEditorTab.tsx`)
+  - `FontEditorTab` (`src/features/theme/components/FontEditorTab.tsx`)
+  - `LivePreviewPane` (`src/features/theme/components/LivePreviewPane.tsx`)
+  - `FontLibrary` (`src/features/theme/components/FontLibrary.tsx`)
+  - `FontReplacementModal` (`src/features/theme/components/FontReplacementModal.tsx`)
+  - `ActivateScheduleModal` (`src/features/theme/components/ActivateScheduleModal.tsx`)
+- **Pages**: `src/features/rbac/pages/Settings.tsx` (Theme tab), `src/features/theme/pages/ThemeManagement.tsx`, `src/features/theme/pages/ThemeEditor.tsx`
+- **Services**:
+  - `ThemeResolutionService` (`server/src/features/theme/services/themeResolution.service.ts`)
+  - `ThemeLockService` (`server/src/features/theme/services/themeLock.service.ts`)
+  - `FontService` (`server/src/features/theme/services/font.service.ts`)
+  - `FontStorageService` (`server/src/features/theme/services/fontStorage.service.ts`)
+  - `ThemeRuntimeContext` (`src/shared/contexts/ThemeRuntimeContext.tsx`)
+- **APIs**:
+  - `GET /api/themes/resolved` (cascading theme resolution, test mode override)
+  - `GET /api/themes`, `GET /api/themes/:id`, `POST /api/themes`, `PATCH /api/themes/:id`, `DELETE /api/themes/:id`
+  - `POST /api/themes/:id/set-ready`, `POST /api/themes/:id/set-draft`
+  - `POST /api/themes/:id/activate`, `POST /api/themes/:id/cancel-schedule`, `POST /api/themes/:id/dismiss-failure`, `POST /api/themes/run-scheduled-activation`
+  - `POST /api/themes/:id/lock`, `DELETE /api/themes/:id/lock`, `GET /api/themes/:id/lock`
+  - `GET /api/fonts`, `GET /api/fonts/:id/file`, `POST /api/fonts`, `DELETE /api/fonts/:id`, `POST /api/fonts/:id/replace`
+- **Database**: `themes`, `fonts`, `theme_locks` (Prisma schema with `ThemeStatus` and `ThemeLockType` enums)
+- **Permissions**: `theme:view`, `theme:edit`, `theme:delete`, `theme:set-ready`, `theme:activate`
+- **Routes**:
+  - Client: `settings` (Theme tab)
+  - Backend: `/api/themes/*` (`server/src/features/theme/routes/theme.routes.ts`), `/api/fonts/*` (`server/src/features/theme/routes/font.routes.ts`)
+- **Events**: `scheduler:theme-scheduled-activation`, `theme:lock-heartbeat`
+- **Dependencies**: Prisma ORM, Node.js, Express, `fontkit`, `multer`, React, Tailwind CSS v4 (`@theme`), `motion/react`, `lucide-react`
+
 
 
 

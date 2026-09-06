@@ -698,6 +698,181 @@ Every documented endpoint logs:
 - **Used By**: "Download Log" button
 - **Permissions**: `identity-providers:view-logs` (LMS Manager, User Manager, etc.)
 
+### 86. Get Resolved Active Theme
+- **Endpoint**: `/api/themes/resolved`
+- **Method**: `GET`
+- **Request**: Optional query parameter `test` (`?test=:themeId`)
+- **Response**: `{ themeId: string, name: string, isTest: boolean, baseFontSize: number, tokens: Record<string, string>, colorValues: Record<string, string>, darkTokens: Record<string, string> | null, darkColorValues: Record<string, string> | null, fonts: Record<FontGroup, ResolvedFontDetails> }` (200 OK)
+- **Used By**: Theme runtime provider, preview frame, and theme editor
+- **Permissions**: Authenticated user session (`requireAuth` — no `theme:*` administrative permissions required)
+
+### 87. List Themes
+- **Endpoint**: `/api/themes`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `Theme[]` (with font relations included) (200 OK)
+- **Used By**: Theme management index
+- **Permissions**: `theme:view`
+
+### 88. Get Theme Detail
+- **Endpoint**: `/api/themes/:id`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `Theme` (with font relations included) (200 OK)
+- **Used By**: Theme editor
+- **Permissions**: `theme:view`
+
+### 89. Create Theme From Template
+- **Endpoint**: `/api/themes`
+- **Method**: `POST`
+- **Request**: `{ name: string, sourceThemeId: string }`
+- **Response**: Newly created `Theme` in `DRAFT` status with deep-copied colors, fonts, and baseFontSize (201 Created)
+- **Used By**: Theme management modal / creation flow
+- **Permissions**: `theme:edit`
+
+### 90. Update Theme
+- **Endpoint**: `/api/themes/:id`
+- **Method**: `PATCH`
+- **Request**: Partial `{ name?: string, colorValues?: Record<string, string>, darkColorValues?: Record<string, string> | null, generalFontId?: string | null, ...fontSlots, baseFontSize?: number }`
+- **Response**: Updated `Theme` (200 OK)
+- **Used By**: Theme editor live changes
+- **Permissions**: `theme:edit`
+- **Rules**: Rejects active themes (409 Conflict) and Smart Cookie Default theme (403 Forbidden). Merges `colorValues` key-by-key.
+
+### 91. Set Theme Ready
+- **Endpoint**: `/api/themes/:id/set-ready`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: Updated `Theme` with `status: READY` (200 OK)
+- **Used By**: Theme editor / management card actions
+- **Permissions**: `theme:set-ready`
+- **Rules**: Validates that all assigned font references still resolve to existing fonts for the company (400 if dangling).
+
+### 92. Set Theme Draft
+- **Endpoint**: `/api/themes/:id/set-draft`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: Updated `Theme` with `status: DRAFT` and `scheduledActivationAt: null` (200 OK)
+- **Used By**: Theme editor / management card actions
+- **Permissions**: `theme:set-ready`
+- **Rules**: Rejects active themes (409 Conflict) and Smart Cookie Default theme (403 Forbidden).
+
+### 93. Activate Theme (Immediate or Scheduled)
+- **Endpoint**: `/api/themes/:id/activate`
+- **Method**: `POST`
+- **Request**: `{ mode: 'immediate' }` OR `{ mode: 'schedule', scheduledActivationAt: string (ISO), confirmReplaceExisting?: boolean }`
+- **Response**: `Theme` (with fonts included) (200 OK)
+- **Used By**: Theme management card / activation button, schedule activation modal
+- **Permissions**: `theme:activate`
+- **Rules**: Validates all font references before activation. For `immediate`: atomically promotes target theme to `ACTIVE` and demotes previously active theme to `READY` in a single transaction. For `schedule`: validates timestamp is in the future; if another theme is already scheduled and `confirmReplaceExisting` is false, returns 409 Conflict with `{ requiresConfirmation: true, existingScheduledTheme: { ... } }`; if confirmed, sets `scheduledActivationAt` and clears previous schedules.
+
+### 94. Delete Theme (Soft-Delete)
+- **Endpoint**: `/api/themes/:id`
+- **Method**: `DELETE`
+- **Request**: `{ confirmCancelSchedule?: boolean }` (optional body)
+- **Response**: `{ success: true, message: string, theme: Theme }` (200 OK)
+- **Used By**: Theme management card delete action
+- **Permissions**: `theme:delete`
+- **Rules**: Soft-deletes theme (`deletedAt = now`, `permanentDeleteAt = now + 14 days`, `deletionBatchId = uuid`). Rejects Smart Cookie Default theme (403 Forbidden). Rejects active theme (409 Conflict). If theme has scheduled activation, requires `{ confirmCancelSchedule: true }` (returns 409 Conflict with `{ requiresScheduleConfirmation: true }` if missing). Soft-deleted themes are automatically purged after 14 days by the hourly background scheduler.
+
+### 95. Cancel Scheduled Theme Activation
+- **Endpoint**: `/api/themes/:id/cancel-schedule`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: Updated `Theme` with `scheduledActivationAt: null` (200 OK)
+- **Used By**: Theme management card cancel schedule button
+- **Permissions**: `theme:activate`
+- **Rules**: Clears `scheduledActivationAt`, `scheduledActivationFailedAt`, and `scheduledActivationFailedReason`. Rejects Smart Cookie Default theme (403 Forbidden).
+
+### 96. Dismiss Scheduled Activation Failure
+- **Endpoint**: `/api/themes/:id/dismiss-failure`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: Updated `Theme` with failure metadata cleared (200 OK)
+- **Used By**: Theme management failure alert banner dismiss button
+- **Permissions**: `theme:view`
+- **Rules**: Clears `scheduledActivationFailedAt` and `scheduledActivationFailedReason`.
+
+### 97. Run Scheduled Activations
+- **Endpoint**: `/api/themes/run-scheduled-activation`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ success: true, processed: number, activatedThemeId?: string }` (200 OK)
+- **Used By**: Manual scheduler trigger / background task
+- **Permissions**: `theme:activate`
+- **Rules**: Checks for pending scheduled themes whose `scheduledActivationAt <= now()`, validates font references, and atomically activates the target theme.
+
+### 98. Acquire or Heartbeat Theme Lock
+- **Endpoint**: `/api/themes/:id/lock`
+- **Method**: `POST`
+- **Request**: `{ lockType?: 'EDIT' | 'TEST' }`
+- **Response**: `{ success: true, lock: ThemeLock }` (200 OK)
+- **Used By**: Theme editor auto-heartbeat, test mode heartbeat
+- **Permissions**: `requireAuth`; `theme:edit` for `EDIT` lock, `theme:view` for `TEST` lock
+- **Rules**: Enforces single-editor concurrency. Heartbeat TTL is 30 seconds. If locked by another user and active (<30s old), returns 409 Conflict with `{ error, holderName, lockType, lockedAt }`. Stale locks (>30s) are automatically stolen and reassigned to the caller.
+
+### 99. Release Theme Lock
+- **Endpoint**: `/api/themes/:id/lock`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true, released: boolean }` (200 OK)
+- **Used By**: Theme editor exit / unmount handler, `beforeunload` cleanup
+- **Permissions**: `requireAuth`
+- **Rules**: Releases active lock on the theme if held by the authenticated user.
+
+### 100. Get Theme Lock Status
+- **Endpoint**: `/api/themes/:id/lock`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ isLocked: boolean, lock: { ...ThemeLock, isMine: boolean } | null }` (200 OK)
+- **Used By**: Theme editor polling, management card indicators
+- **Permissions**: `theme:view`
+
+### 101. List Company Fonts
+- **Endpoint**: `/api/fonts`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `Font[]` (system fonts + tenant uploaded custom fonts) (200 OK)
+- **Used By**: FontLibrary modal, FontEditorTab slot pickers
+- **Permissions**: `requireAuth`, `theme:view`
+
+### 102. Stream Font File
+- **Endpoint**: `/api/fonts/:id/file`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: Binary font file stream with `Content-Type` (`font/woff2`, `font/woff`, `font/ttf`, `font/otf`) and `Cache-Control: public, max-age=86400` (200 OK)
+- **Used By**: Browser `@font-face` CSS rules
+- **Permissions**: Public access (allows browser stylesheet loading without auth credentials)
+
+### 103. Upload Custom Fonts
+- **Endpoint**: `/api/fonts`
+- **Method**: `POST`
+- **Request**: `multipart/form-data` with file array under field name `fonts`
+- **Response**: `{ created: Font[], errors: Array<{ filename: string, error: string }> }` (200 OK)
+- **Used By**: FontLibrary dropzone
+- **Permissions**: `theme:edit`
+- **Rules**: Uses `fontkit` to inspect magic bytes, validate font integrity, and extract PostScript family name, weight, style, and format (WOFF, WOFF2, TTF, OTF; max 15MB). Enforces case-insensitive duplicate family name checks per company. Processes each file independently so invalid files do not block valid files.
+
+### 104. Delete Custom Font
+- **Endpoint**: `/api/fonts/:id`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true, message: string }` (200 OK)
+- **Used By**: FontLibrary delete action
+- **Permissions**: `theme:edit`
+- **Rules**: System fonts cannot be deleted (403 Forbidden). Scans all company themes for references in any of the 8 font slots; if any references exist, returns 409 Conflict with `{ isReferenced: true, affectedThemes: Array<{ id: string, name: string, groups: string[] }> }` and halts deletion. If unreferenced, hard-deletes the font record and unlinks file from disk.
+
+### 105. Replace Font Across Themes
+- **Endpoint**: `/api/fonts/:id/replace`
+- **Method**: `POST`
+- **Request**: `{ replacementFontId: string }`
+- **Response**: `{ success: true, message: string, updatedThemesCount: number }` (200 OK)
+- **Used By**: FontReplacementModal confirmation
+- **Permissions**: `theme:edit`
+- **Rules**: In a single database transaction, migrates all theme slot references from font `:id` to `replacementFontId`, then hard-deletes the original font row and removes its stored file from disk. Rejects system fonts (403 Forbidden).
+
+
+
 
 
 

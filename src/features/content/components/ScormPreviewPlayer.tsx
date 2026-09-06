@@ -125,35 +125,35 @@ export const ScormPreviewPlayer: React.FC<ScormPreviewPlayerProps> = ({ contentI
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white space-y-4" id="scorm-preview-loading">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-        <p className="text-sm font-semibold text-slate-400">{t('previewPlayer.loadingPackage')}</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-bg-app text-text-heading space-y-4" id="scorm-preview-loading">
+        <Loader2 className="h-10 w-10 animate-spin text-link-primary" />
+        <p className="text-sm font-semibold text-text-muted">{t('previewPlayer.loadingPackage')}</p>
       </div>
     );
   }
 
   if (error || !content) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4" id="scorm-preview-error">
-        <div className="max-w-md w-full bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl p-8 text-center space-y-6">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+      <div className="min-h-screen bg-bg-app flex items-center justify-center p-4" id="scorm-preview-error">
+        <div className="max-w-md w-full bg-card-bg rounded-3xl border border-card-border shadow-2xl p-8 text-center space-y-6">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-status-error-bg text-status-error-text border border-status-error-bg">
             <AlertCircle className="h-8 w-8" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-white font-sans">{t('previewPlayer.loadFailedTitle')}</h2>
-            <p className="text-sm text-slate-400 leading-relaxed">{error || t('previewPlayer.packageNotFound')}</p>
+            <h2 className="text-xl font-bold text-text-heading font-sans">{t('previewPlayer.loadFailedTitle')}</h2>
+            <p className="text-sm text-text-muted leading-relaxed">{error || t('previewPlayer.packageNotFound')}</p>
           </div>
           <div className="pt-2 flex justify-center gap-3">
             <button
               onClick={handleClose}
-              className="flex items-center gap-2 px-5 py-2.5 border border-slate-700 hover:bg-slate-800 text-slate-200 font-bold text-sm rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 border border-card-border hover:bg-bg-subtle text-text-muted font-bold text-sm rounded-xl transition-all"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>{t('previewPlayer.closeBtn')}</span>
             </button>
             <button
               onClick={fetchContent}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text font-bold text-sm rounded-xl transition-all shadow-sm"
             >
               <RefreshCw className="h-4 w-4" />
               <span>{t('previewPlayer.tryAgainBtn')}</span>
@@ -167,27 +167,27 @@ export const ScormPreviewPlayer: React.FC<ScormPreviewPlayerProps> = ({ contentI
   const launchUrl = `/content-files/${content.id}/${content.launchFile}`;
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 overflow-hidden" id="scorm-preview-player-root">
+    <div className="flex flex-col h-screen w-screen bg-bg-app overflow-hidden" id="scorm-preview-player-root">
       {/* Top Header Bar */}
-      <header className="flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-6 py-3.5 border-b border-slate-800 text-slate-200 flex-shrink-0 z-10">
+      <header className="flex items-center justify-between bg-card-bg/90 backdrop-blur-md px-6 py-3.5 border-b border-card-border text-text-muted flex-shrink-0 z-10">
         <div className="flex items-center space-x-3.5 min-w-0">
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-slate-800 hover:text-white rounded-xl text-slate-400 transition-colors"
+            className="p-2 hover:bg-bg-subtle hover:text-text-heading rounded-xl text-text-muted transition-colors"
             title={t('previewPlayer.closeTooltip')}
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-white font-sans truncate max-w-md">
+              <h1 className="text-sm font-bold text-text-heading font-sans truncate max-w-md">
                 {content.title}
               </h1>
-              <span className="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-bold text-text-muted bg-bg-subtle px-2 py-0.5 rounded">
                 v{content.version}
               </span>
             </div>
-            <p className="text-[10px] font-semibold text-amber-400/90 flex items-center gap-1.5 mt-0.5">
+            <p className="text-[10px] font-semibold text-status-warning-text flex items-center gap-1.5 mt-0.5">
               <Eye className="h-3 w-3" />
               <span>{t('previewPlayer.nonTrackedNotice')}</span>
             </p>
@@ -195,15 +195,15 @@ export const ScormPreviewPlayer: React.FC<ScormPreviewPlayerProps> = ({ contentI
         </div>
 
         <div className="flex items-center space-x-3 flex-shrink-0">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-amber-500/30 bg-amber-500/10 text-amber-300">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-card-border bg-status-warning-bg text-status-warning-text">
             {t('previewPlayer.badgePreview')}
           </span>
-          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-blue-500/30 bg-blue-500/10 text-blue-400">
+          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-card-border bg-status-info-bg text-status-info-text">
             SCORM 1.2
           </span>
           <button
             onClick={handleClose}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-bold rounded-xl transition-colors border border-slate-700"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-bg-subtle hover:bg-card-header-bg text-text-muted hover:text-text-heading text-xs font-bold rounded-xl transition-colors border border-card-border"
           >
             <X className="h-3.5 w-3.5" />
             <span>{t('previewPlayer.closeBtn')}</span>
@@ -212,7 +212,7 @@ export const ScormPreviewPlayer: React.FC<ScormPreviewPlayerProps> = ({ contentI
       </header>
 
       {/* Frame Container */}
-      <main className="flex-1 bg-white relative">
+      <main className="flex-1 bg-card-bg relative">
         <iframe
           src={launchUrl}
           className="w-full h-full border-none absolute inset-0"

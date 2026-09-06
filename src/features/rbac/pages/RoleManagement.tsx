@@ -427,8 +427,8 @@ export const RoleManagement: React.FC = () => {
     return (
       <div className="flex min-h-[400px] items-center justify-center p-8" id="role-mgmt-loading">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-3" />
-          <p className="text-slate-500 font-medium text-sm">Loading security system profiles...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-link-primary mx-auto mb-3" />
+          <p className="text-text-muted font-medium text-sm">Loading security system profiles...</p>
         </div>
       </div>
     );
@@ -442,15 +442,15 @@ export const RoleManagement: React.FC = () => {
       
       {/* Alert Banners */}
       {error && (
-        <div className="flex items-start space-x-2 rounded-xl bg-rose-50 p-4 text-sm text-rose-800 border border-rose-100" id="role-error-banner">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+        <div className="flex items-start space-x-2 rounded-xl bg-status-error-bg p-4 text-sm text-status-error-text border border-status-error-text/20" id="role-error-banner">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
           <span className="font-semibold">{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="flex items-start space-x-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800 border border-emerald-100" id="role-success-banner">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+        <div className="flex items-start space-x-2 rounded-xl bg-status-success-bg p-4 text-sm text-status-success-text border border-status-success-text/20" id="role-success-banner">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-status-success-text" />
           <span className="font-semibold">{success}</span>
         </div>
       )}
@@ -462,14 +462,14 @@ export const RoleManagement: React.FC = () => {
         <div className="space-y-6 lg:col-span-5">
           
           {/* Global Inheritance Toggle Card */}
-          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm" id="global-inheritance-card">
+          <div className="rounded-2xl border border-card-border bg-card-bg p-5 shadow-sm" id="global-inheritance-card">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight flex items-center">
-                  <Sliders className="h-4 w-4 mr-1.5 text-blue-600" />
+                <h3 className="text-sm font-bold text-text-heading tracking-tight flex items-center">
+                  <Sliders className="h-4 w-4 mr-1.5 text-link-primary" />
                   {t('rbac.globalInheritance')}
                 </h3>
-                <p className="text-xs text-slate-500 max-w-[280px]">
+                <p className="text-xs text-text-muted max-w-[280px]">
                   When enabled, roles inherit all permissions assigned to their designated Parent Role automatically.
                 </p>
               </div>
@@ -478,8 +478,8 @@ export const RoleManagement: React.FC = () => {
                 type="button"
                 onClick={handleToggleInheritance}
                 disabled={isActionLoading}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  roleInheritanceEnabled ? 'bg-blue-600' : 'bg-slate-200'
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-input-border-focus focus:ring-offset-2 ${
+                  roleInheritanceEnabled ? 'bg-btn-primary-bg' : 'bg-bg-subtle'
                 }`}
                 id="inheritance-toggle-button"
                 role="switch"
@@ -487,7 +487,7 @@ export const RoleManagement: React.FC = () => {
               >
                 <span
                   aria-hidden="true"
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card-bg shadow ring-0 transition duration-200 ease-in-out ${
                     roleInheritanceEnabled ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
@@ -496,16 +496,16 @@ export const RoleManagement: React.FC = () => {
           </div>
 
           {/* Roles Registry List */}
-          <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden" id="roles-list-card">
-            <div className="flex items-center justify-between border-b border-slate-50 px-5 py-4 bg-slate-50/50">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center">
-                <ShieldCheck className="h-4 w-4 mr-1.5 text-blue-600" />
+          <div className="rounded-2xl border border-card-border bg-card-bg shadow-sm overflow-hidden" id="roles-list-card">
+            <div className="flex items-center justify-between border-b border-card-border px-5 py-4 bg-card-header-bg">
+              <h3 className="text-sm font-bold text-text-heading uppercase tracking-wider flex items-center">
+                <ShieldCheck className="h-4 w-4 mr-1.5 text-link-primary" />
                 System Roles
               </h3>
               <button
                 onClick={() => setShowCreateModal(true)}
                 disabled={isActionLoading}
-                className="flex items-center space-x-1 rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-all disabled:opacity-50"
+                className="flex items-center space-x-1 rounded-lg bg-btn-primary-bg px-2.5 py-1.5 text-xs font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-all disabled:opacity-50"
                 id="btn-create-role-trigger"
               >
                 <Plus className="h-3 w-3" />
@@ -513,9 +513,9 @@ export const RoleManagement: React.FC = () => {
               </button>
             </div>
 
-            <div className="divide-y divide-slate-50 max-h-[480px] overflow-y-auto">
+            <div className="divide-y divide-card-border max-h-[480px] overflow-y-auto">
               {roles.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-sm">
+                <div className="p-8 text-center text-text-muted text-sm">
                   {t('rbac.noRoles')}
                 </div>
               ) : (
@@ -533,20 +533,20 @@ export const RoleManagement: React.FC = () => {
                     <div
                       key={role.id}
                       onClick={() => handleRoleSelect(role)}
-                      className={`flex flex-col p-4 transition-all cursor-pointer border-l-2 hover:bg-slate-50/70 ${
+                      className={`flex flex-col p-4 transition-all cursor-pointer border-l-2 hover:bg-card-header-bg ${
                         isSelected
-                          ? 'border-l-blue-600 bg-blue-50/10'
+                          ? 'border-l-btn-primary-bg bg-status-info-bg/10'
                           : 'border-l-transparent'
                       }`}
                       id={`role-row-${role.id}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <span className={`text-sm font-bold ${isSelected ? 'text-blue-900' : 'text-slate-800'}`}>
+                          <span className={`text-sm font-bold ${isSelected ? 'text-link-primary font-bold' : 'text-text-heading'}`}>
                             {role.name}
                           </span>
                           {isProtected && (
-                            <span className="inline-flex items-center rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+                            <span className="inline-flex items-center rounded-full bg-bg-subtle px-1.5 py-0.5 text-[10px] font-semibold text-text-body">
                               <Lock className="h-2.5 w-2.5 mr-0.5" />
                               System
                             </span>
@@ -558,8 +558,8 @@ export const RoleManagement: React.FC = () => {
                           <button
                             onClick={() => startRename(role)}
                             disabled={isProtected || isActionLoading}
-                            className={`p-1.5 rounded-lg text-slate-400 transition-colors hover:bg-slate-100 ${
-                              isProtected ? 'opacity-30 cursor-not-allowed' : 'hover:text-slate-700'
+                            className={`p-1.5 rounded-lg text-text-muted transition-colors hover:bg-bg-subtle ${
+                              isProtected ? 'opacity-30 cursor-not-allowed' : 'hover:text-text-body'
                             }`}
                             title={isProtected ? t('rbac.superuserProtected') : t('rbac.editBtn')}
                           >
@@ -569,8 +569,8 @@ export const RoleManagement: React.FC = () => {
                           <button
                             onClick={() => handleDuplicateRole(role)}
                             disabled={isSuper || isActionLoading}
-                            className={`p-1.5 rounded-lg text-slate-400 transition-colors hover:bg-slate-100 ${
-                              isSuper ? 'opacity-30 cursor-not-allowed' : 'hover:text-slate-700'
+                            className={`p-1.5 rounded-lg text-text-muted transition-colors hover:bg-bg-subtle ${
+                              isSuper ? 'opacity-30 cursor-not-allowed' : 'hover:text-text-body'
                             }`}
                             title={isSuper ? 'Cannot duplicate Superuser' : t('rbac.duplicateBtn')}
                           >
@@ -580,8 +580,8 @@ export const RoleManagement: React.FC = () => {
                           <button
                             onClick={() => handleDeleteRole(role)}
                             disabled={isProtected || isActionLoading}
-                            className={`p-1.5 rounded-lg text-slate-400 transition-colors hover:bg-rose-50 ${
-                              isProtected ? 'opacity-30 cursor-not-allowed' : 'hover:text-rose-600'
+                            className={`p-1.5 rounded-lg text-text-muted transition-colors hover:bg-status-error-bg ${
+                              isProtected ? 'opacity-30 cursor-not-allowed' : 'hover:text-status-error-text'
                             }`}
                             title={isProtected ? t('rbac.superuserProtected') : t('rbac.deleteBtn')}
                           >
@@ -591,17 +591,17 @@ export const RoleManagement: React.FC = () => {
                       </div>
 
                       {/* Parent Role indicator & Permission count */}
-                      <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                      <div className="mt-1 flex items-center justify-between text-xs text-text-muted">
                         <span>
                           {parentRoleName ? (
-                            <span className="text-slate-500 font-medium">
+                            <span className="text-text-muted font-medium">
                               Parent: {parentRoleName}
                             </span>
                           ) : (
-                            <span className="italic text-slate-400">No parent role</span>
+                            <span className="italic text-text-muted">No parent role</span>
                           )}
                         </span>
-                        <span className="font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">
+                        <span className="font-semibold text-text-muted bg-bg-subtle px-1.5 py-0.5 rounded text-[10px]">
                           {role.permissionCount} rules
                         </span>
                       </div>
@@ -616,17 +616,17 @@ export const RoleManagement: React.FC = () => {
         {/* Right Column (Role details / Permission Matrix) - 7 cols */}
         <div className="lg:col-span-7">
           {selectedRole ? (
-            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden" id="role-editor-card">
+            <div className="rounded-2xl border border-card-border bg-card-bg shadow-sm overflow-hidden" id="role-editor-card">
               
               {/* Editor Header */}
-              <div className="border-b border-slate-50 bg-slate-50/50 px-5 py-4">
+              <div className="border-b border-card-border bg-card-header-bg px-5 py-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                    <h3 className="text-sm font-bold text-text-heading uppercase tracking-wider">
                       Role Permissions configuration
                     </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Editing profile for <strong className="text-slate-700">{selectedRole.name}</strong>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      Editing profile for <strong className="text-text-body">{selectedRole.name}</strong>
                     </p>
                   </div>
 
@@ -634,7 +634,7 @@ export const RoleManagement: React.FC = () => {
                     <button
                       onClick={handleSaveChanges}
                       disabled={isSavingPermissions}
-                      className="flex items-center space-x-1.5 rounded-xl bg-blue-600 px-4 h-9 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-all disabled:opacity-50"
+                      className="flex items-center space-x-1.5 rounded-xl bg-btn-primary-bg px-4 h-9 text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-all disabled:opacity-50"
                       id="btn-save-role-changes"
                     >
                       {isSavingPermissions ? (
@@ -652,12 +652,12 @@ export const RoleManagement: React.FC = () => {
               <div className="p-6 space-y-6">
                 
                 {/* Parent Role selection (Disabled for Superuser) */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100/50">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 bg-card-header-bg p-4 rounded-xl border border-card-border">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    <label className="text-xs font-bold text-text-body uppercase tracking-wide">
                       {t('rbac.parentRole')}
                     </label>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-text-muted">
                       Select parent to inherit all of its permissions.
                     </p>
                   </div>
@@ -667,7 +667,7 @@ export const RoleManagement: React.FC = () => {
                       value={editingParentId || 'none'}
                       onChange={(e) => setEditingParentId(e.target.value)}
                       disabled={selectedRole.name === 'Superuser'}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 h-10 text-xs font-semibold text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:opacity-60"
+                      className="w-full rounded-xl border border-input-border bg-card-bg px-3 h-10 text-xs font-semibold text-text-heading shadow-sm focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus disabled:bg-bg-subtle disabled:opacity-60"
                       id="parent-role-selector"
                     >
                       <option value="none">-- {t('rbac.noParent')} --</option>
@@ -682,24 +682,24 @@ export const RoleManagement: React.FC = () => {
 
                 {/* Superuser Information Banner */}
                 {selectedRole.name === 'Superuser' && (
-                  <div className="flex items-start space-x-2 rounded-xl bg-blue-50 p-4 text-xs text-blue-800 border border-blue-100">
-                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                  <div className="flex items-start space-x-2 rounded-xl bg-status-info-bg p-4 text-xs text-status-info-text border border-status-info-text/20">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-link-primary" />
                     <div className="space-y-1 font-semibold">
                       <p>The Superuser role holds absolute administrative permissions.</p>
-                      <p className="text-blue-600 font-normal">Permissions for this system role are managed automatically by the kernel and cannot be manually unchecked or altered.</p>
+                      <p className="text-status-info-text font-normal">Permissions for this system role are managed automatically by the kernel and cannot be manually unchecked or altered.</p>
                     </div>
                   </div>
                 )}
 
                 {/* Permissions Grid */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-text-body uppercase tracking-wider">
                     {t('rbac.permissions')} Matrix
                   </h4>
 
-                  <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden max-h-[380px] overflow-y-auto">
+                  <div className="divide-y divide-card-border border border-card-border rounded-xl overflow-hidden max-h-[380px] overflow-y-auto">
                     {Object.keys(localPermissions).length === 0 ? (
-                      <div className="p-6 text-center text-slate-400 text-xs italic">
+                      <div className="p-6 text-center text-text-muted text-xs italic">
                         No permissions registry synchronized on the server.
                       </div>
                     ) : (
@@ -707,10 +707,10 @@ export const RoleManagement: React.FC = () => {
                         const permissions = localPermissions[moduleName] || [];
 
                         return (
-                          <div key={moduleName} className="p-4 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-6 bg-white hover:bg-slate-50/20 transition-colors">
+                          <div key={moduleName} className="p-4 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-6 bg-card-bg hover:bg-card-header-bg transition-colors">
                             {/* Module header */}
                             <div className="sm:w-1/4">
-                              <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                              <span className="inline-flex rounded-full bg-bg-subtle px-2 py-0.5 text-xs font-semibold text-text-body uppercase tracking-wider">
                                 {moduleName}
                               </span>
                             </div>
@@ -725,7 +725,7 @@ export const RoleManagement: React.FC = () => {
                                   <label
                                     key={p.id}
                                     className={`flex items-center space-x-2 cursor-pointer text-xs font-semibold select-none ${
-                                      isSuper ? 'cursor-not-allowed opacity-70' : 'text-slate-700 hover:text-slate-900'
+                                      isSuper ? 'cursor-not-allowed opacity-70' : 'text-text-body hover:text-text-heading'
                                     }`}
                                   >
                                     <input
@@ -733,7 +733,7 @@ export const RoleManagement: React.FC = () => {
                                       checked={isChecked}
                                       disabled={isSuper}
                                       onChange={() => handleLocalPermissionToggle(moduleName, p.id)}
-                                      className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:bg-blue-100/50 disabled:text-blue-600"
+                                      className="h-3.5 w-3.5 rounded border-input-border text-link-primary focus:ring-input-border-focus disabled:bg-status-info-bg disabled:text-link-primary"
                                     />
                                     <span>{p.action}</span>
                                   </label>
@@ -751,7 +751,7 @@ export const RoleManagement: React.FC = () => {
 
             </div>
           ) : (
-            <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-slate-400 text-sm">
+            <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-card-border bg-card-header-bg p-6 text-text-muted text-sm">
               Please select a role from the registry list to modify its parameters.
             </div>
           )}
@@ -761,15 +761,15 @@ export const RoleManagement: React.FC = () => {
 
       {/* MODAL 1: Create Role Dialog */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl border border-slate-100">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-50">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg-overlay backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-card-bg p-6 shadow-xl border border-card-border">
+            <div className="flex items-center justify-between pb-3 border-b border-card-border">
+              <h3 className="text-sm font-bold text-text-heading uppercase tracking-wider">
                 Create New Role
               </h3>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-text-muted hover:text-text-body"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -777,7 +777,7 @@ export const RoleManagement: React.FC = () => {
 
             <form onSubmit={handleCreateRole} className="mt-4 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600">
+                <label className="text-xs font-semibold text-text-body">
                   {t('rbac.roleName')}
                 </label>
                 <input
@@ -786,7 +786,7 @@ export const RoleManagement: React.FC = () => {
                   placeholder="e.g. Content Reviewer"
                   value={newRoleName}
                   onChange={(e) => setNewRoleName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 h-10 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 h-10 text-xs font-semibold text-text-heading placeholder-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                 />
               </div>
 
@@ -794,14 +794,14 @@ export const RoleManagement: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="w-1/2 flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="w-1/2 flex h-9 items-center justify-center rounded-xl border border-card-border bg-card-bg text-xs font-bold text-text-body hover:bg-card-header-bg transition-colors"
                 >
                   {t('rbac.cancelBtn')}
                 </button>
                 <button
                   type="submit"
                   disabled={isActionLoading}
-                  className="w-1/2 flex h-9 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="w-1/2 flex h-9 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
                 >
                   {isActionLoading && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
                   <span>{t('rbac.createBtn')}</span>
@@ -814,10 +814,10 @@ export const RoleManagement: React.FC = () => {
 
       {/* MODAL 2: Rename Role Dialog */}
       {showRenameModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl border border-slate-100">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-50">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg-overlay backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-card-bg p-6 shadow-xl border border-card-border">
+            <div className="flex items-center justify-between pb-3 border-b border-card-border">
+              <h3 className="text-sm font-bold text-text-heading uppercase tracking-wider">
                 Rename Role
               </h3>
               <button
@@ -825,7 +825,7 @@ export const RoleManagement: React.FC = () => {
                   setShowRenameModal(false);
                   setRoleToRename(null);
                 }}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-text-muted hover:text-text-body"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -833,7 +833,7 @@ export const RoleManagement: React.FC = () => {
 
             <form onSubmit={handleRenameSubmit} className="mt-4 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600">
+                <label className="text-xs font-semibold text-text-body">
                   {t('rbac.roleName')}
                 </label>
                 <input
@@ -842,7 +842,7 @@ export const RoleManagement: React.FC = () => {
                   placeholder="e.g. Administrator"
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 h-10 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 h-10 text-xs font-semibold text-text-heading placeholder-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                 />
               </div>
 
@@ -853,14 +853,14 @@ export const RoleManagement: React.FC = () => {
                     setShowRenameModal(false);
                     setRoleToRename(null);
                   }}
-                  className="w-1/2 flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="w-1/2 flex h-9 items-center justify-center rounded-xl border border-card-border bg-card-bg text-xs font-bold text-text-body hover:bg-card-header-bg transition-colors"
                 >
                   {t('rbac.cancelBtn')}
                 </button>
                 <button
                   type="submit"
                   disabled={isActionLoading}
-                  className="w-1/2 flex h-9 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="w-1/2 flex h-9 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
                 >
                   {isActionLoading && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
                   <span>{t('rbac.saveBtn')}</span>

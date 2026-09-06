@@ -298,20 +298,20 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
   // Gating Guard Check
   if (!hasImportPermission) {
     return (
-      <div className="max-w-xl mx-auto my-12 bg-white rounded-3xl border border-rose-100 shadow-xl p-8 text-center space-y-5" id="wizard-unauthorized">
-        <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-rose-50 text-rose-500">
+      <div className="max-w-xl mx-auto my-12 bg-card-bg rounded-3xl border border-card-border shadow-xl p-8 text-center space-y-5" id="wizard-unauthorized">
+        <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-status-error-bg text-status-error-text">
           <XCircle className="h-8 w-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-xl font-black text-slate-800">Permission Denied</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-xl font-black text-text-heading">Permission Denied</h2>
+          <p className="text-sm text-text-muted">
             You do not have the required <code>content:import</code> permission to access the SCORM Package Import Wizard.
           </p>
         </div>
         <div className="pt-2">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors"
+            className="px-6 py-2.5 bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text rounded-xl text-xs font-bold transition-colors"
           >
             Go Back
           </button>
@@ -321,26 +321,26 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl overflow-hidden max-w-3xl mx-auto" id="scorm-import-wizard-container">
+    <div className="bg-card-bg rounded-3xl border border-card-border shadow-2xl overflow-hidden max-w-3xl mx-auto" id="scorm-import-wizard-container">
       {/* Wizard Track / Progress Bar */}
-      <div className="bg-slate-950 px-8 py-5 border-b border-slate-800 flex justify-between items-center text-white">
+      <div className="bg-card-header-bg px-8 py-5 border-b border-card-border flex justify-between items-center text-text-heading">
         <div className="flex items-center space-x-3">
-          <Layers className="h-5 w-5 text-blue-500" />
+          <Layers className="h-5 w-5 text-link-primary" />
           <div>
             <h2 className="text-sm font-black font-sans uppercase tracking-wider">SCORM Import Wizard</h2>
-            <p className="text-[10px] font-mono text-slate-500 font-semibold uppercase">Step {currentStep} of 8</p>
+            <p className="text-[10px] font-mono text-text-muted font-semibold uppercase">Step {currentStep} of 8</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="text-xs font-semibold text-text-muted hover:text-text-heading transition-colors"
         >
           Exit Wizard
         </button>
       </div>
 
       {/* Steps Visual Indicator */}
-      <div className="flex bg-slate-50 border-b border-slate-100 px-8 py-3.5 overflow-x-auto gap-2">
+      <div className="flex bg-card-header-bg border-b border-card-border px-8 py-3.5 overflow-x-auto gap-2">
         {Array.from({ length: 8 }).map((_, index) => {
           const stepNum = index + 1;
           const isActive = currentStep === stepNum;
@@ -350,15 +350,15 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               <div
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
                   isActive
-                    ? 'bg-blue-600 text-white font-black'
+                    ? 'bg-btn-primary-bg text-btn-primary-text font-black'
                     : isCompleted
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-slate-200 text-slate-500'
+                    ? 'bg-status-success-bg text-status-success-text'
+                    : 'bg-bg-subtle text-text-muted'
                 }`}
               >
                 {isCompleted ? <Check className="h-3 w-3" /> : stepNum}
               </div>
-              <span className={`text-[10px] font-bold ${isActive ? 'text-slate-800' : 'text-slate-400'}`}>
+              <span className={`text-[10px] font-bold ${isActive ? 'text-text-heading' : 'text-text-muted'}`}>
                 {stepNum === 1
                   ? 'Intro'
                   : stepNum === 2
@@ -375,7 +375,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                   ? 'Validating'
                   : 'Done'}
               </span>
-              {stepNum < 8 && <span className="text-slate-300 font-mono text-[10px] mx-1">&rarr;</span>}
+              {stepNum < 8 && <span className="text-text-muted font-mono text-[10px] mx-1">&rarr;</span>}
             </div>
           );
         })}
@@ -394,23 +394,23 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-800">SCORM Content Package Import</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">
+                <h3 className="text-xl font-black text-text-heading">SCORM Content Package Import</h3>
+                <p className="text-sm text-text-muted leading-relaxed">
                   Welcome to the multi-step content deployment wizard. This toolkit allows you to upload,
                   parse, validate, and associate industry-standard SCORM 1.2 elearning packages into your SmartCookie workspace.
                 </p>
               </div>
 
               {canPreview && learnerRole && previewRoleId !== learnerRole.id && (
-                <div className="flex items-center space-x-3 bg-amber-50 border border-amber-100 rounded-2xl p-4 text-amber-900" id="wizard-learner-shortcut-card">
-                  <Eye className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                <div className="flex items-center space-x-3 bg-status-warning-bg border border-card-border rounded-2xl p-4 text-status-warning-text" id="wizard-learner-shortcut-card">
+                  <Eye className="h-5 w-5 text-status-warning-text flex-shrink-0" />
                   <div className="flex-1 text-xs font-semibold leading-relaxed">
-                    <p className="font-bold text-amber-950">Quick Testing Tip:</p>
-                    <p className="text-amber-800">Want to test how courses look to students? Toggle the Learner Preview mode instantly.</p>
+                    <p className="font-bold text-status-warning-text">Quick Testing Tip:</p>
+                    <p className="text-status-warning-text">Want to test how courses look to students? Toggle the Learner Preview mode instantly.</p>
                   </div>
                   <button
                     onClick={() => enterPreview(learnerRole.id, learnerRole.name)}
-                    className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm shrink-0 flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-status-warning-text hover:opacity-90 text-white rounded-xl text-xs font-bold transition-colors shadow-sm shrink-0 flex items-center gap-1.5"
                     id="preview-as-learner-wizard-btn"
                   >
                     <Eye className="h-3 w-3" />
@@ -419,11 +419,11 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                 </div>
               )}
 
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 flex gap-4 text-blue-800">
-                <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="bg-status-info-bg border border-card-border rounded-2xl p-5 flex gap-4 text-status-info-text">
+                <Info className="h-5 w-5 text-status-info-text flex-shrink-0 mt-0.5" />
                 <div className="space-y-2 text-xs font-semibold leading-relaxed">
-                  <p className="font-bold text-blue-900">Supported Packages & Requirements:</p>
-                  <ul className="list-disc pl-4 space-y-1 text-blue-700 font-medium">
+                  <p className="font-bold text-status-info-text">Supported Packages & Requirements:</p>
+                  <ul className="list-disc pl-4 space-y-1 text-status-info-text font-medium">
                     <li>Must be a valid ZIP archive format.</li>
                     <li>Must contain a top-level <code>imsmanifest.xml</code> metadata specification file.</li>
                     <li>Files should be compressed directly (not wrapped inside an outer sub-folder).</li>
@@ -444,25 +444,25 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-800">Link to a Lesson Stub</h3>
-                <p className="text-sm text-slate-500">
+                <h3 className="text-xl font-black text-text-heading">Link to a Lesson Stub</h3>
+                <p className="text-sm text-text-muted">
                   Select an existing Lesson Stub to link this SCORM content package to, or skip this step to upload as a general content package.
                 </p>
               </div>
 
               {isLoadingLessons ? (
                 <div className="flex justify-center py-12">
-                  <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
+                  <Loader2 className="h-7 w-7 animate-spin text-link-primary" />
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wide">
+                  <label className="block text-xs font-extrabold text-text-muted uppercase tracking-wide">
                     Target Lesson Stub
                   </label>
                   <select
                     value={selectedLessonId}
                     onChange={(e) => setSelectedLessonId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg p-3.5 text-sm font-semibold text-text-body shadow-xs focus:border-link-primary focus:outline-none"
                   >
                     <option value="">-- Do Not Associate (Upload as General Asset) --</option>
                     {lessons.map((less) => (
@@ -486,8 +486,8 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-800">Select SCORM Zip File</h3>
-                <p className="text-sm text-slate-500">
+                <h3 className="text-xl font-black text-text-heading">Select SCORM Zip File</h3>
+                <p className="text-sm text-text-muted">
                   Choose or drag and drop your SCORM package ZIP archive.
                 </p>
               </div>
@@ -498,31 +498,31 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                 onDrop={handleDrop}
                 className={`border-2 border-dashed rounded-3xl p-10 text-center flex flex-col items-center justify-center gap-4 transition-all ${
                   isDragOver
-                    ? 'border-blue-500 bg-blue-50/20 scale-[1.01]'
+                    ? 'border-link-primary bg-status-info-bg/20 scale-[1.01]'
                     : selectedFile
-                    ? 'border-emerald-300 bg-emerald-50/5'
-                    : 'border-slate-200 hover:border-slate-350 bg-slate-50/20'
+                    ? 'border-card-border bg-status-success-bg/10'
+                    : 'border-card-border hover:border-text-muted bg-card-header-bg/20'
                 }`}
               >
                 <div className={`h-16 w-16 rounded-2xl flex items-center justify-center ${
-                  selectedFile ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'
+                  selectedFile ? 'bg-status-success-bg text-status-success-text' : 'bg-bg-subtle text-text-muted'
                 }`}>
                   <Upload className="h-8 w-8" />
                 </div>
 
                 {selectedFile ? (
                   <div className="space-y-1.5">
-                    <p className="text-sm font-extrabold text-slate-800 truncate max-w-md">
+                    <p className="text-sm font-extrabold text-text-heading truncate max-w-md">
                       {selectedFile.name}
                     </p>
-                    <p className="text-xs text-slate-400 font-mono">
+                    <p className="text-xs text-text-muted font-mono">
                       {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <p className="text-sm font-bold text-slate-700">Drag & Drop SCORM ZIP package here</p>
-                    <p className="text-xs text-slate-400">or click below to browse local storage</p>
+                    <p className="text-sm font-bold text-text-body">Drag & Drop SCORM ZIP package here</p>
+                    <p className="text-xs text-text-muted">or click below to browse local storage</p>
                   </div>
                 )}
 
@@ -536,7 +536,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                   />
                   <label
                     htmlFor="scorm-file-input"
-                    className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl cursor-pointer shadow-xs inline-block transition-colors"
+                    className="px-5 py-2.5 bg-card-bg border border-card-border hover:bg-card-header-bg text-text-body text-xs font-bold rounded-xl cursor-pointer shadow-xs inline-block transition-colors"
                   >
                     {selectedFile ? 'Change File' : 'Browse Files'}
                   </label>
@@ -555,13 +555,13 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               className="space-y-5"
             >
               <div className="space-y-1">
-                <h3 className="text-xl font-black text-slate-800">SCORM Metadata Configuration</h3>
-                <p className="text-sm text-slate-500">Provide the details for this package publication.</p>
+                <h3 className="text-xl font-black text-text-heading">SCORM Metadata Configuration</h3>
+                <p className="text-sm text-text-muted">Provide the details for this package publication.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
+                  <label className="block text-[10px] font-extrabold text-text-muted uppercase tracking-wide">
                     Package Title *
                   </label>
                   <input
@@ -569,32 +569,32 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg p-3 text-sm font-semibold text-text-body shadow-xs focus:border-link-primary focus:outline-none"
                     placeholder="SCORM Title"
                   />
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
+                  <label className="block text-[10px] font-extrabold text-text-muted uppercase tracking-wide">
                     Description
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
-                    className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg p-3 text-sm font-semibold text-text-body shadow-xs focus:border-link-primary focus:outline-none"
                     placeholder="Brief description of course materials..."
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
+                  <label className="block text-[10px] font-extrabold text-text-muted uppercase tracking-wide">
                     Category
                   </label>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg p-3 text-sm font-semibold text-text-body shadow-xs focus:border-link-primary focus:outline-none"
                   >
                     <option value="">No Category</option>
                     {categories.map((cat) => (
@@ -606,26 +606,26 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
+                  <label className="block text-[10px] font-extrabold text-text-muted uppercase tracking-wide">
                     Author / Creator
                   </label>
                   <input
                     type="text"
                     value={author}
                     onChange={(e) => setAuthor(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg p-3 text-sm font-semibold text-text-body shadow-xs focus:border-link-primary focus:outline-none"
                     placeholder="Author name"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
+                  <label className="block text-[10px] font-extrabold text-text-muted uppercase tracking-wide">
                     Language
                   </label>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg p-3 text-sm font-semibold text-text-body shadow-xs focus:border-link-primary focus:outline-none"
                   >
                     <option value="en">English (en)</option>
                     <option value="de">German (de)</option>
@@ -635,14 +635,14 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
+                  <label className="block text-[10px] font-extrabold text-text-muted uppercase tracking-wide">
                     Tags (comma separated)
                   </label>
                   <input
                     type="text"
                     value={tagsInput}
                     onChange={(e) => setTagsInput(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg p-3 text-sm font-semibold text-text-body shadow-xs focus:border-link-primary focus:outline-none"
                     placeholder="compliance, security, 2026"
                   />
                 </div>
@@ -660,8 +660,8 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-800">Versioning Behavior</h3>
-                <p className="text-sm text-slate-500">
+                <h3 className="text-xl font-black text-text-heading">Versioning Behavior</h3>
+                <p className="text-sm text-text-muted">
                   Choose how the system handles the package if it is updating previous course materials.
                 </p>
               </div>
@@ -672,15 +672,15 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                   onClick={() => setVersionBehavior('NEW')}
                   className={`text-left p-5 rounded-2xl border transition-all space-y-2 flex flex-col justify-between ${
                     versionBehavior === 'NEW'
-                      ? 'border-blue-500 bg-blue-50/10 shadow-md ring-1 ring-blue-500'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-link-primary bg-status-info-bg/20 shadow-md ring-1 ring-link-primary'
+                      : 'border-card-border hover:border-text-muted'
                   }`}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-status-info-bg text-status-info-text">
                     <FolderPlus className="h-5 w-5" />
                   </div>
-                  <h4 className="font-bold text-slate-800 text-sm">New Independent Package</h4>
-                  <p className="text-xs text-slate-400">
+                  <h4 className="font-bold text-text-heading text-sm">New Independent Package</h4>
+                  <p className="text-xs text-text-muted">
                     Uploads this package as a brand new independent content asset in the database.
                   </p>
                 </button>
@@ -690,15 +690,15 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                   onClick={() => setVersionBehavior('REPLACE')}
                   className={`text-left p-5 rounded-2xl border transition-all space-y-2 flex flex-col justify-between ${
                     versionBehavior === 'REPLACE'
-                      ? 'border-blue-500 bg-blue-50/10 shadow-md ring-1 ring-blue-500'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-link-primary bg-status-info-bg/20 shadow-md ring-1 ring-link-primary'
+                      : 'border-card-border hover:border-text-muted'
                   }`}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-status-info-bg text-status-info-text">
                     <RefreshCw className="h-5 w-5" />
                   </div>
-                  <h4 className="font-bold text-slate-800 text-sm">Overwrite Existing / Version Up</h4>
-                  <p className="text-xs text-slate-400">
+                  <h4 className="font-bold text-text-heading text-sm">Overwrite Existing / Version Up</h4>
+                  <p className="text-xs text-text-muted">
                     Overwrites or increments the version number of an existing content group package.
                   </p>
                 </button>
@@ -706,7 +706,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
 
               {versionBehavior === 'REPLACE' && (
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wide">
+                  <label className="block text-xs font-extrabold text-text-muted uppercase tracking-wide">
                     Existing Content Group ID
                   </label>
                   <input
@@ -714,7 +714,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                     required
                     value={existingContentGroupId}
                     onChange={(e) => setExistingContentGroupId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 shadow-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg p-3 text-sm font-semibold text-text-body shadow-xs focus:border-link-primary focus:outline-none"
                     placeholder="Enter Content Group UUID to overwrite"
                   />
                 </div>
@@ -732,8 +732,8 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               className="space-y-6"
             >
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-800">Package Certificate Configuration</h3>
-                <p className="text-sm text-slate-500">
+                <h3 className="text-xl font-black text-text-heading">Package Certificate Configuration</h3>
+                <p className="text-sm text-text-muted">
                   Select how package-level certificates should be handled upon successful SCORM completion.
                 </p>
               </div>
@@ -777,29 +777,29 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                     onClick={() => setCertificateOption(opt.id as any)}
                     className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start justify-between ${
                       certificateOption === opt.id
-                        ? 'border-blue-500 bg-blue-50/10 shadow-md ring-1 ring-blue-500'
-                        : 'border-slate-150 hover:border-slate-200 bg-white'
+                        ? 'border-link-primary bg-status-info-bg/20 shadow-md ring-1 ring-link-primary'
+                        : 'border-card-border hover:border-text-muted bg-card-bg'
                     }`}
                   >
                     <div className="space-y-1 pr-4">
                       <div className="flex items-center space-x-2">
-                        <span className="font-extrabold text-slate-800 text-sm leading-none">{opt.title}</span>
+                        <span className="font-extrabold text-text-heading text-sm leading-none">{opt.title}</span>
                         {!opt.isMVPActive && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-slate-100 text-slate-400 tracking-wider">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-bg-subtle text-text-muted tracking-wider">
                             INERT
                           </span>
                         )}
                         {opt.isMVPActive && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-emerald-50 text-emerald-600 border border-emerald-100 tracking-wider">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-status-success-bg text-status-success-text border border-card-border tracking-wider">
                             ACTIVE
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-400 font-medium leading-relaxed">{opt.desc}</p>
+                      <p className="text-xs text-text-muted font-medium leading-relaxed">{opt.desc}</p>
                     </div>
 
                     <div className={`h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                      certificateOption === opt.id ? 'border-blue-500 bg-blue-600 text-white' : 'border-slate-300'
+                      certificateOption === opt.id ? 'border-link-primary bg-link-primary text-white' : 'border-card-border'
                     }`}>
                       {certificateOption === opt.id && <Check className="h-3 w-3" />}
                     </div>
@@ -821,30 +821,30 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               {isUploading ? (
                 <>
                   <div className="relative flex items-center justify-center">
-                    <Loader2 className="h-14 w-14 animate-spin text-blue-600" />
-                    <Upload className="absolute h-5 w-5 text-blue-500" />
+                    <Loader2 className="h-14 w-14 animate-spin text-link-primary" />
+                    <Upload className="absolute h-5 w-5 text-link-primary" />
                   </div>
                   <div className="space-y-1.5">
-                    <h4 className="font-black text-slate-800 text-lg">Uploading & Validating</h4>
-                    <p className="text-xs text-slate-400 max-w-sm">
+                    <h4 className="font-black text-text-heading text-lg">Uploading & Validating</h4>
+                    <p className="text-xs text-text-muted max-w-sm">
                       Streaming SCORM package ZIP payload, extracting archives, and analyzing <code>imsmanifest.xml</code> structures...
                     </p>
                   </div>
                 </>
               ) : uploadError ? (
                 <>
-                  <div className="h-14 w-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center">
+                  <div className="h-14 w-14 bg-status-error-bg text-status-error-text rounded-2xl flex items-center justify-center">
                     <AlertTriangle className="h-7 w-7" />
                   </div>
                   <div className="space-y-2 max-w-md">
-                    <h4 className="font-black text-slate-800 text-lg">Validation Failed</h4>
-                    <p className="text-xs text-rose-600 bg-rose-50/50 p-3 rounded-xl border border-rose-100 leading-relaxed">
+                    <h4 className="font-black text-text-heading text-lg">Validation Failed</h4>
+                    <p className="text-xs text-status-error-text bg-status-error-bg/50 p-3 rounded-xl border border-card-border leading-relaxed">
                       {uploadError}
                     </p>
                   </div>
                   <button
                     onClick={prevStep}
-                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+                    className="px-5 py-2.5 bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text rounded-xl text-xs font-bold transition-colors shadow-xs"
                   >
                     Go Back & Correct
                   </button>
@@ -862,28 +862,28 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               exit={{ opacity: 0 }}
               className="space-y-6 text-center py-6"
             >
-              <div className="inline-flex items-center justify-center h-16 w-16 rounded-3xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm">
+              <div className="inline-flex items-center justify-center h-16 w-16 rounded-3xl bg-status-success-bg text-status-success-text border border-card-border shadow-sm">
                 <CheckCircle className="h-8 w-8" />
               </div>
 
               <div className="space-y-2 max-w-md mx-auto">
-                <h3 className="text-2xl font-black text-slate-800 font-sans">Import Successful!</h3>
-                <p className="text-sm text-slate-400 font-medium">
+                <h3 className="text-2xl font-black text-text-heading font-sans">Import Successful!</h3>
+                <p className="text-sm text-text-muted font-medium">
                   The SCORM package has been fully decompressed, parsed, and validated green on the server.
                 </p>
               </div>
 
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 max-w-md mx-auto text-left space-y-2.5 text-xs text-slate-500 font-medium">
+              <div className="bg-card-header-bg border border-card-border rounded-2xl p-4 max-w-md mx-auto text-left space-y-2.5 text-xs text-text-muted font-medium">
                 <div className="flex justify-between">
                   <span>Package ID:</span>
-                  <span className="font-mono text-slate-700">{validationResult?.contentId?.slice(0, 8)}...</span>
+                  <span className="font-mono text-text-heading">{validationResult?.contentId?.slice(0, 8)}...</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Launch File:</span>
-                  <span className="font-mono text-slate-700">{validationResult?.launchFile}</span>
+                  <span className="font-mono text-text-heading">{validationResult?.launchFile}</span>
                 </div>
                 {selectedLessonId && (
-                  <div className="flex justify-between text-blue-600 font-semibold border-t border-slate-200/50 pt-2.5 mt-2.5">
+                  <div className="flex justify-between text-link-primary font-semibold border-t border-card-border pt-2.5 mt-2.5">
                     <span>Associated LessonStub:</span>
                     <span>SUCCESSFULLY LINKED</span>
                   </div>
@@ -895,7 +895,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                   <button
                     onClick={handlePublishContent}
                     disabled={isPublishing}
-                    className="flex-1 flex items-center justify-center gap-2 px-5 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition-colors shadow-sm"
+                    className="flex-1 flex items-center justify-center gap-2 px-5 py-3.5 bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text rounded-xl font-bold text-xs transition-colors shadow-sm"
                   >
                     {isPublishing ? (
                       <Loader2 className="h-4 w-4 animate-spin text-white" />
@@ -905,7 +905,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
                     <span>Publish Package Globally</span>
                   </button>
                 ) : (
-                  <div className="flex-1 py-3 px-4 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5">
+                  <div className="flex-1 py-3 px-4 bg-status-success-bg border border-card-border text-status-success-text text-xs font-bold rounded-xl flex items-center justify-center gap-1.5">
                     <Check className="h-4 w-4" />
                     <span>Package Published Successfully!</span>
                   </div>
@@ -913,7 +913,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
 
                 <button
                   onClick={onSuccess}
-                  className="flex-1 px-5 py-3.5 bg-slate-900 hover:bg-slate-950 text-white rounded-xl font-bold text-xs transition-colors"
+                  className="flex-1 px-5 py-3.5 bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text rounded-xl font-bold text-xs transition-colors"
                 >
                   Close Wizard & Return
                 </button>
@@ -925,11 +925,11 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
 
       {/* Footer Navigation Bar */}
       {currentStep < 7 && (
-        <div className="bg-slate-50 border-t border-slate-100 px-8 py-5 flex justify-between items-center">
+        <div className="bg-card-header-bg border-t border-card-border px-8 py-5 flex justify-between items-center">
           <button
             onClick={prevStep}
             disabled={currentStep === 1}
-            className={`flex items-center gap-1.5 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 transition-colors shadow-xs ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 bg-card-bg border border-card-border hover:bg-card-header-bg rounded-xl text-xs font-bold text-text-body transition-colors shadow-xs ${
               currentStep === 1 ? 'opacity-30 cursor-not-allowed' : ''
             }`}
           >
@@ -939,7 +939,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
 
           <button
             onClick={nextStep}
-            className="flex items-center gap-1.5 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-5 py-2.5 bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text rounded-xl text-xs font-bold transition-all shadow-sm"
           >
             <span>{currentStep === 6 ? 'Submit & Validate' : 'Next Step'}</span>
             <ChevronRight className="h-3.5 w-3.5" />

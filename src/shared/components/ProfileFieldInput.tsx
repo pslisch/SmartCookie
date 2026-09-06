@@ -192,8 +192,8 @@ export function ProfileFieldInput({
 
   const renderInputControl = () => {
     const fType = field.fieldType as ProfileFieldType;
-    const commonClass = `w-full rounded-xl border px-3 py-2 text-sm shadow-sm transition-all outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-50/70 disabled:text-slate-500 disabled:border-slate-200 disabled:cursor-not-allowed ${
-      localError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200'
+    const commonClass = `w-full rounded-xl border px-3 py-2 text-sm shadow-sm transition-all outline-none focus:ring-2 focus:ring-input-border-focus focus:border-input-border-focus disabled:bg-card-header-bg/70 disabled:text-text-muted disabled:border-input-border disabled:cursor-not-allowed ${
+      localError ? 'border-status-error-text focus:ring-status-error-text focus:border-status-error-text' : 'border-input-border'
     }`;
 
     switch (fType) {
@@ -270,9 +270,9 @@ export function ProfileFieldInput({
               checked={value === 'true'}
               disabled={!isEditable}
               onChange={(e) => onChange(e.target.checked ? 'true' : 'false')}
-              className="h-4.5 w-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="h-4.5 w-4.5 rounded border-input-border text-link-primary focus:ring-input-border-focus disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             />
-            <span className="text-sm text-slate-700 font-medium">
+            <span className="text-sm text-text-body font-medium">
               {t('profileFields.selectOption')}
             </span>
           </div>
@@ -313,9 +313,9 @@ export function ProfileFieldInput({
                   checked={value === opt.value}
                   disabled={!isEditable}
                   onChange={() => onChange(opt.value)}
-                  className="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-4 w-4 border-input-border text-link-primary focus:ring-input-border-focus disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                <span className="text-sm text-slate-700">{opt.label}</span>
+                <span className="text-sm text-text-body">{opt.label}</span>
               </label>
             ))}
           </div>
@@ -340,10 +340,10 @@ export function ProfileFieldInput({
   return (
     <div id={`profile-field-container-${field.id}`} className="space-y-1.5 w-full">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-semibold text-slate-700">
+        <label className="block text-sm font-semibold text-text-body">
           {field.name}
           {field.required && (
-            <span className="text-red-500 ml-1" id={`req-marker-${field.id}`}>
+            <span className="text-status-error-text ml-1" id={`req-marker-${field.id}`}>
               *
             </span>
           )}
@@ -351,7 +351,7 @@ export function ProfileFieldInput({
       </div>
 
       {field.description && (
-        <p className="text-xs text-slate-500 leading-relaxed">{field.description}</p>
+        <p className="text-xs text-text-muted leading-relaxed">{field.description}</p>
       )}
 
       <div className="relative rounded-xl">{renderInputControl()}</div>
@@ -359,7 +359,7 @@ export function ProfileFieldInput({
       {localError && (
         <div
           id={`error-msg-${field.id}`}
-          className="flex items-center space-x-1.5 text-xs text-red-600 font-medium animate-fadeIn"
+          className="flex items-center space-x-1.5 text-xs text-status-error-text font-medium animate-fadeIn"
         >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           <span>{localError}</span>
@@ -369,9 +369,9 @@ export function ProfileFieldInput({
       {disabledExplanation && (
         <div
           id={`disabled-explanation-${field.id}`}
-          className="flex items-start space-x-1.5 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-600 border border-slate-100/80"
+          className="flex items-start space-x-1.5 rounded-lg bg-card-header-bg p-2 text-[11px] text-text-body border border-card-border"
         >
-          <Lock className="h-3.5 w-3.5 mt-0.5 shrink-0 text-slate-400" />
+          <Lock className="h-3.5 w-3.5 mt-0.5 shrink-0 text-text-muted" />
           <span>{disabledExplanation}</span>
         </div>
       )}

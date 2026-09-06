@@ -363,14 +363,14 @@ export const OrganizationStructureTab: React.FC = () => {
     return (
       <div 
         key={node.id} 
-        className="group relative flex flex-col md:flex-row md:items-center justify-between border-b border-slate-50 py-4 hover:bg-slate-50/50 transition-colors rounded-xl px-4"
+        className="group relative flex flex-col md:flex-row md:items-center justify-between border-b border-card-border/50 py-4 hover:bg-card-header-bg transition-colors rounded-xl px-4"
         style={{ paddingLeft: `${node.depth * 1.5 + 1}rem` }}
         id={`ou-row-${node.id}`}
       >
         <div className="flex-1 min-w-0 pr-4">
           <div className="flex items-center space-x-2">
             {node.children.length > 0 ? (
-              <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+              <ChevronDown className="h-4 w-4 text-text-muted shrink-0" />
             ) : (
               <div className="w-4 h-4 shrink-0" />
             )}
@@ -381,19 +381,19 @@ export const OrganizationStructureTab: React.FC = () => {
                   type="text"
                   value={editingOUName}
                   onChange={(e) => setEditingOUName(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-sm font-semibold focus:border-blue-500 focus:outline-none"
+                  className="rounded-lg border border-input-border bg-card-bg text-text-body px-2.5 py-1 text-sm font-semibold focus:border-input-border-focus focus:outline-none"
                   autoFocus
                 />
                 <button
                   onClick={() => handleRenameOU(node.id)}
-                  className="rounded-lg bg-emerald-50 p-1 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                  className="rounded-lg bg-status-success-bg p-1 text-status-success-text hover:bg-status-success-bg/80 transition-colors"
                   title={t('organization.structure.saveNameTooltip')}
                 >
                   <Check className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setEditingOUId(null)}
-                  className="rounded-lg bg-rose-50 p-1 text-rose-600 hover:bg-rose-100 transition-colors"
+                  className="rounded-lg bg-status-error-bg p-1 text-status-error-text hover:bg-status-error-bg/80 transition-colors"
                   title={t('organization.structure.cancelTooltip')}
                 >
                   <X className="h-4 w-4" />
@@ -401,13 +401,13 @@ export const OrganizationStructureTab: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-2.5">
-                <span className="font-bold text-slate-800 text-sm">{node.name}</span>
+                <span className="font-bold text-text-heading text-sm">{node.name}</span>
                 <button
                   onClick={() => {
                     setEditingOUId(node.id);
                     setEditingOUName(node.name);
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-600 rounded transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-text-body rounded transition-opacity"
                   title={t('organization.structure.renameTooltip')}
                 >
                   <Edit2 className="h-3.5 w-3.5" />
@@ -420,13 +420,13 @@ export const OrganizationStructureTab: React.FC = () => {
           <div className="mt-2 flex flex-wrap gap-2 text-xs pl-6">
             {managers.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">{t('organization.structure.managersLabel')}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-status-warning-text bg-status-warning-bg px-1.5 py-0.5 rounded">{t('organization.structure.managersLabel')}</span>
                 {managers.map((m) => (
-                  <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-amber-100 bg-amber-50/30 px-2 py-0.5 text-[11px] text-amber-800 font-medium">
+                  <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-status-warning-text/20 bg-status-warning-bg px-2 py-0.5 text-[11px] text-status-warning-text font-medium">
                     <span>{m.user?.username || m.user?.email || t('organization.structure.anonymousUser')}</span>
                     <button
                       onClick={() => handleRemoveManager(node.id, m.userId)}
-                      className="text-amber-500 hover:text-amber-700 ml-1 rounded-full hover:bg-amber-100/50 p-0.5 shrink-0"
+                      className="text-status-warning-text hover:text-status-warning-text/80 ml-1 rounded-full hover:bg-status-warning-bg p-0.5 shrink-0"
                       title={t('organization.structure.removeManagerTooltip')}
                     >
                       <UserX className="h-3 w-3" />
@@ -438,9 +438,9 @@ export const OrganizationStructureTab: React.FC = () => {
 
             {members.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{t('organization.structure.membersLabel')}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted bg-card-header-bg px-1.5 py-0.5 rounded">{t('organization.structure.membersLabel')}</span>
                 {members.map((m) => (
-                  <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-700 font-medium">
+                  <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-card-border bg-card-header-bg px-2 py-0.5 text-[11px] text-text-body font-medium">
                     <span>{m.user?.username || m.user?.email || t('organization.structure.anonymousUser')}</span>
                   </span>
                 ))}
@@ -448,7 +448,7 @@ export const OrganizationStructureTab: React.FC = () => {
             )}
 
             {managers.length === 0 && members.length === 0 && (
-              <span className="text-slate-400 italic">{t('organization.structure.noMembersOrManagers')}</span>
+              <span className="text-text-muted italic">{t('organization.structure.noMembersOrManagers')}</span>
             )}
           </div>
         </div>
@@ -460,7 +460,7 @@ export const OrganizationStructureTab: React.FC = () => {
               setSelectedOUForUser(node.id);
               setSelectedUserToMove('');
             }}
-            className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50/50 px-2.5 py-1 rounded-lg border border-blue-100 transition-all font-semibold"
+            className="flex items-center space-x-1 text-xs text-link-primary hover:text-link-primary/80 hover:bg-status-info-bg px-2.5 py-1 rounded-lg border border-link-primary/20 transition-all font-semibold"
             title={t('organization.structure.assignUserTooltip')}
           >
             <UserPlus className="h-3.5 w-3.5" />
@@ -472,7 +472,7 @@ export const OrganizationStructureTab: React.FC = () => {
               setSelectedOUForManager(node.id);
               setSelectedUserToManager('');
             }}
-            className="flex items-center space-x-1 text-xs text-amber-600 hover:text-amber-800 hover:bg-amber-50/50 px-2.5 py-1 rounded-lg border border-amber-100 transition-all font-semibold"
+            className="flex items-center space-x-1 text-xs text-status-warning-text hover:text-status-warning-text/80 hover:bg-status-warning-bg px-2.5 py-1 rounded-lg border border-status-warning-text/20 transition-all font-semibold"
             title={t('organization.structure.assignManagerTooltip')}
           >
             <ShieldCheck className="h-3.5 w-3.5" />
@@ -481,7 +481,7 @@ export const OrganizationStructureTab: React.FC = () => {
 
           <button
             onClick={() => setDeletingOU(node)}
-            className="flex items-center justify-center p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100"
+            className="flex items-center justify-center p-1.5 text-text-muted hover:text-status-error-text hover:bg-status-error-bg rounded-lg transition-colors border border-transparent hover:border-status-error-text/20"
             title={t('organization.structure.deleteTooltip')}
           >
             <Trash2 className="h-4 w-4" />
@@ -495,30 +495,30 @@ export const OrganizationStructureTab: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8" id="org-structure-tab-container">
       {/* Left Column: List/Tree View of Active Units */}
       <div className="lg:col-span-8 space-y-6">
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+        <div className="bg-card-bg rounded-2xl border border-card-border p-6 shadow-sm">
+          <div className="flex items-center justify-between border-b border-card-border pb-4 mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-900">{t('organization.structure.treeTitle')}</h3>
-              <p className="text-xs text-slate-500 mt-1">{t('organization.structure.treeSubtitle')}</p>
+              <h3 className="text-base font-bold text-text-heading">{t('organization.structure.treeTitle')}</h3>
+              <p className="text-xs text-text-muted mt-1">{t('organization.structure.treeSubtitle')}</p>
             </div>
-            {loading && <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />}
+            {loading && <Loader2 className="h-5 w-5 text-link-primary animate-spin" />}
           </div>
 
           {error && (
-            <div className="mb-4 rounded-xl bg-rose-50 border border-rose-100 p-4 text-xs text-rose-800 flex items-start space-x-2.5">
-              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
+            <div className="mb-4 rounded-xl bg-status-error-bg border border-status-error-text/20 p-4 text-xs text-status-error-text flex items-start space-x-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-status-error-text mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {activeOUs.length === 0 ? (
-            <div className="text-center py-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
-              <FolderSync className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-500">{t('organization.structure.noUnitsTitle')}</p>
-              <p className="text-xs text-slate-400 mt-1">{t('organization.structure.noUnitsDesc')}</p>
+            <div className="text-center py-12 rounded-2xl border border-dashed border-card-border bg-card-header-bg">
+              <FolderSync className="h-10 w-10 text-text-muted mx-auto mb-3" />
+              <p className="text-sm font-semibold text-text-muted">{t('organization.structure.noUnitsTitle')}</p>
+              <p className="text-xs text-text-muted mt-1">{t('organization.structure.noUnitsDesc')}</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto pr-2">
+            <div className="divide-y divide-card-border max-h-[600px] overflow-y-auto pr-2">
               {flatTreeList.map(renderUnitRow)}
             </div>
           )}
@@ -526,12 +526,12 @@ export const OrganizationStructureTab: React.FC = () => {
 
         {/* Recently Deleted / Soft Restore Window */}
         {deletedOUs.length > 0 && (
-          <div className="bg-slate-50/70 rounded-2xl border border-slate-200 p-6">
-            <h4 className="text-sm font-bold text-slate-800 flex items-center space-x-2">
-              <RotateCcw className="h-4 w-4 text-slate-600" />
+          <div className="bg-card-header-bg rounded-2xl border border-card-border p-6">
+            <h4 className="text-sm font-bold text-text-heading flex items-center space-x-2">
+              <RotateCcw className="h-4 w-4 text-text-muted" />
               <span>{t('organization.structure.recentlyDeletedTitle')}</span>
             </h4>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-text-muted mt-1">
               {t('organization.structure.recentlyDeletedDesc')}
             </p>
 
@@ -542,18 +542,18 @@ export const OrganizationStructureTab: React.FC = () => {
                   : 14;
 
                 return (
-                  <div key={ou.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                  <div key={ou.id} className="flex items-center justify-between rounded-xl border border-card-border bg-card-bg p-3.5 shadow-sm">
                     <div className="min-w-0 pr-4">
-                      <p className="text-sm font-bold text-slate-800 truncate">{ou.name}</p>
-                      <p className="text-[11px] text-rose-600 font-semibold mt-0.5">
+                      <p className="text-sm font-bold text-text-heading truncate">{ou.name}</p>
+                      <p className="text-[11px] text-status-error-text font-semibold mt-0.5">
                         {t('organization.structure.daysRemaining', { count: daysLeft })}
                       </p>
                     </div>
                     <button
                       onClick={() => handleRestoreOU(ou.id)}
-                      className="flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                      className="flex items-center space-x-1.5 rounded-lg border border-card-border bg-card-bg px-3 py-1.5 text-xs font-semibold text-text-body shadow-sm transition-colors hover:bg-card-header-bg"
                     >
-                      <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
+                      <RotateCcw className="h-3.5 w-3.5 text-text-muted" />
                       <span>{t('organization.structure.restoreBtn')}</span>
                     </button>
                   </div>
@@ -567,30 +567,30 @@ export const OrganizationStructureTab: React.FC = () => {
       {/* Right Column: Actions (Create, Move User, Assign Manager) */}
       <div className="lg:col-span-4 space-y-6">
         {/* Create Unit Form */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2 pb-3 border-b border-slate-100">
-            <Plus className="h-4 w-4 text-blue-600" />
+        <div className="bg-card-bg rounded-2xl border border-card-border p-6 shadow-sm">
+          <h3 className="text-sm font-bold text-text-heading flex items-center space-x-2 pb-3 border-b border-card-border">
+            <Plus className="h-4 w-4 text-link-primary" />
             <span>{t('organization.structure.createTitle')}</span>
           </h3>
           <form onSubmit={handleCreateOU} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.structure.unitNameLabel')}</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('organization.structure.unitNameLabel')}</label>
               <input
                 type="text"
                 value={newOUName}
                 onChange={(e) => setNewOUName(e.target.value)}
                 placeholder={t('organization.structure.unitNamePlaceholder')}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm focus:border-blue-500 focus:outline-none placeholder:text-slate-400 font-medium"
+                className="w-full rounded-xl border border-input-border bg-card-bg text-text-body px-3.5 py-2 text-sm focus:border-input-border-focus focus:outline-none placeholder:text-text-muted font-medium"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.structure.parentUnitLabel')}</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('organization.structure.parentUnitLabel')}</label>
               <select
                 value={newOUParentId}
                 onChange={(e) => setNewOUParentId(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none font-semibold text-slate-700"
+                className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-sm focus:border-input-border-focus focus:outline-none font-semibold text-text-body"
               >
                 <option value="">{t('organization.structure.noneTopLevel')}</option>
                 {activeOUs.map((ou) => (
@@ -602,7 +602,7 @@ export const OrganizationStructureTab: React.FC = () => {
             <button
               type="submit"
               disabled={!newOUName.trim()}
-              className="w-full rounded-xl bg-blue-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="w-full rounded-xl bg-btn-primary-bg py-2.5 text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
             >
               {t('organization.structure.addUnitBtn')}
             </button>
@@ -614,28 +614,28 @@ export const OrganizationStructureTab: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl border border-blue-200 bg-blue-50/20 p-6 shadow-sm"
+            className="bg-card-bg rounded-2xl border border-link-primary/30 p-6 shadow-sm"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-blue-100">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                <UserPlus className="h-4 w-4 text-blue-600" />
+            <div className="flex items-center justify-between pb-3 border-b border-card-border">
+              <h3 className="text-sm font-bold text-text-heading flex items-center space-x-2">
+                <UserPlus className="h-4 w-4 text-link-primary" />
                 <span>{t('organization.structure.moveUserTitle')}</span>
               </h3>
-              <button onClick={() => setSelectedOUForUser('')} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setSelectedOUForUser('')} className="text-text-muted hover:text-text-body">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-text-muted mt-2">
               {t('organization.structure.moveUserText', { name: activeOUs.find(o => o.id === selectedOUForUser)?.name })}
               {t('organization.structure.moveUserTextSuffix')}
             </p>
             <form onSubmit={handleMoveUser} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.structure.selectUserLabel')}</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('organization.structure.selectUserLabel')}</label>
                 <select
                   value={selectedUserToMove}
                   onChange={(e) => setSelectedUserToMove(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none font-semibold text-slate-700"
+                  className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-sm focus:border-input-border-focus focus:outline-none font-semibold text-text-body"
                   required
                 >
                   <option value="">{t('organization.structure.chooseUserPlaceholder')}</option>
@@ -650,7 +650,7 @@ export const OrganizationStructureTab: React.FC = () => {
               <button
                 type="submit"
                 disabled={!selectedUserToMove}
-                className="w-full rounded-xl bg-blue-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="w-full rounded-xl bg-btn-primary-bg py-2.5 text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
               >
                 {t('organization.structure.confirmMoveUserBtn')}
               </button>
@@ -663,27 +663,27 @@ export const OrganizationStructureTab: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl border border-amber-200 bg-amber-50/10 p-6 shadow-sm"
+            className="bg-card-bg rounded-2xl border border-status-warning-text/30 p-6 shadow-sm"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-amber-100">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                <ShieldCheck className="h-4 w-4 text-amber-600" />
+            <div className="flex items-center justify-between pb-3 border-b border-card-border">
+              <h3 className="text-sm font-bold text-text-heading flex items-center space-x-2">
+                <ShieldCheck className="h-4 w-4 text-status-warning-text" />
                 <span>{t('organization.structure.assignManagerTitle')}</span>
               </h3>
-              <button onClick={() => setSelectedOUForManager('')} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setSelectedOUForManager('')} className="text-text-muted hover:text-text-body">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-text-muted mt-2">
               {t('organization.structure.assignManagerText', { name: activeOUs.find(o => o.id === selectedOUForManager)?.name })}
             </p>
             <form onSubmit={handleAssignManager} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.structure.selectUserLabel')}</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('organization.structure.selectUserLabel')}</label>
                 <select
                   value={selectedUserToManager}
                   onChange={(e) => setSelectedUserToManager(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none font-semibold text-slate-700"
+                  className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-sm focus:border-input-border-focus focus:outline-none font-semibold text-text-body"
                   required
                 >
                   <option value="">{t('organization.structure.chooseUserToAssignPlaceholder')}</option>
@@ -698,7 +698,7 @@ export const OrganizationStructureTab: React.FC = () => {
               <button
                 type="submit"
                 disabled={!selectedUserToManager}
-                className="w-full rounded-xl bg-amber-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-amber-700 transition-colors disabled:opacity-50"
+                className="w-full rounded-xl bg-status-warning-text py-2.5 text-xs font-bold text-btn-primary-text shadow-sm hover:bg-status-warning-text/90 transition-colors disabled:opacity-50"
               >
                 {t('organization.structure.assignManagerBtn')}
               </button>
@@ -710,21 +710,21 @@ export const OrganizationStructureTab: React.FC = () => {
       {/* Mandatory Soft Deletion Preview Confirmation Modal */}
       <AnimatePresence>
         {deletingOU && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-overlay p-4 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl overflow-hidden"
+              className="w-full max-w-lg rounded-2xl border border-card-border bg-card-bg p-6 shadow-2xl overflow-hidden"
               id="delete-ou-confirmation-modal"
             >
-              <div className="flex items-start space-x-3 text-rose-600">
+              <div className="flex items-start space-x-3 text-status-error-text">
                 <ShieldAlert className="h-6 w-6 shrink-0 mt-0.5 animate-pulse" />
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
+                  <h3 className="text-lg font-bold text-text-heading">
                     {t('organization.structure.deleteModalTitle', { name: deletingOU.name })}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-text-muted mt-1">
                     {t('organization.structure.deleteModalSubtitle')}
                   </p>
                 </div>
@@ -733,14 +733,14 @@ export const OrganizationStructureTab: React.FC = () => {
               <div className="mt-6 space-y-4">
                 {/* Deletion Behavior Radio Option Choice */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-2">
                     {t('organization.structure.deleteStrategyLabel')}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <label className={`flex flex-col p-3 rounded-xl border text-left cursor-pointer transition-all ${
                       deleteOption === 'REASSIGN' 
-                        ? 'border-blue-500 bg-blue-50/10 text-blue-900 shadow-sm' 
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-link-primary bg-status-info-bg text-text-heading shadow-sm' 
+                        : 'border-card-border bg-card-bg hover:border-input-border-focus'
                     }`}>
                       <div className="flex items-center space-x-2">
                         <input
@@ -749,19 +749,19 @@ export const OrganizationStructureTab: React.FC = () => {
                           value="REASSIGN"
                           checked={deleteOption === 'REASSIGN'}
                           onChange={() => setDeleteOption('REASSIGN')}
-                          className="text-blue-600 focus:ring-blue-500 h-4 w-4"
+                          className="text-link-primary focus:ring-link-primary/20 h-4 w-4"
                         />
                         <span className="text-xs font-bold">{t('organization.structure.reassignOption')}</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                      <p className="text-[11px] text-text-muted mt-1.5 leading-relaxed">
                         {t('organization.structure.reassignOptionDesc')}
                       </p>
                     </label>
 
                     <label className={`flex flex-col p-3 rounded-xl border text-left cursor-pointer transition-all ${
                       deleteOption === 'SUBTREE' 
-                        ? 'border-rose-500 bg-rose-50/10 text-rose-900 shadow-sm' 
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-status-error-text bg-status-error-bg text-status-error-text shadow-sm' 
+                        : 'border-card-border bg-card-bg hover:border-input-border-focus'
                     }`}>
                       <div className="flex items-center space-x-2">
                         <input
@@ -770,11 +770,11 @@ export const OrganizationStructureTab: React.FC = () => {
                           value="SUBTREE"
                           checked={deleteOption === 'SUBTREE'}
                           onChange={() => setDeleteOption('SUBTREE')}
-                          className="text-rose-600 focus:ring-rose-500 h-4 w-4"
+                          className="text-status-error-text focus:ring-status-error-text/20 h-4 w-4"
                         />
-                        <span className="text-xs font-bold text-rose-700">{t('organization.structure.subtreeOption')}</span>
+                        <span className="text-xs font-bold text-status-error-text">{t('organization.structure.subtreeOption')}</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                      <p className="text-[11px] text-text-muted mt-1.5 leading-relaxed">
                         {t('organization.structure.subtreeOptionDesc')}
                       </p>
                     </label>
@@ -782,22 +782,22 @@ export const OrganizationStructureTab: React.FC = () => {
                 </div>
 
                 {/* Real Affected-Users List Preview Box */}
-                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                  <h4 className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                <div className="rounded-xl border border-card-border bg-card-header-bg p-4">
+                  <h4 className="text-xs font-bold text-text-heading flex items-center justify-between">
                     <span>{t('organization.structure.affectedMembershipsLabel', { count: loadingPreview ? '...' : affectedUsers.length })}</span>
-                    {loadingPreview && <Loader2 className="h-3.5 w-3.5 text-blue-600 animate-spin" />}
+                    {loadingPreview && <Loader2 className="h-3.5 w-3.5 text-link-primary animate-spin" />}
                   </h4>
                   
                   {!loadingPreview && affectedUsers.length === 0 ? (
-                    <p className="text-[11px] text-slate-400 italic mt-2">
+                    <p className="text-[11px] text-text-muted italic mt-2">
                       {t('organization.structure.noAffectedMembers')}
                     </p>
                   ) : (
                     <div className="mt-2.5 max-h-[120px] overflow-y-auto space-y-1.5 pr-1">
                       {affectedUsers.map((u) => (
-                        <div key={u.id} className="flex items-center space-x-2 text-xs bg-white border border-slate-100 p-1.5 rounded-lg">
-                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                          <span className="font-semibold text-slate-700">{u.username || u.email}</span>
+                        <div key={u.id} className="flex items-center space-x-2 text-xs bg-card-bg border border-card-border p-1.5 rounded-lg">
+                          <div className="h-1.5 w-1.5 rounded-full bg-status-error-text" />
+                          <span className="font-semibold text-text-body">{u.username || u.email}</span>
                         </div>
                       ))}
                     </div>
@@ -806,17 +806,17 @@ export const OrganizationStructureTab: React.FC = () => {
               </div>
 
               {/* Confirm / Cancel Buttons */}
-              <div className="mt-6 flex items-center justify-end space-x-2.5 border-t border-slate-100 pt-4">
+              <div className="mt-6 flex items-center justify-end space-x-2.5 border-t border-card-border pt-4">
                 <button
                   onClick={() => setDeletingOU(null)}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="rounded-xl border border-card-border bg-card-bg px-4 py-2 text-xs font-bold text-text-body hover:bg-card-header-bg transition-colors"
                 >
                   {t('organization.structure.cancelBtn')}
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={loadingPreview}
-                  className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-700 transition-colors flex items-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-xl bg-status-error-text px-4 py-2 text-xs font-bold text-btn-primary-text shadow-sm hover:bg-status-error-text/90 transition-colors flex items-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash className="h-4 w-4" />
                   <span>{t('organization.structure.confirmDeletionBtn')}</span>

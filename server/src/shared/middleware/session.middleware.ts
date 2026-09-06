@@ -49,3 +49,36 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     res.status(500).json({ error: error.message || 'Internal server error validating session.' });
   }
 }
+
+/**
+ * Middleware to optionally populate req.session and req.user if a valid session cookie exists.
+ * Does NOT reject unauthenticated requests (allows them to proceed as anonymous).
+ */
+export async function optionalAuth(req: Request, res: Response, next: NextFunction) {
+  try {
+    const sessionId = req.signedCookies?.sid;
+    if (!sessionId) {
+      return next();
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: { user: true },
+    });
+
+    if (!session || session.expiresAt < new Date()) {
+      return next();
+    }
+
+    const user = session.user;
+    if (!user || user.status !== 'ACTIVE') {
+      return next();
+    }
+
+    req.session = session;
+    req.user = user;
+    next();
+  } catch {
+    next();
+  }
+}

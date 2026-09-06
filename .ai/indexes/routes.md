@@ -61,9 +61,9 @@ Every listed visual route should eventually document:
 ### 8. System Settings
 - **Path**: Local State Tab & Hash URL (`#settings`)
 - **Component**: `src/features/rbac/pages/Settings.tsx`
-- **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend check for `profile-fields:manage-fields` (bounces to `my-lessons` tab if access is unauthorized)
-- **Permissions**: Requires active session with `profile-fields:manage-fields` permission or Superuser status
-
+- **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend check for admin permissions (`roles:manage`, `profile-fields:manage-fields`, `identity-providers:view-config`, `theme:view`)
+- **Permissions**: Requires active session with relevant administrative permissions (`roles:manage`, `profile-fields:manage-fields`, `identity-providers:view-config`, `theme:view`) or Superuser status
+- **Tabs**: Roles, Fields, Notifications, Identity Providers, and Theme & Branding (`ThemeManagement.tsx`)
 
 ### 9. Management Hub
 - **Path**: Local State Tab & Hash URL (`#management`)
@@ -88,4 +88,10 @@ Every listed visual route should eventually document:
 - **Component**: `src/features/content/components/ScormPreviewPlayer.tsx`
 - **Guards**: Intercepted in `App.tsx` before main shell rendering; provides untracked in-memory preview
 - **Permissions**: Authenticated session with `content:view` permission
+
+### 13. Theme Test Mode Parameter Override
+- **Path**: Any application route with `?test=:themeId` URL query parameter
+- **Component**: Global application shell (`Shell.tsx`) with `ThemeTestBanner.tsx` and `ThemeRuntimeContext.tsx`
+- **Guards**: Intercepted by `ThemeRuntimeContext` and server `ThemeResolutionService`. Validates caller session and permissions; if the theme does not exist or user lacks permission, quietly falls back to active company theme.
+- **Permissions**: Requires active session with `theme:view` permission
 

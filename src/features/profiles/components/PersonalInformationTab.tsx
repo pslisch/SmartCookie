@@ -199,7 +199,7 @@ export function PersonalInformationTab() {
   if (loading) {
     return (
       <div className="flex h-60 items-center justify-center" id="personal-tab-loader">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-link-primary" />
       </div>
     );
   }
@@ -251,27 +251,27 @@ export function PersonalInformationTab() {
       {/* Profile Completion Panel */}
       {completion && (
         <div
-          className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/40 to-indigo-50/20 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+          className="rounded-2xl border border-card-border bg-status-info-bg/30 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
           id="profile-completion-panel"
         >
           <div className="space-y-1">
-            <h4 className="text-sm font-bold text-slate-900" id="profile-completion-title">
+            <h4 className="text-sm font-bold text-text-heading" id="profile-completion-title">
               {t('profile.personal.strength')}
             </h4>
-            <p className="text-xs text-slate-600" id="profile-completion-missing">
+            <p className="text-xs text-text-body" id="profile-completion-missing">
               {completion.percentage}%, {t('profile.personal.missing')}:{' '}
               {completion.missingFields.length > 0 ? (
-                <span className="font-semibold text-slate-800">
+                <span className="font-semibold text-text-heading">
                   {completion.missingFields.map((f) => f.name).join(', ')}
                 </span>
               ) : (
-                <span className="font-semibold text-green-600">{t('profile.personal.noRequiredMissing')}</span>
+                <span className="font-semibold text-status-success-text">{t('profile.personal.noRequiredMissing')}</span>
               )}
             </p>
           </div>
-          <div className="w-full md:w-48 bg-slate-200/80 rounded-full h-2.5 overflow-hidden shrink-0">
+          <div className="w-full md:w-48 bg-bg-subtle rounded-full h-2.5 overflow-hidden shrink-0">
             <div
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+              className="bg-link-primary h-2.5 rounded-full transition-all duration-500"
               style={{ width: `${completion.percentage}%` }}
               id="profile-completion-progress"
             />
@@ -286,10 +286,10 @@ export function PersonalInformationTab() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="flex items-center space-x-2.5 rounded-xl bg-green-50 border border-green-100 p-4 text-sm text-green-700"
+            className="flex items-center space-x-2.5 rounded-xl bg-status-success-bg border border-card-border p-4 text-sm text-status-success-text"
             id="personal-success-alert"
           >
-            <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />
+            <CheckCircle className="h-4 w-4 shrink-0 text-status-success-text" />
             <span>{successMsg}</span>
           </motion.div>
         )}
@@ -299,10 +299,10 @@ export function PersonalInformationTab() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="flex items-center space-x-2.5 rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-700"
+            className="flex items-center space-x-2.5 rounded-xl bg-status-error-bg border border-card-border p-4 text-sm text-status-error-text"
             id="personal-error-alert"
           >
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+            <AlertCircle className="h-4 w-4 shrink-0 text-status-error-text" />
             <span>{error}</span>
           </motion.div>
         )}
@@ -310,19 +310,19 @@ export function PersonalInformationTab() {
 
       <form onSubmit={handleSave} className="space-y-8" id="personal-info-form">
         {/* Profile Picture Upload Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5 pb-6 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5 pb-6 border-b border-card-border">
           <div className="relative group self-start sm:self-center" id="avatar-container">
             {profilePictureVal ? (
               <img
                 src={profilePictureVal}
                 alt="Avatar"
                 referrerPolicy="no-referrer"
-                className="h-24 w-24 rounded-2xl object-cover border-2 border-slate-100 shadow-sm"
+                className="h-24 w-24 rounded-2xl object-cover border-2 border-card-border shadow-sm"
                 id="avatar-image-display"
               />
             ) : (
               <div
-                className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-2xl font-bold text-white shadow-inner border border-blue-100"
+                className="flex h-24 w-24 items-center justify-center rounded-2xl bg-btn-primary-bg text-2xl font-bold text-btn-primary-text shadow-inner border border-card-border"
                 id="avatar-initials-display"
               >
                 {initials}
@@ -332,11 +332,11 @@ export function PersonalInformationTab() {
               type="button"
               disabled={uploadingPic}
               onClick={triggerFileSelect}
-              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-white shadow-md hover:bg-slate-800 transition-colors disabled:opacity-50"
+              className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl bg-btn-primary-bg text-btn-primary-text shadow-md hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
               id="avatar-upload-trigger-btn"
             >
               {uploadingPic ? (
-                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                <Loader2 className="h-4 w-4 animate-spin text-btn-primary-text" />
               ) : (
                 <Camera className="h-4 w-4" />
               )}
@@ -352,18 +352,18 @@ export function PersonalInformationTab() {
           </div>
 
           <div className="space-y-1">
-            <h4 className="text-sm font-bold text-slate-900">{t('profile.personal.pictureTitle')}</h4>
-            <p className="text-xs text-slate-500 max-w-sm">
+            <h4 className="text-sm font-bold text-text-heading">{t('profile.personal.pictureTitle')}</h4>
+            <p className="text-xs text-text-muted max-w-sm">
               {t('profile.personal.pictureDescription')}
             </p>
             <button
               type="button"
               disabled={uploadingPic}
               onClick={triggerFileSelect}
-              className="mt-2 inline-flex items-center space-x-1.5 rounded-xl border border-slate-200/80 px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+              className="mt-2 inline-flex items-center space-x-1.5 rounded-xl border border-card-border px-3.5 py-1.5 text-xs font-semibold text-text-body hover:bg-card-header-bg transition-colors disabled:opacity-50"
               id="avatar-select-btn"
             >
-              <Upload className="h-3.5 w-3.5 text-slate-500" />
+              <Upload className="h-3.5 w-3.5 text-text-muted" />
               <span>{uploadingPic ? t('profile.personal.uploading') : t('profile.personal.chooseFile')}</span>
             </button>
           </div>
@@ -373,7 +373,7 @@ export function PersonalInformationTab() {
         <div className="space-y-8" id="profile-categories-list">
           {sortedCategories.map((category) => (
             <div key={category.id} className="space-y-4" id={`profile-cat-section-${category.id}`}>
-              <h3 className="text-sm font-extrabold tracking-wider text-slate-400 uppercase">
+              <h3 className="text-sm font-extrabold tracking-wider text-text-muted uppercase">
                 {category.name}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -393,11 +393,11 @@ export function PersonalInformationTab() {
         </div>
 
         {/* Form Actions */}
-        <div className="pt-5 border-t border-slate-100 flex items-center justify-end">
+        <div className="pt-5 border-t border-card-border flex items-center justify-end">
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center justify-center space-x-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm shadow-blue-600/10"
+            className="flex items-center justify-center space-x-2 rounded-xl bg-btn-primary-bg px-6 py-2.5 text-sm font-semibold text-btn-primary-text hover:bg-btn-primary-hover transition-colors disabled:opacity-50 shadow-sm"
             id="personal-info-save-btn"
           >
             {saving ? (

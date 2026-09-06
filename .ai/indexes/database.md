@@ -64,6 +64,8 @@ This index describes the data models, entity relationships, and schemas supporti
   - Has many `ProfileFieldCategory`s (via `profileFieldCategories`)
   - Has many `ProfileFieldDefinition`s (via `profileFieldDefinitions`)
   - Has many `MfaPolicyRole`s (via `mfaPolicyRoles`)
+  - Has many `Theme`s (via `themes`)
+  - Has many `Font`s (via `fonts`)
   - Has one `EmailConfig` (via `emailConfig`)
 
 ### Email Configs (`email_configs`)
@@ -547,10 +549,72 @@ This index describes the data models, entity relationships, and schemas supporti
   - Belongs to `Company` (via `companyId`, cascade on delete)
   - Belongs to triggering `User` (via `triggeredByUserId`, set null on delete)
 
+### Themes (`themes`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `name` (String)
+  - `status` (Enum: `DRAFT`, `READY`, `ACTIVE`, Default: `DRAFT`)
+  - `isSmartCookieDefault` (Boolean, Default: `false`, maps to `is_smart_cookie_default`)
+  - `colorValues` (Json, maps to `color_values`, 28 semantic tokens)
+  - `darkColorValues` (Json, Nullable, maps to `dark_color_values`)
+  - `generalFontId` (String, Nullable, Foreign Key to `fonts.id`)
+  - `navFontId` (String, Nullable, Foreign Key to `fonts.id`)
+  - `headingsFontId` (String, Nullable, Foreign Key to `fonts.id`)
+  - `buttonsFontId` (String, Nullable, Foreign Key to `fonts.id`)
+  - `formsFontId` (String, Nullable, Foreign Key to `fonts.id`)
+  - `cardsFontId` (String, Nullable, Foreign Key to `fonts.id`)
+  - `linksFontId` (String, Nullable, Foreign Key to `fonts.id`)
+  - `statusFontId` (String, Nullable, Foreign Key to `fonts.id`)
+  - `baseFontSize` (Int, Default: 16, maps to `base_font_size`)
+  - `scheduledActivationAt` (DateTime, Nullable, maps to `scheduled_activation_at`)
+  - `scheduledActivationFailedAt` (DateTime, Nullable, maps to `scheduled_activation_failed_at`)
+  - `scheduledActivationFailedReason` (String, Text, Nullable, maps to `scheduled_activation_failed_reason`)
+  - `deletedAt` (DateTime, Nullable, soft-delete timestamp)
+  - `permanentDeleteAt` (DateTime, Nullable, timestamp for permanent purge)
+  - `deletionBatchId` (String, UUID, Nullable)
+  - `createdById` (String, maps to `created_by_id`)
+  - `createdAt` (DateTime, Default: `now()`)
+  - `updatedAt` (DateTime, Auto-updated)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to optional `Font`s (via `generalFont`, `navFont`, `headingsFont`, `buttonsFont`, `formsFont`, `cardsFont`, `linksFont`, `statusFont`)
+  - Has one `ThemeLock` (optional, via `themeLock`)
+
+### Fonts (`fonts`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `familyName` (String, maps to `family_name`)
+  - `format` (String, Nullable)
+  - `weight` (String, Nullable)
+  - `style` (String, Nullable)
+  - `storagePath` (String, Nullable, maps to `storage_path`)
+  - `isSystem` (Boolean, Default: `false`, maps to `is_system`)
+  - `createdById` (String, maps to `created_by_id`)
+  - `createdAt` (DateTime, Default: `now()`)
+- **Indexes & Constraints**:
+  - Unique composite index on `(companyId, familyName)`
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Referenced by `Theme`s across font slot relations
+
+### Theme Locks (`theme_locks`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `themeId` (String, Foreign Key to `themes.id`, Unique)
+  - `userId` (String, maps to `user_id`)
+  - `lockType` (Enum: `EDIT`, `TEST`, maps to `lock_type`)
+  - `lockedAt` (DateTime, Default: `now()`, maps to `locked_at`)
+- **Indexes & Constraints**:
+  - Unique index on `themeId`
+- **Relations**:
+  - Belongs to `Theme` (via `themeId`, cascade on delete)
+
 
 ---
 
-## 🟢 Schema Registry (v1.11.0)
+## 🟢 Schema Registry (v1.12.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
@@ -562,6 +626,7 @@ This index describes the data models, entity relationships, and schemas supporti
 - **v1.8.0**: Content Engine SCORM 1.2 MVP. Added `Content`, `ContentTag`, `ContentCategory`, and `ContentAttempt` models. Associated `Lesson` model with optional SCORM `Content`. Mapped attempts directly to existing `UserAssignmentInstance`. Added `course_lessons`, `courses`, and `lessons` schemas documentation to Database index.
 - **v1.9.0**: Profiles & User Management Extensions. Added `ProfileFieldCategory`, `ProfileFieldDefinition`, `FieldEditableByRole`, `ProfileFieldValue`, and `NotificationPreference` models. Extended `User` with first/last names, profile picture, and last login. Added `mandatoryNotificationTypes` to `Company`. Added `EMAIL_CHANGE` token purpose and `pendingEmail` to `Token`.
 - **v1.10.0**: Local MFA (TOTP). Added `mfaEnabled`, `mfaSecretEncrypted`, and `mfaEnabledAt` to `User`. Added `MfaRecoveryCode` table. Added `mfaPolicy` enum default `DISABLED` to `Company`. Added `MfaPolicyRole` join table. Added `MFA_CHALLENGE` to `TokenPurpose` enum.
-- **v1.11.0 (Current)**: Microsoft Entra ID Integration Backend. Added `IdentityProviderConfig`, `EntraGroupSelection`, and `SyncLog` tables. Added `entraObjectId` and `profilePictureManuallySet` to `User` table. Added `syncSource` and `entraGroupId` to `OrganizationUnit` table. Added `SyncSource`, `IdentityProviderType`, `LoginMode`, `ImportStrategy`, `SyncStatus`, and `SyncTriggerType` enums.
+- **v1.11.0**: Microsoft Entra ID Integration Backend. Added `IdentityProviderConfig`, `EntraGroupSelection`, and `SyncLog` tables. Added `entraObjectId` and `profilePictureManuallySet` to `User` table. Added `syncSource` and `entraGroupId` to `OrganizationUnit` table. Added `SyncSource`, `IdentityProviderType`, `LoginMode`, `ImportStrategy`, `SyncStatus`, and `SyncTriggerType` enums.
+- **v1.12.0 (Current)**: Theme & Branding Data Models. Added `Theme`, `Font`, and `ThemeLock` tables with `ThemeStatus` (`DRAFT`, `READY`, `ACTIVE`) and `ThemeLockType` (`EDIT`, `TEST`) enums. Soft-delete support with 14-day purge window on `Theme`. Seeded mandatory Smart Cookie Default theme and system `Inter` font per company.
 
 

@@ -21,6 +21,8 @@ import profileRouter from './features/profiles/routes/profile.routes';
 import profileFieldRouter from './features/profiles/routes/profileField.routes';
 import identityProviderRouter from './features/identity/routes/identityProvider.routes';
 import emailConfigRouter from './features/profiles/routes/emailConfig.routes';
+import themeRouter from './features/theme/routes/theme.routes';
+import fontRouter from './features/theme/routes/font.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
 import './features/auth/auth.permissions';
 import './features/rbac/rbac.permissions';
@@ -30,9 +32,11 @@ import './features/content/content.permissions.js';
 import './features/preview/preview.permissions';
 import './features/profiles/profileFields.permissions';
 import './features/identity/identity.permissions';
+import './features/theme/theme.permissions';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 import { seedProfileFields } from '../prisma/seed/profileFieldsSeed';
+import { seedThemes } from '../prisma/seed/themeSeed';
 import { scheduledTasksService } from './shared/scheduler/scheduledTasks.service';
 
 async function startServer() {
@@ -51,6 +55,7 @@ async function startServer() {
     await syncPermissions();
     await seedSuperuserRoles();
     await seedProfileFields();
+    await seedThemes();
 
     // Run manual DB migrations on startup
     const { prisma } = await import('./shared/db/prisma');
@@ -99,6 +104,8 @@ async function startServer() {
   app.use('/api/assignment-instances', assignmentInstancesRouter);
   app.use('/api/content', contentManagementRouter);
   app.use('/api/content-attempts', contentAttemptsRouter);
+  app.use('/api/themes', themeRouter);
+  app.use('/api/fonts', fontRouter);
   app.use('/content-files', contentFileRouter);
   app.use('/api', contentRouter);
   app.use('/api', previewRouter);

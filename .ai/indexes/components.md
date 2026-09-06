@@ -19,7 +19,7 @@ Every registered component should include:
 
 ### 1. `Shell`
 - **Location**: `src/shared/components/layout/Shell.tsx`
-- **Purpose**: Global viewport layout skeleton.
+- **Purpose**: Global viewport layout skeleton. Migrated to theme tokens (`bg-bg-app`, `text-text-body`).
 - **Props**:
   - `children`: `React.ReactNode` - Content inside the visual body.
 - **Used By**: `src/App.tsx`
@@ -27,7 +27,7 @@ Every registered component should include:
 
 ### 2. `Navbar`
 - **Location**: `src/shared/components/layout/Navbar.tsx`
-- **Purpose**: Dynamic responsive navigation bar.
+- **Purpose**: Dynamic responsive navigation bar. Migrated to theme tokens (`border-card-border`, `bg-nav-bg`, `text-nav-text`, `text-nav-text-active`, `hover:bg-bg-subtle`).
 - **Props**:
   - `currentTab`: `Tab` - Active enum identifier.
   - `onTabChange`: `(tab: Tab) => void` - Selection callback.
@@ -37,21 +37,21 @@ Every registered component should include:
 
 ### 3. `Footer`
 - **Location**: `src/shared/components/layout/Footer.tsx`
-- **Purpose**: Bottom structural footer displaying version tags and dynamic copyright hover states.
+- **Purpose**: Bottom structural footer displaying version tags and dynamic copyright hover states. Migrated to theme tokens (`border-card-border`, `bg-nav-bg`, `text-text-muted`, `hover:text-text-heading`).
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx`
 - **Dependencies**: React, Motion, `package.json` metadata
 
 ### 4. `LanguageSwitcher`
 - **Location**: `src/shared/components/layout/LanguageSwitcher.tsx`
-- **Purpose**: Keyboard-accessible language selection drop-down with click-outside and escape-key dismissal.
+- **Purpose**: Keyboard-accessible language selection drop-down with click-outside and escape-key dismissal. Migrated to theme tokens (`border-card-border`, `bg-card-bg`, `text-text-body`, `hover:bg-card-header-bg`).
 - **Props**: None (Self-contained).
 - **Used By**: `src/shared/components/layout/Navbar.tsx`
 - **Dependencies**: React, Lucide React, `react-i18next`
 
 ### 5. `AppGate`
 - **Location**: `src/shared/components/AppGate.tsx`
-- **Purpose**: Main orchestrator and security state machine for app entry. Intercepts views, verifies setup status, validates sessions, and renders either setup wizard, login page, or primary workspace children.
+- **Purpose**: Main orchestrator and security state machine for app entry. Intercepts views, verifies setup status, validates sessions, and renders either setup wizard, login page, or primary workspace children. Loading/error states migrated to theme tokens (`bg-bg-app`, `text-text-heading`, `btn-primary-*`).
 - **Props**:
   - `children`: `React.ReactNode` - Child layouts authorized to render after login.
 - **Used By**: `src/App.tsx`
@@ -82,21 +82,21 @@ Every registered component should include:
 
 ### 8. `Settings`
 - **Location**: `src/features/rbac/pages/Settings.tsx`
-- **Purpose**: Superuser-only settings and configuration panel showing an empty state until further configurable system features are added.
+- **Purpose**: Superuser-only settings and configuration panel showing an empty state until further configurable system features are added. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-text-heading`, `text-text-muted`).
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, Lucide Icons
 
 ### 9. `RoleManagement`
 - **Location**: `src/features/rbac/pages/RoleManagement.tsx`
-- **Purpose**: Full-featured interactive administrator interface to view roles, create/duplicate/delete custom roles, map parent inheritance options, and configure modular permission grids.
+- **Purpose**: Full-featured interactive administrator interface to view roles, create/duplicate/delete custom roles, map parent inheritance options, and configure modular permission grids. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `card-header-bg`, `btn-primary-*`, `status-*`, `text-*`).
 - **Props**: None (Self-contained).
 - **Used By**: `src/features/management/pages/Management.tsx`
 - **Dependencies**: React, `react-i18next`, Lucide Icons, Fetch API, CSRF Token helper
 
 ### 10. `Management`
 - **Location**: `src/features/management/pages/Management.tsx`
-- **Purpose**: Centralized administration and oversight hub presenting gated cards for Role Management, User & Group Management, and Lesson Assignments.
+- **Purpose**: Centralized administration and oversight hub presenting gated cards for Role Management, User & Group Management, and Lesson Assignments. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-text-heading`, `text-text-muted`).
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `usePermission`, `RoleManagement`, `UserGroupManagement`, `AssignmentManagement`, `ContentManagement`, Lucide Icons
@@ -163,14 +163,14 @@ Every registered component should include:
 
 ### 18. `UsersTab`
 - **Location**: `src/features/organization/components/UsersTab.tsx`
-- **Purpose**: A comprehensive user administration panel providing robust search, multi-faceted filtering (status, roles, organization units), side-sheet detail editing, single-user password reset, and archive/restore operations.
+- **Purpose**: A comprehensive user administration panel providing robust search, multi-faceted filtering (status, roles, organization units), side-sheet detail editing, single-user password reset, and archive/restore operations. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `card-header-bg`, `text-*`, `status-*`, `btn-primary-*`).
 - **Props**: None (Self-contained tab).
 - **Used By**: `src/features/organization/pages/UserGroupManagement.tsx`
 - **Dependencies**: React, `lucide-react`, `react-i18next`, `ProfileFieldInput`, `BulkImportWizard`
 
 ### 19. `BulkImportWizard`
 - **Location**: `src/features/organization/components/BulkImportWizard.tsx`
-- **Purpose**: Multi-step wizard layout for uploading a CSV file to bulk import user accounts. Provides a download template button, a beautiful drag-and-drop file selector, per-row validation reporting, and an all-or-nothing confirmation step.
+- **Purpose**: Multi-step wizard layout for uploading a CSV file to bulk import user accounts. Provides a download template button, a beautiful drag-and-drop file selector, per-row validation reporting, and an all-or-nothing confirmation step. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `status-*`, `text-*`, `btn-primary-*`).
 - **Props**:
   - `onClose`: `() => void` - Triggers closing the wizard modal.
   - `onSuccess`: `() => void` - Callback triggered upon successful database persistence of the batch import.
@@ -194,12 +194,109 @@ Every registered component should include:
 
 ### 22. `EntraSetupSteps`
 - **Location**: `src/features/identity/components/EntraSetupSteps.tsx`
-- **Purpose**: Multi-part sub-flow for OIDC / Microsoft Entra ID connection, displaying app registration guidance, copyable redirect callbacks, live test handshakes, API permission checking, sync strategy config, and attribute mappings.
+- **Purpose**: Multi-part sub-flow for OIDC / Microsoft Entra ID connection, displaying app registration guidance, copyable redirect callbacks, live test handshakes, API permission checking, sync strategy config, and attribute mappings. Migrated to theme tokens (`border-card-border`, `bg-card-bg`, `card-header-bg`, `text-*`, `status-*`, `btn-primary-*`).
 - **Props**:
   - `onSave`: `(config) => Promise<void>` - Configuration submit trigger.
   - `onSkip`: `() => Promise<void>` - Skip action trigger.
 - **Used By**: `src/features/auth/pages/SetupWizard.tsx`
 - **Dependencies**: React, Lucide Icons, `motion/react`
+
+### 23. `UserGroupManagement`
+- **Location**: `src/features/organization/pages/UserGroupManagement.tsx`
+- **Purpose**: Primary administration container page organizing Users, Learning Groups, Expiring Groups, and Organization Hierarchy tabs. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-*`, `link-primary`).
+- **Props**: None.
+- **Used By**: `src/features/management/pages/Management.tsx`
+- **Dependencies**: React, `lucide-react`, `react-i18next`
+
+### 24. `LearningGroupsTab`
+- **Location**: `src/features/organization/components/LearningGroupsTab.tsx`
+- **Purpose**: Administration view to manage permanent cohorts/learning groups, view membership counts, add new groups, edit names, and delete groups. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `card-header-bg`, `text-*`, `status-*`, `btn-primary-*`).
+- **Props**: None.
+- **Used By**: `src/features/organization/pages/UserGroupManagement.tsx`
+- **Dependencies**: React, `lucide-react`, `react-i18next`
+
+### 25. `ExpiringGroupsTab`
+- **Location**: `src/features/organization/components/ExpiringGroupsTab.tsx`
+- **Purpose**: Administration view to create time-bound groups with start and expiry dates, inspect membership status, and purge or extend expirations. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `card-header-bg`, `text-*`, `status-*`, `btn-primary-*`).
+- **Props**: None.
+- **Used By**: `src/features/organization/pages/UserGroupManagement.tsx`
+- **Dependencies**: React, `lucide-react`, `react-i18next`
+
+### 26. `OrganizationStructureTab`
+- **Location**: `src/features/organization/components/OrganizationStructureTab.tsx`
+- **Purpose**: Tree hierarchy visualization and management for company divisions, departments, and organizational units (OUs). Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `card-header-bg`, `text-*`, `status-*`, `btn-primary-*`).
+- **Props**: None.
+- **Used By**: `src/features/organization/pages/UserGroupManagement.tsx`
+- **Dependencies**: React, `lucide-react`, `react-i18next`
+
+---
+
+## 🎨 Theme & Branding Subsystem Components (v1.12.0)
+
+> **System-Wide Design Token Migration (Task 8)**: Every existing component across all feature domains (`auth`, `lessons`, `catalog`, `management`, `organization`, `rbac`, `assignments`, `content`, `profiles`, `identity`, and shared layout components `Navbar`, `Footer`, `Shell`) was systematically refactored from hardcoded Tailwind color utilities (e.g., `bg-blue-600`, `text-slate-900`, `border-gray-200`) to semantic design tokens (`bg-btn-primary-bg`, `text-text-heading`, `border-card-border`, `bg-card-bg`, `text-link-primary`, etc.) generated via the Tailwind v4 `@theme` directive in `src/index.css`.
+
+### 27. `ThemeManagement`
+- **Location**: `src/features/theme/pages/ThemeManagement.tsx`
+- **Purpose**: Administration dashboard listing tenant themes categorized by status (`ACTIVE`, `SCHEDULED`, `READY`, `DRAFT`), presenting status chips, template cloning modal, test mode launch/exit, lock collision warnings, deletion modals, and activation failure alert banners with dismiss actions.
+- **Props**: None.
+- **Used By**: `src/features/rbac/pages/Settings.tsx` (Theme tab)
+- **Dependencies**: React, `lucide-react`, `motion/react`, `useThemeRuntime`, `usePermission`
+
+### 28. `ThemeEditor`
+- **Location**: `src/features/theme/pages/ThemeEditor.tsx`
+- **Purpose**: Visual theme customizer with tabbed interface (`general`, `colors`, `fonts`), real-time split-screen preview, concurrent lock heartbeat engine, light/dark submode editing, per-token reset, and auto-saving drafts.
+- **Props**: `themeId: string`, `onClose: () => void`
+- **Used By**: `src/features/theme/pages/ThemeManagement.tsx`
+- **Dependencies**: React, `lucide-react`, `motion/react`, `useThemeRuntime`
+
+### 29. `ThemeTestBanner`
+- **Location**: `src/features/theme/components/ThemeTestBanner.tsx`
+- **Purpose**: Top sticky notification bar rendered when session-scoped test mode is active, showing the active test theme name and an instantaneous "Exit Test Mode" trigger.
+- **Props**: None.
+- **Used By**: `src/shared/components/layout/Shell.tsx`
+- **Dependencies**: React, `lucide-react`, `useThemeRuntime`
+
+### 30. `ColorEditorTab`
+- **Location**: `src/features/theme/components/ColorEditorTab.tsx`
+- **Purpose**: Semantic color manager presenting the 28 tokens grouped by domain (Navigation, Text, Buttons, Forms, Cards, Links, Status, Backgrounds), with quick search filtering, inline color pickers, hex & opacity inputs, light/dark mode editing, and reset-to-default actions.
+- **Props**: `draft: ThemeDraft`, `mode: 'light' | 'dark'`, `onChange: (updates) => void`, `isReadOnly?: boolean`
+- **Used By**: `src/features/theme/pages/ThemeEditor.tsx`
+- **Dependencies**: React, `lucide-react`
+
+### 31. `FontEditorTab`
+- **Location**: `src/features/theme/components/FontEditorTab.tsx`
+- **Purpose**: Typography slot mapper for 8 UI domains (`general`, `nav`, `headings`, `buttons`, `forms`, `cards`, `links`, `status`), displaying font selection dropdowns, specimen previews, and a button to open the `FontLibrary`.
+- **Props**: `draft: ThemeDraft`, `onChange: (updates) => void`, `fonts: Font[]`, `onOpenFontLibrary: () => void`, `isReadOnly?: boolean`
+- **Used By**: `src/features/theme/pages/ThemeEditor.tsx`
+- **Dependencies**: React, `lucide-react`
+
+### 32. `LivePreviewPane`
+- **Location**: `src/features/theme/components/LivePreviewPane.tsx`
+- **Purpose**: Realistic split-screen application mockup dynamically styled with current draft colors, typography, and base font size, with light/dark preview toggling and viewport controls.
+- **Props**: `draft: ThemeDraft`, `mode: 'light' | 'dark'`, `baseFontSize: number`
+- **Used By**: `src/features/theme/pages/ThemeEditor.tsx`
+- **Dependencies**: React, `lucide-react`
+
+### 33. `FontLibrary`
+- **Location**: `src/features/theme/components/FontLibrary.tsx`
+- **Purpose**: Modal dialog for managing uploaded custom fonts, featuring file drag-and-drop dropzone, font format validation (WOFF, WOFF2, TTF, OTF), fontkit metadata display (family, weight, style, format), specimen preview, and deletion with reference protection.
+- **Props**: `isOpen: boolean`, `onClose: () => void`, `onFontUploaded: () => void`
+- **Used By**: `src/features/theme/pages/ThemeEditor.tsx`, `src/features/theme/components/FontEditorTab.tsx`
+- **Dependencies**: React, `lucide-react`, `motion/react`
+
+### 34. `FontReplacementModal`
+- **Location**: `src/features/theme/components/FontReplacementModal.tsx`
+- **Purpose**: Confirmation dialog shown when deleting a font that is currently referenced by one or more themes, allowing administrators to select a replacement font before completing the deletion.
+- **Props**: `fontToDelete: Font`, `affectedThemes: Array<{ id: string, name: string, groups: string[] }>`, `availableFonts: Font[]`, `onConfirm: (replacementFontId: string) => Promise<void>`, `onClose: () => void`
+- **Used By**: `src/features/theme/components/FontLibrary.tsx`
+- **Dependencies**: React, `lucide-react`
+
+### 35. `ActivateScheduleModal`
+- **Location**: `src/features/theme/components/ActivateScheduleModal.tsx`
+- **Purpose**: Modal dialog enabling administrators to either activate a READY theme immediately or schedule future activation with a datetime picker and collision confirmation if another theme is scheduled.
+- **Props**: `theme: Theme`, `isOpen: boolean`, `onClose: () => void`, `onActivated: () => void`
+- **Used By**: `src/features/theme/pages/ThemeManagement.tsx`
+- **Dependencies**: React, `lucide-react`
 
 
 

@@ -24,15 +24,15 @@ export const UserGroupManagement: React.FC = () => {
   return (
     <div className="space-y-6" id="user-group-mgmt-container">
       {/* Tabs Selection Bar */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-card-border">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs" id="user-group-tabs">
           {hasUsersView && (
             <button
               onClick={() => setActiveTab('users')}
               className={`relative flex items-center space-x-2 py-4 px-1 text-sm font-semibold border-b-2 transition-all ${
                 activeTab === 'users'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                  ? 'border-link-primary text-link-primary'
+                  : 'border-transparent text-text-muted hover:text-text-body hover:border-card-border'
               }`}
               id="tab-btn-users"
             >
@@ -45,8 +45,8 @@ export const UserGroupManagement: React.FC = () => {
             onClick={() => setActiveTab('structure')}
             className={`relative flex items-center space-x-2 py-4 px-1 text-sm font-semibold border-b-2 transition-all ${
               activeTab === 'structure'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                ? 'border-link-primary text-link-primary'
+                : 'border-transparent text-text-muted hover:text-text-body hover:border-card-border'
             }`}
             id="tab-btn-structure"
           >
@@ -58,8 +58,8 @@ export const UserGroupManagement: React.FC = () => {
             onClick={() => setActiveTab('groups')}
             className={`relative flex items-center space-x-2 py-4 px-1 text-sm font-semibold border-b-2 transition-all ${
               activeTab === 'groups'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                ? 'border-link-primary text-link-primary'
+                : 'border-transparent text-text-muted hover:text-text-body hover:border-card-border'
             }`}
             id="tab-btn-groups"
           >
@@ -71,8 +71,8 @@ export const UserGroupManagement: React.FC = () => {
             onClick={() => setActiveTab('expiring')}
             className={`relative flex items-center space-x-2 py-4 px-1 text-sm font-semibold border-b-2 transition-all ${
               activeTab === 'expiring'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                ? 'border-link-primary text-link-primary'
+                : 'border-transparent text-text-muted hover:text-text-body hover:border-card-border'
             }`}
             id="tab-btn-expiring"
           >

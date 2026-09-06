@@ -336,14 +336,14 @@ export const LearningGroupsTab: React.FC = () => {
     return (
       <div 
         key={node.id} 
-        className="group relative flex flex-col md:flex-row md:items-center justify-between border-b border-slate-50 py-4 hover:bg-slate-50/50 transition-colors rounded-xl px-4"
+        className="group relative flex flex-col md:flex-row md:items-center justify-between border-b border-card-border/50 py-4 hover:bg-card-header-bg transition-colors rounded-xl px-4"
         style={{ paddingLeft: `${node.depth * 1.5 + 1}rem` }}
         id={`group-row-${node.id}`}
       >
         <div className="flex-1 min-w-0 pr-4">
           <div className="flex items-center space-x-2">
             {node.children.length > 0 ? (
-              <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+              <ChevronDown className="h-4 w-4 text-text-muted shrink-0" />
             ) : (
               <div className="w-4 h-4 shrink-0" />
             )}
@@ -354,31 +354,31 @@ export const LearningGroupsTab: React.FC = () => {
                   type="text"
                   value={editingGroupName}
                   onChange={(e) => setEditingGroupName(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-sm font-semibold focus:border-blue-500 focus:outline-none"
+                  className="rounded-lg border border-input-border bg-card-bg px-2.5 py-1 text-sm font-semibold focus:border-input-border-focus focus:outline-none text-text-body"
                   autoFocus
                 />
                 <button
                   onClick={() => handleRenameGroup(node.id)}
-                  className="rounded-lg bg-emerald-50 p-1 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                  className="rounded-lg bg-status-success-bg p-1 text-status-success-text hover:bg-status-success-bg/80 transition-colors"
                 >
                   <Check className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setEditingGroupId(null)}
-                  className="rounded-lg bg-rose-50 p-1 text-rose-600 hover:bg-rose-100 transition-colors"
+                  className="rounded-lg bg-status-error-bg p-1 text-status-error-text hover:bg-status-error-bg/80 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
             ) : (
               <div className="flex items-center space-x-2.5">
-                <span className="font-bold text-slate-800 text-sm">{node.name}</span>
+                <span className="font-bold text-text-heading text-sm">{node.name}</span>
                 <button
                   onClick={() => {
                     setEditingGroupId(node.id);
                     setEditingGroupName(node.name);
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-600 rounded transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-text-body rounded transition-opacity"
                   title={t('organization.groups.renameTooltip')}
                 >
                   <Edit2 className="h-3.5 w-3.5" />
@@ -388,7 +388,7 @@ export const LearningGroupsTab: React.FC = () => {
 
             {/* Temporary / Expiration Pill Indicator */}
             {node.isTemporary && (
-              <span className="inline-flex items-center space-x-1 rounded-md bg-amber-50 border border-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5">
+              <span className="inline-flex items-center space-x-1 rounded-md bg-status-warning-bg border border-status-warning-text/20 text-status-warning-text text-[10px] font-bold px-1.5 py-0.5">
                 <Clock className="h-3 w-3 shrink-0" />
                 <span>
                   {node.expiresAt 
@@ -403,15 +403,15 @@ export const LearningGroupsTab: React.FC = () => {
           <div className="mt-2 flex flex-wrap gap-2 text-xs pl-6">
             {members.length > 0 ? (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-link-primary bg-status-info-bg px-1.5 py-0.5 rounded">
                   {t('organization.groups.membersCount', { count: members.length })}
                 </span>
                 {members.map((m) => (
-                  <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-700 font-medium">
+                  <span key={m.id} className="inline-flex items-center space-x-1 rounded-full border border-card-border bg-card-header-bg px-2 py-0.5 text-[11px] text-text-body font-medium">
                     <span>{m.user?.username || m.user?.email || t('organization.groups.anonymousUser')}</span>
                     <button
                       onClick={() => handleRemoveMember(node.id, m.userId)}
-                      className="text-slate-400 hover:text-rose-600 ml-1 rounded-full hover:bg-rose-50 p-0.5 shrink-0"
+                      className="text-text-muted hover:text-status-error-text ml-1 rounded-full hover:bg-status-error-bg p-0.5 shrink-0"
                       title={t('organization.groups.removeMemberTooltip')}
                     >
                       <UserMinus className="h-3 w-3" />
@@ -420,7 +420,7 @@ export const LearningGroupsTab: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <span className="text-slate-400 italic">{t('organization.groups.noMembers')}</span>
+              <span className="text-text-muted italic">{t('organization.groups.noMembers')}</span>
             )}
           </div>
         </div>
@@ -432,7 +432,7 @@ export const LearningGroupsTab: React.FC = () => {
               setSelectedGroupForMember(node.id);
               setSelectedUserToAdd('');
             }}
-            className="flex items-center space-x-1 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50/50 px-2.5 py-1 rounded-lg border border-indigo-100 transition-all font-semibold"
+            className="flex items-center space-x-1 text-xs text-link-primary hover:text-link-primary/80 hover:bg-status-info-bg px-2.5 py-1 rounded-lg border border-link-primary/20 transition-all font-semibold"
           >
             <UserPlus className="h-3.5 w-3.5" />
             <span>{t('organization.groups.addMemberBtn')}</span>
@@ -443,7 +443,7 @@ export const LearningGroupsTab: React.FC = () => {
               setMovingGroup(node);
               setTargetParentId(node.parentGroupId || '');
             }}
-            className="flex items-center space-x-1 text-xs text-slate-600 hover:text-slate-800 hover:bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 transition-all font-semibold"
+            className="flex items-center space-x-1 text-xs text-text-body hover:text-text-heading hover:bg-card-header-bg px-2.5 py-1 rounded-lg border border-card-border transition-all font-semibold"
             title={t('organization.groups.nestTooltip')}
           >
             <span>{t('organization.groups.nestGroupBtn')}</span>
@@ -451,7 +451,7 @@ export const LearningGroupsTab: React.FC = () => {
 
           <button
             onClick={() => handleDeleteGroup(node.id)}
-            className="flex items-center justify-center p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100"
+            className="flex items-center justify-center p-1.5 text-text-muted hover:text-status-error-text hover:bg-status-error-bg rounded-lg transition-colors border border-transparent hover:border-status-error-text/20"
             title={t('organization.groups.deleteTooltip')}
           >
             <Trash2 className="h-4 w-4" />
@@ -465,30 +465,30 @@ export const LearningGroupsTab: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8" id="learning-groups-tab-container">
       {/* Left Column: List/Tree View of Active Cohorts */}
       <div className="lg:col-span-8 space-y-6">
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+        <div className="bg-card-bg rounded-2xl border border-card-border p-6 shadow-sm">
+          <div className="flex items-center justify-between border-b border-card-border pb-4 mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-900">{t('organization.groups.title')}</h3>
-              <p className="text-xs text-slate-500 mt-1">{t('organization.groups.subtitle')}</p>
+              <h3 className="text-base font-bold text-text-heading">{t('organization.groups.title')}</h3>
+              <p className="text-xs text-text-muted mt-1">{t('organization.groups.subtitle')}</p>
             </div>
-            {loading && <Loader2 className="h-5 w-5 text-indigo-600 animate-spin" />}
+            {loading && <Loader2 className="h-5 w-5 text-link-primary animate-spin" />}
           </div>
 
           {error && (
-            <div className="mb-4 rounded-xl bg-rose-50 border border-rose-100 p-4 text-xs text-rose-800 flex items-start space-x-2.5">
-              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
+            <div className="mb-4 rounded-xl bg-status-error-bg border border-status-error-text/20 p-4 text-xs text-status-error-text flex items-start space-x-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-status-error-text mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {activeGroups.length === 0 ? (
-            <div className="text-center py-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
-              <FolderOpen className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-500">{t('organization.groups.noCohortsTitle')}</p>
-              <p className="text-xs text-slate-400 mt-1">{t('organization.groups.noCohortsDesc')}</p>
+            <div className="text-center py-12 rounded-2xl border border-dashed border-card-border bg-card-header-bg">
+              <FolderOpen className="h-10 w-10 text-text-muted mx-auto mb-3" />
+              <p className="text-sm font-semibold text-text-muted">{t('organization.groups.noCohortsTitle')}</p>
+              <p className="text-xs text-text-muted mt-1">{t('organization.groups.noCohortsDesc')}</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto pr-2">
+            <div className="divide-y divide-card-border max-h-[600px] overflow-y-auto pr-2">
               {flatTreeList.map(renderGroupRow)}
             </div>
           )}
@@ -496,12 +496,12 @@ export const LearningGroupsTab: React.FC = () => {
 
         {/* Recently Deleted Learning Groups Restore Panel */}
         {deletedGroups.length > 0 && (
-          <div className="bg-slate-50/70 rounded-2xl border border-slate-200 p-6">
-            <h4 className="text-sm font-bold text-slate-800 flex items-center space-x-2">
-              <RotateCcw className="h-4 w-4 text-slate-600" />
+          <div className="bg-card-header-bg rounded-2xl border border-card-border p-6">
+            <h4 className="text-sm font-bold text-text-heading flex items-center space-x-2">
+              <RotateCcw className="h-4 w-4 text-text-body" />
               <span>{t('organization.groups.deletedTitle')}</span>
             </h4>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-text-muted mt-1">
               {t('organization.groups.deletedDesc')}
             </p>
 
@@ -512,18 +512,18 @@ export const LearningGroupsTab: React.FC = () => {
                   : 14;
 
                 return (
-                  <div key={group.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                  <div key={group.id} className="flex items-center justify-between rounded-xl border border-card-border bg-card-bg p-3.5 shadow-sm">
                     <div className="min-w-0 pr-4">
-                      <p className="text-sm font-bold text-slate-800 truncate">{group.name}</p>
-                      <p className="text-[11px] text-rose-600 font-semibold mt-0.5">
+                      <p className="text-sm font-bold text-text-heading truncate">{group.name}</p>
+                      <p className="text-[11px] text-status-error-text font-semibold mt-0.5">
                         {t('organization.groups.daysLeftPurge', { count: daysLeft })}
                       </p>
                     </div>
                     <button
                       onClick={() => handleRestoreGroup(group.id)}
-                      className="flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                      className="flex items-center space-x-1.5 rounded-lg border border-card-border bg-card-bg px-3 py-1.5 text-xs font-semibold text-text-body shadow-sm transition-colors hover:bg-card-header-bg"
                     >
-                      <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
+                      <RotateCcw className="h-3.5 w-3.5 text-text-muted" />
                       <span>{t('organization.groups.restoreBtn')}</span>
                     </button>
                   </div>
@@ -537,51 +537,51 @@ export const LearningGroupsTab: React.FC = () => {
       {/* Right Column: Creation, Assignment and Nesting Forms */}
       <div className="lg:col-span-4 space-y-6">
         {/* Create Cohort Form */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2 pb-3 border-b border-slate-100">
-            <Plus className="h-4 w-4 text-indigo-600" />
+        <div className="bg-card-bg rounded-2xl border border-card-border p-6 shadow-sm">
+          <h3 className="text-sm font-bold text-text-heading flex items-center space-x-2 pb-3 border-b border-card-border">
+            <Plus className="h-4 w-4 text-link-primary" />
             <span>{t('organization.groups.createTitle')}</span>
           </h3>
           <form onSubmit={handleCreateGroup} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.groups.cohortNameLabel')}</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('organization.groups.cohortNameLabel')}</label>
               <input
                 type="text"
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
                 placeholder={t('organization.groups.cohortNamePlaceholder')}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm focus:border-blue-500 focus:outline-none placeholder:text-slate-400 font-medium"
+                className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 py-2 text-sm focus:border-input-border-focus focus:outline-none placeholder:text-text-muted font-medium text-text-body"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.groups.parentCohortLabel')}</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('organization.groups.parentCohortLabel')}</label>
               <select
                 value={newGroupParentId}
                 onChange={(e) => setNewGroupParentId(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none font-semibold text-slate-700"
+                className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-sm focus:border-input-border-focus focus:outline-none font-semibold text-text-body"
               >
                 <option value="">{t('organization.groups.noneTopLevel')}</option>
                 {activeGroups.map((g) => (
                   <option key={g.id} value={g.id}>{g.name}</option>
                 ))}
               </select>
-              <p className="mt-1.5 text-[11px] text-indigo-600 leading-normal font-medium bg-indigo-50/40 p-2 rounded-lg border border-indigo-100/30">
+              <p className="mt-1.5 text-[11px] text-link-primary leading-normal font-medium bg-status-info-bg p-2 rounded-lg border border-link-primary/20">
                 {t('organization.groups.parentNote')}
               </p>
             </div>
 
             {/* Temporary Group Expiration Toggles */}
-            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 space-y-3.5">
+            <div className="rounded-xl border border-card-border bg-card-header-bg p-3.5 space-y-3.5">
               <label className="flex items-center space-x-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={isTemporary}
                   onChange={(e) => setIsTemporary(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                  className="rounded border-input-border text-link-primary focus:ring-link-primary h-4 w-4"
                 />
-                <span className="text-xs font-bold text-slate-700">{t('organization.groups.tempCohortCheckbox')}</span>
+                <span className="text-xs font-bold text-text-body">{t('organization.groups.tempCohortCheckbox')}</span>
               </label>
 
               {isTemporary && (
@@ -590,14 +590,14 @@ export const LearningGroupsTab: React.FC = () => {
                   animate={{ opacity: 1, height: 'auto' }}
                   className="space-y-1.5"
                 >
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('organization.groups.expirationDateLabel')}</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-text-muted">{t('organization.groups.expirationDateLabel')}</label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-text-muted" />
                     <input
                       type="date"
                       value={expiresAt}
                       onChange={(e) => setExpiresAt(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 py-2 text-xs focus:border-indigo-500 focus:outline-none font-semibold text-slate-700"
+                      className="w-full rounded-lg border border-input-border bg-card-bg pl-9 pr-3 py-2 text-xs focus:border-input-border-focus focus:outline-none font-semibold text-text-body"
                       required={isTemporary}
                     />
                   </div>
@@ -608,7 +608,7 @@ export const LearningGroupsTab: React.FC = () => {
             <button
               type="submit"
               disabled={!newGroupName.trim() || (isTemporary && !expiresAt)}
-              className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              className="w-full rounded-xl bg-btn-primary-bg py-2.5 text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
             >
               {t('organization.groups.addGroupBtn')}
             </button>
@@ -620,27 +620,27 @@ export const LearningGroupsTab: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-indigo-50/20 border border-indigo-200 rounded-2xl p-6 shadow-sm"
+            className="bg-card-bg border border-card-border rounded-2xl p-6 shadow-sm"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                <UserPlus className="h-4 w-4 text-indigo-600" />
+            <div className="flex items-center justify-between pb-3 border-b border-card-border">
+              <h3 className="text-sm font-bold text-text-heading flex items-center space-x-2">
+                <UserPlus className="h-4 w-4 text-link-primary" />
                 <span>{t('organization.groups.addMemberTitle')}</span>
               </h3>
-              <button onClick={() => setSelectedGroupForMember('')} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setSelectedGroupForMember('')} className="text-text-muted hover:text-text-body">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-text-muted mt-2">
               {t('organization.groups.assignUserText', { name: activeGroups.find(g => g.id === selectedGroupForMember)?.name })}
             </p>
             <form onSubmit={handleAddMember} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.groups.selectUserLabel')}</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('organization.groups.selectUserLabel')}</label>
                 <select
                   value={selectedUserToAdd}
                   onChange={(e) => setSelectedUserToAdd(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none font-semibold text-slate-700"
+                  className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-sm focus:border-input-border-focus focus:outline-none font-semibold text-text-body"
                   required
                 >
                   <option value="">{t('organization.groups.chooseUserPlaceholder')}</option>
@@ -655,7 +655,7 @@ export const LearningGroupsTab: React.FC = () => {
               <button
                 type="submit"
                 disabled={!selectedUserToAdd}
-                className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                className="w-full rounded-xl bg-btn-primary-bg py-2.5 text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
               >
                 {t('organization.groups.confirmAddMemberBtn')}
               </button>
@@ -668,24 +668,24 @@ export const LearningGroupsTab: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm"
+            className="bg-card-header-bg border border-card-border rounded-2xl p-6 shadow-sm"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <h3 className="text-sm font-bold text-slate-900">{t('organization.groups.nestTitle')}</h3>
-              <button onClick={() => setMovingGroup(null)} className="text-slate-400 hover:text-slate-600">
+            <div className="flex items-center justify-between pb-3 border-b border-card-border">
+              <h3 className="text-sm font-bold text-text-heading">{t('organization.groups.nestTitle')}</h3>
+              <button onClick={() => setMovingGroup(null)} className="text-text-muted hover:text-text-body">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-text-muted mt-2">
               {t('organization.groups.moveText', { name: movingGroup.name })}
             </p>
             <form onSubmit={handleMoveGroup} className="mt-4 space-y-4 font-sans">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{t('organization.groups.parentCohortLabel')}</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">{t('organization.groups.parentCohortLabel')}</label>
                 <select
                   value={targetParentId}
                   onChange={(e) => setTargetParentId(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none font-semibold text-slate-700"
+                  className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-sm focus:border-input-border-focus focus:outline-none font-semibold text-text-body"
                 >
                   <option value="">{t('organization.groups.noneTopLevel')}</option>
                   {activeGroups
@@ -694,14 +694,14 @@ export const LearningGroupsTab: React.FC = () => {
                       <option key={g.id} value={g.id}>{g.name}</option>
                     ))}
                 </select>
-                <p className="mt-1.5 text-[11px] text-indigo-600 leading-normal font-medium bg-indigo-50/40 p-2 rounded-lg border border-indigo-100/30">
+                <p className="mt-1.5 text-[11px] text-link-primary leading-normal font-medium bg-status-info-bg p-2 rounded-lg border border-link-primary/20">
                   {t('organization.groups.nestingClarityNote')}
                 </p>
               </div>
 
               <button
                 type="submit"
-                className="w-full rounded-xl bg-slate-800 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-950 transition-colors"
+                className="w-full rounded-xl bg-btn-primary-bg py-2.5 text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors"
               >
                 {t('organization.groups.confirmNestMoveBtn')}
               </button>

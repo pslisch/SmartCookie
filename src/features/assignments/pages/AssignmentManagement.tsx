@@ -349,7 +349,7 @@ export const AssignmentManagement: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
       </div>
     );
   }
@@ -363,7 +363,7 @@ export const AssignmentManagement: React.FC = () => {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="flex items-center space-x-2.5 rounded-xl border border-red-100 bg-red-50 p-4 text-red-700 shadow-sm"
+            className="flex items-center space-x-2.5 rounded-xl border border-card-border bg-status-error-bg p-4 text-status-error-text shadow-sm"
           >
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm font-medium">{error}</span>
@@ -374,7 +374,7 @@ export const AssignmentManagement: React.FC = () => {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="flex items-center space-x-2.5 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-700 shadow-sm"
+            className="flex items-center space-x-2.5 rounded-xl border border-card-border bg-status-success-bg p-4 text-status-success-text shadow-sm"
           >
             <CheckCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm font-medium">{success}</span>
@@ -383,17 +383,17 @@ export const AssignmentManagement: React.FC = () => {
       </AnimatePresence>
 
       {/* Top action bar: Filters and Creation buttons */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-100 pb-4 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-card-border pb-4 gap-4">
         {/* Status Filters */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl self-start">
+        <div className="flex flex-wrap items-center gap-1.5 bg-bg-subtle p-1 rounded-xl self-start">
           {['ALL', 'ACTIVE', 'SCHEDULED', 'CANCELLED', 'ARCHIVED'].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 statusFilter === st
-                  ? 'bg-white text-slate-800 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-card-bg text-text-heading shadow-xs'
+                  : 'text-text-muted hover:text-text-heading'
               }`}
             >
               {st === 'ALL'
@@ -418,7 +418,7 @@ export const AssignmentManagement: React.FC = () => {
                 setSuccess('');
                 setShowCreateModal('lesson');
               }}
-              className="flex items-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+              className="flex items-center space-x-1.5 rounded-xl bg-link-primary px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-link-primary-hover"
               id="assign-lesson-btn"
             >
               <Plus className="h-4 w-4" />
@@ -430,7 +430,7 @@ export const AssignmentManagement: React.FC = () => {
                 setSuccess('');
                 setShowCreateModal('course');
               }}
-              className="flex items-center space-x-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-700"
+              className="flex items-center space-x-1.5 rounded-xl bg-status-success-text px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-status-success-text/90"
               id="assign-course-btn"
             >
               <Plus className="h-4 w-4" />
@@ -442,7 +442,7 @@ export const AssignmentManagement: React.FC = () => {
 
       {/* Primary List View */}
       {filteredAssignments.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-400">
+        <div className="rounded-2xl border border-dashed border-card-border bg-card-bg p-12 text-center text-text-muted">
           {t('assignments.management.noAssignments')}
         </div>
       ) : (
@@ -464,21 +464,21 @@ export const AssignmentManagement: React.FC = () => {
                 return (
                   <div
                     key={`batch-${batchId}`}
-                    className="rounded-2xl border border-blue-200 bg-blue-50/20 p-5 space-y-4 shadow-sm"
+                    className="rounded-2xl border border-card-border bg-status-info-bg/20 p-5 space-y-4 shadow-sm"
                   >
-                    <div className="flex items-center justify-between border-b border-blue-100 pb-3">
+                    <div className="flex items-center justify-between border-b border-card-border pb-3">
                       <div className="flex items-center space-x-2">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-status-info-bg text-status-info-text">
                           <Sparkles className="h-3 w-3" />
                         </span>
-                        <h3 className="text-sm font-bold text-blue-800">
+                        <h3 className="text-sm font-bold text-text-heading">
                           {t('assignments.management.courseBatch')}
                         </h3>
-                        <span className="text-[10px] font-mono bg-blue-100/50 text-blue-600 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-mono bg-status-info-bg text-link-primary px-1.5 py-0.5 rounded">
                           {t('assignments.management.batchIdLabel', { id: batchId.substring(0, 8) })}
                         </span>
                       </div>
-                      <span className="text-xs font-bold text-blue-600">
+                      <span className="text-xs font-bold text-link-primary">
                         {t('assignments.management.fannedOut', { count: batchItems.length })}
                       </span>
                     </div>
@@ -492,24 +492,24 @@ export const AssignmentManagement: React.FC = () => {
                               setSelectedReportAssignment({ id: item.id, title: item.lesson.title });
                             }
                           }}
-                          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3.5 rounded-xl border border-slate-150 bg-white shadow-xs hover:border-slate-300 transition-all gap-4 ${
-                            canViewReports ? 'cursor-pointer hover:bg-slate-50/50 hover:shadow-xs' : ''
+                          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3.5 rounded-xl border border-card-border bg-card-bg shadow-xs hover:border-card-border transition-all gap-4 ${
+                            canViewReports ? 'cursor-pointer hover:bg-card-header-bg hover:shadow-xs' : ''
                           }`}
                         >
                           <div>
                             <div className="flex items-center space-x-2.5">
-                              <h4 className="font-bold text-slate-800 text-sm font-sans">
+                              <h4 className="font-bold text-text-heading text-sm font-sans">
                                 {item.lesson.title}
                               </h4>
                               {item.isMandatory && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-status-warning-bg text-status-warning-text border border-card-border uppercase tracking-wider">
                                   {t('assignments.management.mandatory')}
                                 </span>
                               )}
                             </div>
-                            <div className="flex flex-wrap items-center text-xs text-slate-400 mt-1 gap-x-3 gap-y-1">
+                            <div className="flex flex-wrap items-center text-xs text-text-muted mt-1 gap-x-3 gap-y-1">
                               <span className="flex items-center space-x-1">
-                                <Users className="h-3.5 w-3.5 text-slate-400" />
+                                <Users className="h-3.5 w-3.5 text-text-muted" />
                                 <span>{t('assignments.management.targetSummary', { summary: getTargetsSummary(item.targets) })}</span>
                               </span>
                               <span>&bull;</span>
@@ -525,10 +525,10 @@ export const AssignmentManagement: React.FC = () => {
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold font-sans border ${
                                 item.status === 'ACTIVE'
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                  ? 'bg-status-success-bg text-status-success-text border-card-border'
                                   : item.status === 'SCHEDULED'
-                                  ? 'bg-blue-50 text-blue-700 border-blue-100'
-                                  : 'bg-slate-50 text-slate-500 border-slate-100'
+                                  ? 'bg-status-info-bg text-status-info-text border-card-border'
+                                  : 'bg-bg-subtle text-text-muted border-card-border'
                               }`}
                             >
                               {item.status}
@@ -540,7 +540,7 @@ export const AssignmentManagement: React.FC = () => {
                                   e.stopPropagation();
                                   setSelectedReportAssignment({ id: item.id, title: item.lesson.title });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition-colors"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-card-border bg-card-bg text-text-muted shadow-sm hover:text-link-primary hover:border-card-border hover:bg-card-header-bg transition-colors"
                                 title={t('assignments.management.viewReportTooltip')}
                                 id={`view-report-btn-${item.id}`}
                               >
@@ -554,7 +554,7 @@ export const AssignmentManagement: React.FC = () => {
                                   e.stopPropagation();
                                   handleCancelAssignment(item.id);
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-red-600 hover:border-red-200 hover:bg-red-50/50 transition-colors"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-card-border bg-card-bg text-text-muted shadow-sm hover:text-status-error-text hover:border-card-border hover:bg-status-error-bg/50 transition-colors"
                                 title={t('assignments.management.cancelAssignmentTooltip')}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -576,24 +576,24 @@ export const AssignmentManagement: React.FC = () => {
                         setSelectedReportAssignment({ id: assignment.id, title: assignment.lesson.title });
                       }
                     }}
-                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-2xl border border-slate-200 bg-white shadow-xs hover:border-slate-300 transition-all gap-4 ${
-                      canViewReports ? 'cursor-pointer hover:bg-slate-50/50 hover:shadow-sm' : ''
+                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-2xl border border-card-border bg-card-bg shadow-xs hover:border-card-border transition-all gap-4 ${
+                      canViewReports ? 'cursor-pointer hover:bg-card-header-bg hover:shadow-sm' : ''
                     }`}
                   >
                     <div>
                       <div className="flex items-center space-x-2.5">
-                        <h4 className="font-bold text-slate-800 text-sm sm:text-base font-sans">
+                        <h4 className="font-bold text-text-heading text-sm sm:text-base font-sans">
                           {assignment.lesson.title}
                         </h4>
                         {assignment.isMandatory && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wider">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-status-warning-bg text-status-warning-text border border-card-border uppercase tracking-wider">
                             {t('assignments.management.mandatory')}
                           </span>
                         )}
                       </div>
-                      <div className="flex flex-wrap items-center text-xs text-slate-400 mt-1.5 gap-x-3 gap-y-1">
+                      <div className="flex flex-wrap items-center text-xs text-text-muted mt-1.5 gap-x-3 gap-y-1">
                         <span className="flex items-center space-x-1">
-                          <Users className="h-3.5 w-3.5 text-slate-400" />
+                          <Users className="h-3.5 w-3.5 text-text-muted" />
                           <span>{t('assignments.management.targetSummary', { summary: getTargetsSummary(assignment.targets) })}</span>
                         </span>
                         <span>&bull;</span>
@@ -607,10 +607,10 @@ export const AssignmentManagement: React.FC = () => {
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-sans border ${
                           assignment.status === 'ACTIVE'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                            ? 'bg-status-success-bg text-status-success-text border-card-border'
                             : assignment.status === 'SCHEDULED'
-                            ? 'bg-blue-50 text-blue-700 border-blue-100'
-                            : 'bg-slate-50 text-slate-500 border-slate-100'
+                            ? 'bg-status-info-bg text-status-info-text border-card-border'
+                            : 'bg-bg-subtle text-text-muted border-card-border'
                         }`}
                       >
                         {assignment.status}
@@ -622,7 +622,7 @@ export const AssignmentManagement: React.FC = () => {
                             e.stopPropagation();
                             setSelectedReportAssignment({ id: assignment.id, title: assignment.lesson.title });
                           }}
-                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition-colors"
+                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-card-border bg-card-bg text-text-muted shadow-sm hover:text-link-primary hover:border-card-border hover:bg-card-header-bg transition-colors"
                           title={t('assignments.management.viewReportTooltip')}
                           id={`view-report-btn-${assignment.id}`}
                         >
@@ -636,7 +636,7 @@ export const AssignmentManagement: React.FC = () => {
                             e.stopPropagation();
                             handleCancelAssignment(assignment.id);
                           }}
-                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-red-600 hover:border-red-200 hover:bg-red-50/50 transition-colors"
+                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-card-border bg-card-bg text-text-muted shadow-sm hover:text-status-error-text hover:border-card-border hover:bg-status-error-bg/50 transition-colors"
                           title={t('assignments.management.cancelAssignmentTooltip')}
                         >
                           <Trash2 className="h-4.5 w-4.5" />
@@ -655,20 +655,20 @@ export const AssignmentManagement: React.FC = () => {
 
       {/* CREATE ASSIGNMENT FLOW DIALOG MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl border border-slate-100 my-8"
+            className="w-full max-w-2xl rounded-2xl bg-card-bg p-6 shadow-xl border border-card-border my-8"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-lg font-bold text-slate-900 font-sans flex items-center space-x-2">
-                <BookOpen className="h-5 w-5 text-blue-600" />
+            <div className="flex items-center justify-between border-b border-card-border pb-3 mb-4">
+              <h3 className="text-lg font-bold text-text-heading font-sans flex items-center space-x-2">
+                <BookOpen className="h-5 w-5 text-link-primary" />
                 <span>{showCreateModal === 'lesson' ? t('assignments.management.createModal.lessonTitle') : t('assignments.management.createModal.courseTitle')}</span>
               </h3>
               <button
                 onClick={closeAndResetForm}
-                className="text-slate-400 hover:text-slate-600 font-bold"
+                className="text-text-muted hover:text-text-heading font-bold"
               >
                 {t('assignments.management.createModal.cancelBtn')}
               </button>
@@ -678,14 +678,14 @@ export const AssignmentManagement: React.FC = () => {
               {/* Content Selection - Only published shown */}
               {showCreateModal === 'lesson' ? (
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
                     {t('assignments.management.createModal.selectLesson')}
                   </label>
                   <select
                     required
                     value={selectedLessonId}
                     onChange={(e) => setSelectedLessonId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-bold text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg px-3.5 py-2.5 text-sm font-bold text-text-heading shadow-sm focus:border-link-primary focus:outline-none"
                   >
                     <option value="">{t('assignments.management.createModal.chooseLesson')}</option>
                     {publishedLessons.map((l) => (
@@ -697,14 +697,14 @@ export const AssignmentManagement: React.FC = () => {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
                     {t('assignments.management.createModal.selectCourse')}
                   </label>
                   <select
                     required
                     value={selectedCourseId}
                     onChange={(e) => setSelectedCourseId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-bold text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg px-3.5 py-2.5 text-sm font-bold text-text-heading shadow-sm focus:border-link-primary focus:outline-none"
                   >
                     <option value="">{t('assignments.management.createModal.chooseCourse')}</option>
                     {publishedCourses.map((c) => (
@@ -718,29 +718,29 @@ export const AssignmentManagement: React.FC = () => {
 
               {/* Gated Target Picker Checklist UI */}
               <div className="space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-card-border pb-2">
+                  <span className="text-xs font-bold text-text-muted uppercase tracking-wider">
                     {t('assignments.management.createModal.targetPicker')}
                   </span>
                   {/* Search filter inside picker */}
                   <div className="relative flex items-center">
-                    <Search className="absolute left-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                    <Search className="absolute left-2.5 h-3.5 w-3.5 text-text-muted pointer-events-none" />
                     <input
                       type="text"
                       placeholder={t('assignments.management.createModal.searchTargets')}
                       value={targetSearch}
                       onChange={(e) => setTargetSearch(e.target.value)}
-                      className="rounded-lg border border-slate-200 px-2.5 py-1 pl-8 text-xs focus:outline-none focus:border-blue-500 w-full sm:w-48 font-semibold"
+                      className="rounded-lg border border-card-border bg-card-bg px-2.5 py-1 pl-8 text-xs focus:outline-none focus:border-link-primary w-full sm:w-48 font-semibold text-text-heading"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-60 overflow-y-auto border border-slate-200 p-3 rounded-xl bg-slate-50/50">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-60 overflow-y-auto border border-card-border p-3 rounded-xl bg-card-header-bg">
                   {/* Column 1: Departments / OUs */}
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-1.5 sticky top-0 bg-slate-50 py-1 border-b border-slate-100 mb-1 z-10">
-                      <Building className="h-4 w-4 text-indigo-600" />
-                      <span className="text-xs font-bold text-slate-700">{t('assignments.management.createModal.departments')}</span>
+                    <div className="flex items-center space-x-1.5 sticky top-0 bg-card-header-bg py-1 border-b border-card-border mb-1 z-10">
+                      <Building className="h-4 w-4 text-link-primary" />
+                      <span className="text-xs font-bold text-text-heading">{t('assignments.management.createModal.departments')}</span>
                     </div>
                     {ous
                       .filter((ou) =>
@@ -749,27 +749,27 @@ export const AssignmentManagement: React.FC = () => {
                       .map((ou) => (
                         <label
                           key={ou.id}
-                          className="flex items-center space-x-2 text-xs font-bold text-slate-600 cursor-pointer p-1 rounded-lg hover:bg-slate-100/50"
+                          className="flex items-center space-x-2 text-xs font-bold text-text-body cursor-pointer p-1 rounded-lg hover:bg-bg-subtle"
                         >
                           <input
                             type="checkbox"
                             checked={selectedOUIds.includes(ou.id)}
                             onChange={() => toggleOUSelection(ou.id)}
-                            className="rounded text-blue-600 focus:ring-blue-500"
+                            className="rounded text-link-primary focus:ring-link-primary"
                           />
                           <span className="truncate">{ou.name}</span>
                         </label>
                       ))}
                     {ous.length === 0 && (
-                      <p className="text-[11px] text-slate-400 italic">{t('assignments.management.createModal.noDepartments')}</p>
+                      <p className="text-[11px] text-text-muted italic">{t('assignments.management.createModal.noDepartments')}</p>
                     )}
                   </div>
 
                   {/* Column 2: Cohorts / Learning Groups */}
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-1.5 sticky top-0 bg-slate-50 py-1 border-b border-slate-100 mb-1 z-10">
-                      <GraduationCap className="h-4 w-4 text-emerald-600" />
-                      <span className="text-xs font-bold text-slate-700">{t('assignments.management.createModal.learningCohorts')}</span>
+                    <div className="flex items-center space-x-1.5 sticky top-0 bg-card-header-bg py-1 border-b border-card-border mb-1 z-10">
+                      <GraduationCap className="h-4 w-4 text-status-success-text" />
+                      <span className="text-xs font-bold text-text-heading">{t('assignments.management.createModal.learningCohorts')}</span>
                     </div>
                     {lgs
                       .filter((lg) =>
@@ -778,27 +778,27 @@ export const AssignmentManagement: React.FC = () => {
                       .map((lg) => (
                         <label
                           key={lg.id}
-                          className="flex items-center space-x-2 text-xs font-bold text-slate-600 cursor-pointer p-1 rounded-lg hover:bg-slate-100/50"
+                          className="flex items-center space-x-2 text-xs font-bold text-text-body cursor-pointer p-1 rounded-lg hover:bg-bg-subtle"
                         >
                           <input
                             type="checkbox"
                             checked={selectedLGIds.includes(lg.id)}
                             onChange={() => toggleLGSelection(lg.id)}
-                            className="rounded text-blue-600 focus:ring-blue-500"
+                            className="rounded text-link-primary focus:ring-link-primary"
                           />
                           <span className="truncate">{lg.name}</span>
                         </label>
                       ))}
                     {lgs.length === 0 && (
-                      <p className="text-[11px] text-slate-400 italic">{t('assignments.management.createModal.noCohorts')}</p>
+                      <p className="text-[11px] text-text-muted italic">{t('assignments.management.createModal.noCohorts')}</p>
                     )}
                   </div>
 
                   {/* Column 3: Individual Users */}
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-1.5 sticky top-0 bg-slate-50 py-1 border-b border-slate-100 mb-1 z-10">
-                      <Users className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs font-bold text-slate-700">{t('assignments.management.createModal.individualMembers')}</span>
+                    <div className="flex items-center space-x-1.5 sticky top-0 bg-card-header-bg py-1 border-b border-card-border mb-1 z-10">
+                      <Users className="h-4 w-4 text-link-primary" />
+                      <span className="text-xs font-bold text-text-heading">{t('assignments.management.createModal.individualMembers')}</span>
                     </div>
                     {users
                       .filter((u) =>
@@ -808,44 +808,44 @@ export const AssignmentManagement: React.FC = () => {
                       .map((u) => (
                         <label
                           key={u.id}
-                          className="flex items-center space-x-2 text-xs font-bold text-slate-600 cursor-pointer p-1 rounded-lg hover:bg-slate-100/50"
+                          className="flex items-center space-x-2 text-xs font-bold text-text-body cursor-pointer p-1 rounded-lg hover:bg-bg-subtle"
                         >
                           <input
                             type="checkbox"
                             checked={selectedUserIds.includes(u.id)}
                             onChange={() => toggleUserSelection(u.id)}
-                            className="rounded text-blue-600 focus:ring-blue-500"
+                            className="rounded text-link-primary focus:ring-link-primary"
                           />
                           <span className="truncate" title={u.email}>{u.username}</span>
                         </label>
                       ))}
                     {users.length === 0 && (
-                      <p className="text-[11px] text-slate-400 italic">{t('assignments.management.createModal.noIndividualUsers')}</p>
+                      <p className="text-[11px] text-text-muted italic">{t('assignments.management.createModal.noIndividualUsers')}</p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-xs font-bold text-slate-400 mr-1.5 self-center">{t('assignments.management.createModal.selectedLabel')}</span>
+                <div className="flex flex-wrap gap-1.5 bg-card-header-bg p-2.5 rounded-xl border border-card-border">
+                  <span className="text-xs font-bold text-text-muted mr-1.5 self-center">{t('assignments.management.createModal.selectedLabel')}</span>
                   {selectedOUIds.length === 0 && selectedLGIds.length === 0 && selectedUserIds.length === 0 && (
-                    <span className="text-xs text-slate-400 italic">{t('assignments.management.createModal.wholeOrgDefault')}</span>
+                    <span className="text-xs text-text-muted italic">{t('assignments.management.createModal.wholeOrgDefault')}</span>
                   )}
                   {selectedOUIds.map((ouid) => (
-                    <span key={ouid} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    <span key={ouid} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-status-info-bg text-status-info-text border border-card-border">
                       <span>{ous.find(o => o.id === ouid)?.name}</span>
-                      <button type="button" onClick={() => toggleOUSelection(ouid)} className="text-indigo-400 hover:text-indigo-600 font-bold ml-1">&times;</button>
+                      <button type="button" onClick={() => toggleOUSelection(ouid)} className="text-text-muted hover:text-text-heading font-bold ml-1">&times;</button>
                     </span>
                   ))}
                   {selectedLGIds.map((lgid) => (
-                    <span key={lgid} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <span key={lgid} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-status-success-bg text-status-success-text border border-card-border">
                       <span>{lgs.find(g => g.id === lgid)?.name}</span>
-                      <button type="button" onClick={() => toggleLGSelection(lgid)} className="text-emerald-400 hover:text-emerald-600 font-bold ml-1">&times;</button>
+                      <button type="button" onClick={() => toggleLGSelection(lgid)} className="text-text-muted hover:text-text-heading font-bold ml-1">&times;</button>
                     </span>
                   ))}
                   {selectedUserIds.map((uid) => (
-                    <span key={uid} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                    <span key={uid} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-status-info-bg text-status-info-text border border-card-border">
                       <span>{users.find(u => u.id === uid)?.username}</span>
-                      <button type="button" onClick={() => toggleUserSelection(uid)} className="text-blue-400 hover:text-blue-600 font-bold ml-1">&times;</button>
+                      <button type="button" onClick={() => toggleUserSelection(uid)} className="text-text-muted hover:text-text-heading font-bold ml-1">&times;</button>
                     </span>
                   ))}
                 </div>
@@ -854,17 +854,17 @@ export const AssignmentManagement: React.FC = () => {
               {/* Assignment Type Options and Date Picker */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
                     {t('assignments.management.createModal.scheduleType')}
                   </label>
-                  <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <div className="flex bg-bg-subtle p-1 rounded-xl">
                     <button
                       type="button"
                       onClick={() => setAssignmentType('IMMEDIATE')}
                       className={`flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all ${
                         assignmentType === 'IMMEDIATE'
-                          ? 'bg-white text-slate-800 shadow-xs'
-                          : 'text-slate-500 hover:text-slate-800'
+                          ? 'bg-card-bg text-text-heading shadow-xs'
+                          : 'text-text-muted hover:text-text-heading'
                       }`}
                     >
                       {t('assignments.management.createModal.immediate')}
@@ -874,8 +874,8 @@ export const AssignmentManagement: React.FC = () => {
                       onClick={() => setAssignmentType('SCHEDULED')}
                       className={`flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all ${
                         assignmentType === 'SCHEDULED'
-                          ? 'bg-white text-slate-800 shadow-xs'
-                          : 'text-slate-500 hover:text-slate-800'
+                          ? 'bg-card-bg text-text-heading shadow-xs'
+                          : 'text-text-muted hover:text-text-heading'
                       }`}
                     >
                       {t('assignments.management.createModal.scheduled')}
@@ -885,8 +885,8 @@ export const AssignmentManagement: React.FC = () => {
 
                 {assignmentType === 'SCHEDULED' && (
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                    <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5 flex items-center space-x-1">
+                      <Calendar className="h-3.5 w-3.5 text-text-muted" />
                       <span>{t('assignments.management.createModal.releaseDateTime')}</span>
                     </label>
                     <input
@@ -894,7 +894,7 @@ export const AssignmentManagement: React.FC = () => {
                       required
                       value={scheduledForDate}
                       onChange={(e) => setScheduledForDate(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-bold text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none animate-fade-in"
+                      className="w-full rounded-xl border border-card-border bg-card-bg px-3.5 py-2 text-sm font-bold text-text-heading shadow-sm focus:border-link-primary focus:outline-none animate-fade-in"
                     />
                   </div>
                 )}
@@ -903,7 +903,7 @@ export const AssignmentManagement: React.FC = () => {
               {/* Due Date Defaults and Mandatory */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
                     {t('assignments.management.createModal.defaultDueDays')}
                   </label>
                   <input
@@ -912,22 +912,22 @@ export const AssignmentManagement: React.FC = () => {
                     max="365"
                     value={dueDateDays}
                     onChange={(e) => setDueDateDays(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-bold text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-card-border bg-card-bg px-3.5 py-2 text-sm font-bold text-text-heading shadow-sm focus:border-link-primary focus:outline-none"
                   />
                 </div>
 
                 {canCreateMandatory && (
                   <div className="flex items-center self-end h-full pb-2.5">
-                    <label className="flex items-center space-x-2.5 text-sm font-bold text-slate-700 cursor-pointer">
+                    <label className="flex items-center space-x-2.5 text-sm font-bold text-text-heading cursor-pointer">
                       <input
                         type="checkbox"
                         checked={isMandatory}
                         onChange={(e) => setIsMandatory(e.target.checked)}
-                        className="rounded h-5 w-5 text-blue-600 border-slate-300 focus:ring-blue-500"
+                        className="rounded h-5 w-5 text-link-primary border-card-border focus:ring-link-primary"
                       />
                       <div>
                         <span>{t('assignments.management.createModal.mandatoryAssignment')}</span>
-                        <p className="text-xs text-slate-400 font-normal mt-0.5">{t('assignments.management.createModal.mandatoryNote')}</p>
+                        <p className="text-xs text-text-muted font-normal mt-0.5">{t('assignments.management.createModal.mandatoryNote')}</p>
                       </div>
                     </label>
                   </div>
@@ -935,18 +935,18 @@ export const AssignmentManagement: React.FC = () => {
               </div>
 
               {/* Form Action buttons */}
-              <div className="flex space-x-3 pt-3 border-t border-slate-100">
+              <div className="flex space-x-3 pt-3 border-t border-card-border">
                 <button
                   type="button"
                   onClick={closeAndResetForm}
-                  className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="flex-1 rounded-xl border border-card-border px-4 py-2.5 text-sm font-bold text-text-muted hover:bg-card-header-bg transition-colors"
                 >
                   {t('assignments.management.createModal.cancelBtn')}
                 </button>
                 <button
                   type="submit"
                   disabled={isActionLoading}
-                  className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-1.5"
+                  className="flex-1 rounded-xl bg-link-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-link-primary-hover transition-colors disabled:opacity-50 flex items-center justify-center space-x-1.5"
                 >
                   {isActionLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

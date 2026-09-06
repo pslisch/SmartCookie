@@ -130,14 +130,14 @@ export function SecurityTab() {
   return (
     <div className="space-y-8" id="security-tab-container">
       {/* Change Password Section */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-6" id="change-password-section">
-        <div className="flex items-center space-x-3 pb-4 border-b border-slate-100">
-          <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
+      <div className="rounded-2xl border border-card-border bg-card-bg p-6 md:p-8 shadow-sm space-y-6" id="change-password-section">
+        <div className="flex items-center space-x-3 pb-4 border-b border-card-border">
+          <div className="rounded-xl bg-status-info-bg p-2.5 text-status-info-text">
             <Lock className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900">{t('profile.security.changePasswordTitle')}</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="text-base font-bold text-text-heading">{t('profile.security.changePasswordTitle')}</h3>
+            <p className="text-xs text-text-muted">
               {t('profile.security.changePasswordDesc')}
             </p>
           </div>
@@ -149,10 +149,10 @@ export function SecurityTab() {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="flex items-center space-x-2.5 rounded-xl bg-green-50 border border-green-100 p-4 text-sm text-green-700"
+              className="flex items-center space-x-2.5 rounded-xl bg-status-success-bg border border-card-border p-4 text-sm text-status-success-text"
               id="password-success-alert"
             >
-              <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />
+              <CheckCircle className="h-4 w-4 shrink-0 text-status-success-text" />
               <span>{pwdSuccess}</span>
             </motion.div>
           )}
@@ -162,10 +162,10 @@ export function SecurityTab() {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="flex items-center space-x-2.5 rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-700"
+              className="flex items-center space-x-2.5 rounded-xl bg-status-error-bg border border-card-border p-4 text-sm text-status-error-text"
               id="password-error-alert"
             >
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+              <AlertCircle className="h-4 w-4 shrink-0 text-status-error-text" />
               <span>{pwdError}</span>
             </motion.div>
           )}
@@ -173,7 +173,7 @@ export function SecurityTab() {
 
         <form onSubmit={handlePasswordChange} className="space-y-4 max-w-lg" id="password-change-form">
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-slate-700" htmlFor="current-password-input">
+            <label className="block text-sm font-semibold text-text-body" htmlFor="current-password-input">
               {t('profile.security.currentPassword')}
             </label>
             <input
@@ -181,14 +181,14 @@ export function SecurityTab() {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm shadow-sm transition-all outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+              className="w-full rounded-xl border border-card-border px-3.5 py-2 text-sm bg-card-bg text-text-heading shadow-sm transition-all outline-none focus:ring-2 focus:ring-link-primary/10 focus:border-link-primary"
               placeholder={t('profile.security.currentPasswordPlaceholder')}
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-slate-700" htmlFor="new-password-input">
+            <label className="block text-sm font-semibold text-text-body" htmlFor="new-password-input">
               {t('profile.security.newPassword')}
             </label>
             <input
@@ -196,14 +196,14 @@ export function SecurityTab() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm shadow-sm transition-all outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+              className="w-full rounded-xl border border-card-border px-3.5 py-2 text-sm bg-card-bg text-text-heading shadow-sm transition-all outline-none focus:ring-2 focus:ring-link-primary/10 focus:border-link-primary"
               placeholder={t('profile.security.newPasswordPlaceholder')}
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-slate-700" htmlFor="confirm-new-password-input">
+            <label className="block text-sm font-semibold text-text-body" htmlFor="confirm-new-password-input">
               {t('profile.security.confirmNewPassword')}
             </label>
             <input
@@ -211,7 +211,7 @@ export function SecurityTab() {
               type="password"
               value={confirmNewPassword}
               onChange={(e) => setConfirmNewPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm shadow-sm transition-all outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+              className="w-full rounded-xl border border-card-border px-3.5 py-2 text-sm bg-card-bg text-text-heading shadow-sm transition-all outline-none focus:ring-2 focus:ring-link-primary/10 focus:border-link-primary"
               placeholder={t('profile.security.confirmNewPasswordPlaceholder')}
               required
             />
@@ -221,7 +221,7 @@ export function SecurityTab() {
             <button
               type="submit"
               disabled={pwdLoading}
-              className="flex items-center justify-center space-x-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm shadow-blue-600/10"
+              className="flex items-center justify-center space-x-2 rounded-xl bg-btn-primary-bg px-5 py-2.5 text-sm font-semibold text-btn-primary-text hover:bg-btn-primary-hover transition-colors disabled:opacity-50 shadow-sm"
               id="password-submit-btn"
             >
               {pwdLoading ? (
@@ -238,14 +238,14 @@ export function SecurityTab() {
       </div>
 
       {/* Change Email Section */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 md:p-8 shadow-sm space-y-6" id="change-email-section">
-        <div className="flex items-center space-x-3 pb-4 border-b border-slate-100">
-          <div className="rounded-xl bg-indigo-50 p-2.5 text-indigo-600">
+      <div className="rounded-2xl border border-card-border bg-card-bg p-6 md:p-8 shadow-sm space-y-6" id="change-email-section">
+        <div className="flex items-center space-x-3 pb-4 border-b border-card-border">
+          <div className="rounded-xl bg-status-info-bg p-2.5 text-status-info-text">
             <Mail className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900">{t('profile.security.changeEmailTitle')}</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="text-base font-bold text-text-heading">{t('profile.security.changeEmailTitle')}</h3>
+            <p className="text-xs text-text-muted">
               {t('profile.security.changeEmailDesc')}
             </p>
           </div>
@@ -257,10 +257,10 @@ export function SecurityTab() {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="flex items-center space-x-2.5 rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-700"
+              className="flex items-center space-x-2.5 rounded-xl bg-status-error-bg border border-card-border p-4 text-sm text-status-error-text"
               id="email-error-alert"
             >
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+              <AlertCircle className="h-4 w-4 shrink-0 text-status-error-text" />
               <span>{emailError}</span>
             </motion.div>
           )}
@@ -269,7 +269,7 @@ export function SecurityTab() {
         {!pendingEmail ? (
           <form onSubmit={handleEmailChangeRequest} className="space-y-4 max-w-lg" id="email-change-form">
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-slate-700" htmlFor="new-email-input">
+              <label className="block text-sm font-semibold text-text-body" htmlFor="new-email-input">
                 {t('profile.security.newEmail')}
               </label>
               <input
@@ -277,7 +277,7 @@ export function SecurityTab() {
                 type="email"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm shadow-sm transition-all outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500"
+                className="w-full rounded-xl border border-card-border px-3.5 py-2 text-sm bg-card-bg text-text-heading shadow-sm transition-all outline-none focus:ring-2 focus:ring-link-primary/10 focus:border-link-primary"
                 placeholder={t('profile.security.newEmailPlaceholder')}
                 required
               />
@@ -287,7 +287,7 @@ export function SecurityTab() {
               <button
                 type="submit"
                 disabled={emailLoading}
-                className="flex items-center justify-center space-x-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-600/10"
+                className="flex items-center justify-center space-x-2 rounded-xl bg-btn-primary-bg px-5 py-2.5 text-sm font-semibold text-btn-primary-text hover:bg-btn-primary-hover transition-colors disabled:opacity-50 shadow-sm"
                 id="email-submit-btn"
               >
                 {emailLoading ? (
@@ -302,25 +302,25 @@ export function SecurityTab() {
             </div>
           </form>
         ) : (
-          <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-5 space-y-4 max-w-lg" id="email-pending-state">
+          <div className="rounded-xl border border-card-border bg-status-info-bg/30 p-5 space-y-4 max-w-lg" id="email-pending-state">
             <div className="flex items-start space-x-3">
-              <Clock className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5 animate-pulse" />
+              <Clock className="h-5 w-5 text-link-primary shrink-0 mt-0.5 animate-pulse" />
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-slate-900">{t('profile.security.verificationPendingTitle')}</h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <h4 className="text-sm font-bold text-text-heading">{t('profile.security.verificationPendingTitle')}</h4>
+                <p className="text-xs text-text-body leading-relaxed">
                   {t('profile.security.verificationPendingDesc', { email: pendingEmail })}
                 </p>
-                <p className="text-xs text-slate-500 italic mt-1">
+                <p className="text-xs text-text-muted italic mt-1">
                   {t('profile.security.verificationPendingExpiry')}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-2 border-t border-indigo-100/60">
+            <div className="flex items-center gap-3 pt-2 border-t border-card-border">
               <button
                 type="button"
                 onClick={() => setPendingEmail(null)}
-                className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                className="inline-flex items-center space-x-1.5 text-xs font-semibold text-text-body hover:text-text-heading transition-colors"
                 id="cancel-email-change-btn"
               >
                 <XCircle className="h-3.5 w-3.5" />
@@ -332,20 +332,20 @@ export function SecurityTab() {
       </div>
 
       {/* MFA (Multi-Factor Authentication) Section - deferred honestly */}
-      <div className="rounded-2xl border border-slate-200/80 bg-slate-50/50 p-6 md:p-8 shadow-sm space-y-4" id="mfa-section">
+      <div className="rounded-2xl border border-card-border bg-card-header-bg/50 p-6 md:p-8 shadow-sm space-y-4" id="mfa-section">
         <div className="flex items-center space-x-3">
-          <div className="rounded-xl bg-slate-100 p-2.5 text-slate-500">
+          <div className="rounded-xl bg-bg-subtle p-2.5 text-text-muted">
             <Shield className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-800">{t('profile.security.mfaTitle')}</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="text-base font-bold text-text-heading">{t('profile.security.mfaTitle')}</h3>
+            <p className="text-xs text-text-muted">
               {t('profile.security.mfaDesc')}
             </p>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200/60 bg-white p-4 text-xs text-slate-600 flex items-center space-x-2.5 max-w-lg" id="mfa-alert">
-          <AlertCircle className="h-4 w-4 text-slate-400 shrink-0" />
+        <div className="rounded-xl border border-card-border bg-card-bg p-4 text-xs text-text-body flex items-center space-x-2.5 max-w-lg" id="mfa-alert">
+          <AlertCircle className="h-4 w-4 text-text-muted shrink-0" />
           <span>{t('profile.security.mfaUnavailable')}</span>
         </div>
       </div>

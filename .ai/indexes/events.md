@@ -107,3 +107,15 @@ Every documented event should eventually include:
 - **Consumer**: `EmailService` (dispatches verification link to new email address)
 - **Payload**: `{ userId: string, newEmail: string, verificationUrl: string }`
 
+### 11. `scheduler:theme-scheduled-activation`
+- **Event Identifier**: `scheduler:theme-scheduled-activation`
+- **Producer**: `ScheduledTasksService` (periodic scheduler in `server/src/shared/scheduler/index.ts`)
+- **Consumer**: Theme activation processor (activates pending themes where `scheduledActivationAt <= now()`, validates font integrity, logs failures to `scheduledActivationFailedAt` and `scheduledActivationFailedReason`)
+- **Payload**: `{ timestamp: Date, activatedCount: number }`
+
+### 12. `theme:lock-heartbeat`
+- **Event Identifier**: `theme:lock-heartbeat`
+- **Producer**: `ThemeEditor.tsx` / Client theme session (every 15 seconds)
+- **Consumer**: `POST /api/themes/:id/lock` -> `themeLock.service.ts`
+- **Payload**: `{ themeId: string, lockType: "EDIT" | "TEST" }`
+

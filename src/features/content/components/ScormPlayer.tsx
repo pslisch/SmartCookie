@@ -222,33 +222,33 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] space-y-4" id="scorm-player-loading">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-        <p className="text-sm font-semibold text-slate-500">Preparing your SCORM player...</p>
+        <Loader2 className="h-10 w-10 animate-spin text-link-primary" />
+        <p className="text-sm font-semibold text-text-muted">Preparing your SCORM player...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-xl mx-auto my-12 bg-white rounded-3xl border border-rose-100 shadow-xl p-8 text-center space-y-6" id="scorm-player-error">
-        <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-rose-50 text-rose-500">
+      <div className="max-w-xl mx-auto my-12 bg-card-bg rounded-3xl border border-card-border shadow-xl p-8 text-center space-y-6" id="scorm-player-error">
+        <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-status-error-bg text-status-error-text">
           <AlertCircle className="h-8 w-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-xl font-black text-slate-800 font-sans">Launch Blocked</h2>
-          <p className="text-sm text-slate-500 leading-relaxed">{error}</p>
+          <h2 className="text-xl font-black text-text-heading font-sans">Launch Blocked</h2>
+          <p className="text-sm text-text-muted leading-relaxed">{error}</p>
         </div>
         <div className="pt-2 flex justify-center gap-3">
           <button
             onClick={onClose}
-            className="flex items-center gap-2 px-6 py-3 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-sm rounded-xl transition-all"
+            className="flex items-center gap-2 px-6 py-3 border border-card-border hover:bg-card-header-bg text-text-body font-bold text-sm rounded-xl transition-all"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to My Lessons</span>
           </button>
           <button
             onClick={fetchData}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm"
+            className="flex items-center gap-2 px-6 py-3 bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text font-bold text-sm rounded-xl transition-all shadow-sm"
           >
             <RefreshCw className="h-4 w-4" />
             <span>Try Again</span>
@@ -264,38 +264,38 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
     const limit = instance?.assignment.attemptLimit || 0;
 
     return (
-      <div className="max-w-xl mx-auto my-12 bg-white rounded-3xl border border-slate-100 shadow-xl p-8" id="scorm-player-prompt">
+      <div className="max-w-xl mx-auto my-12 bg-card-bg rounded-3xl border border-card-border shadow-xl p-8" id="scorm-player-prompt">
         <div className="text-center space-y-4 mb-8">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-blue-50 text-blue-600">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-status-info-bg text-status-info-text">
             <BookOpen className="h-8 w-8" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-2xl font-black text-slate-800 font-sans">Resume Lesson?</h2>
-            <p className="text-sm text-slate-400 font-medium">
+            <h2 className="text-2xl font-black text-text-heading font-sans">Resume Lesson?</h2>
+            <p className="text-sm text-text-muted font-medium">
               You have an incomplete attempt in progress.
             </p>
           </div>
         </div>
 
-        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2.5 text-xs text-slate-500 mb-8">
+        <div className="bg-card-header-bg rounded-2xl p-4 border border-card-border space-y-2.5 text-xs text-text-muted mb-8">
           <div className="flex justify-between font-semibold">
             <span>Attempt Number:</span>
-            <span className="font-mono text-slate-700">#{incompleteAttempt.attemptNumber}</span>
+            <span className="font-mono text-text-heading">#{incompleteAttempt.attemptNumber}</span>
           </div>
           <div className="flex justify-between font-semibold">
             <span>Last Status:</span>
-            <span className="font-mono text-slate-700 uppercase">{incompleteAttempt.lessonStatus}</span>
+            <span className="font-mono text-text-heading uppercase">{incompleteAttempt.lessonStatus}</span>
           </div>
           {incompleteAttempt.lessonLocation && (
             <div className="flex justify-between font-semibold">
               <span>Bookmark Location:</span>
-              <span className="font-mono text-slate-700">{incompleteAttempt.lessonLocation}</span>
+              <span className="font-mono text-text-heading">{incompleteAttempt.lessonLocation}</span>
             </div>
           )}
           {limit > 0 && (
-            <div className="flex justify-between font-semibold border-t border-slate-250/50 pt-2 mt-2">
+            <div className="flex justify-between font-semibold border-t border-card-border pt-2 mt-2">
               <span>Attempt Limit Usage:</span>
-              <span className="text-amber-600 font-bold">
+              <span className="text-status-warning-text font-bold">
                 {attempts.length} of {limit} used
               </span>
             </div>
@@ -306,7 +306,7 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
           <button
             onClick={() => handleResumeAttempt(incompleteAttempt)}
             disabled={isLaunching}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg"
           >
             <Play className="h-4 w-4 fill-current" />
             <span>Resume (Recommended)</span>
@@ -316,18 +316,18 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
             <button
               onClick={handleRestartAttempt}
               disabled={isLaunching}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-all shadow-xs"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-card-bg hover:bg-card-header-bg border border-card-border text-text-body rounded-xl font-bold text-sm transition-all shadow-xs"
             >
               {isLaunching ? (
-                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                <Loader2 className="h-4 w-4 animate-spin text-text-muted" />
               ) : (
                 <RotateCcw className="h-4 w-4" />
               )}
               <span>Start New Attempt</span>
             </button>
           ) : (
-            <div className="flex-1 flex items-center gap-2 p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700 font-medium leading-normal">
-              <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-500" />
+            <div className="flex-1 flex items-center gap-2 p-3 bg-status-warning-bg border border-card-border rounded-xl text-xs text-status-warning-text font-medium leading-normal">
+              <AlertTriangle className="h-4 w-4 flex-shrink-0 text-status-warning-text" />
               <span>Restart unavailable: max attempt limit reached.</span>
             </div>
           )}
@@ -336,7 +336,7 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
         <div className="mt-6 flex justify-center">
           <button
             onClick={onClose}
-            className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors underline"
+            className="text-xs font-semibold text-text-muted hover:text-text-body transition-colors underline"
           >
             Cancel and Return
           </button>
@@ -347,34 +347,34 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
 
   // Active playing view inside the iframe
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] min-h-[600px] w-full bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden" id="scorm-player-active">
+    <div className="flex flex-col h-[calc(100vh-140px)] min-h-[600px] w-full bg-bg-app rounded-3xl border border-card-border shadow-2xl overflow-hidden" id="scorm-player-active">
       {/* Player Header Bar */}
-      <div className="flex items-center justify-between bg-slate-950 px-6 py-4 border-b border-slate-800 text-slate-300">
+      <div className="flex items-center justify-between bg-card-bg/90 backdrop-blur-md px-6 py-4 border-b border-card-border text-text-muted">
         <div className="flex items-center space-x-3.5">
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-800 hover:text-white rounded-xl transition-colors"
+            className="p-2 hover:bg-bg-subtle hover:text-text-heading rounded-xl transition-colors"
             title="Exit Player"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h2 className="text-sm font-extrabold text-white font-sans truncate max-w-md">
+            <h2 className="text-sm font-extrabold text-text-heading font-sans truncate max-w-md">
               {instance?.assignment?.lesson?.title}
             </h2>
-            <p className="text-[10px] font-mono text-slate-500 font-semibold uppercase tracking-wider">
+            <p className="text-[10px] font-mono text-text-muted font-semibold uppercase tracking-wider">
               Attempt #{activeAttempt?.attemptNumber} • Active Session
             </p>
           </div>
         </div>
 
         <div className="flex items-center space-x-3">
-          <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-blue-500/30 bg-blue-500/10 text-blue-400">
+          <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-card-border bg-status-info-bg text-status-info-text">
             SCORM 1.2
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-bold rounded-lg transition-colors border border-slate-750"
+            className="px-4 py-2 bg-bg-subtle hover:bg-card-header-bg text-text-muted hover:text-text-heading text-xs font-bold rounded-lg transition-colors border border-card-border"
           >
             Exit & Save
           </button>
@@ -382,7 +382,7 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
       </div>
 
       {/* Frame Container */}
-      <div className="flex-1 bg-white relative">
+      <div className="flex-1 bg-card-bg relative">
         {launchUrl && (
           <iframe
             src={launchUrl}

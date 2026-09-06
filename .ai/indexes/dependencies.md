@@ -136,6 +136,15 @@ Each feature should eventually map:
 - **Routes**: Layout-wide wrapper
 - **Events**: In-memory React state toggle
 
+### 14. Theme & Font Library Subsystem
+- **Uses**: `fontkit`, `multer`, `src/shared/types/index.ts`, `src/features/theme/constants/themeTokens.ts`, `src/shared/contexts/ThemeRuntimeContext.tsx`
+- **Used By**: `src/features/theme/pages/ThemeManagement.tsx`, `src/features/theme/pages/ThemeEditor.tsx`, `src/shared/components/layout/Shell.tsx`, `src/features/rbac/pages/Settings.tsx`
+- **Database**: `themes`, `fonts`, `theme_locks`
+- **Services**: `fontStorage.service.ts`, `font.service.ts`, `themeResolution.service.ts`, `themeLock.service.ts`
+- **Components**: `ThemeManagement.tsx`, `ThemeEditor.tsx`, `ThemeTestBanner.tsx`, `ColorEditorTab.tsx`, `FontEditorTab.tsx`, `LivePreviewPane.tsx`, `FontLibrary.tsx`, `FontReplacementModal.tsx`, `ActivateScheduleModal.tsx`
+- **Routes**: Client: Settings > Theme tab; Backend: `/api/themes/*`, `/api/fonts/*`
+- **Events**: Font upload/validation, cascading font replacement, lock heartbeat/acquisition/release, test mode trigger/exit, scheduled activation execution
+
 ---
 
 ## 🟡 Unused / Reserved Dependencies

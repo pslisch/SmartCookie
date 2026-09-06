@@ -16,6 +16,8 @@ import { FullProfile } from './features/profiles/pages/FullProfile';
 import { AppGate, useAuth } from './shared/components/AppGate';
 import { usePermission } from './shared/hooks/usePermission';
 import { PreviewProvider } from './shared/contexts/PreviewContext';
+import { ThemeRuntimeProvider } from './shared/contexts/ThemeRuntimeContext';
+import { ThemeTestBanner } from './features/theme/components/ThemeTestBanner';
 import { RequiredFieldReminder } from './shared/components/RequiredFieldReminder';
 import { ScormPreviewPlayer } from './features/content/components/ScormPreviewPlayer';
 import pkg from '@/package.json';
@@ -140,10 +142,13 @@ export default function App() {
   const appName = formatAppName(pkg.name);
 
   return (
-    <AppGate>
-      <PreviewProvider>
-        <AppContent appName={appName} />
-      </PreviewProvider>
-    </AppGate>
+    <ThemeRuntimeProvider>
+      <ThemeTestBanner />
+      <AppGate>
+        <PreviewProvider>
+          <AppContent appName={appName} />
+        </PreviewProvider>
+      </AppGate>
+    </ThemeRuntimeProvider>
   );
 }

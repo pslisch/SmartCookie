@@ -77,20 +77,20 @@ export const RequiredFieldReminder: React.FC<RequiredFieldReminderProps> = ({
         className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 lg:px-8"
         id="required-fields-reminder-banner"
       >
-        <div className="relative rounded-2xl border border-amber-100 bg-amber-50/55 p-4 pr-12 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+        <div className="relative rounded-2xl border border-status-warning-text/20 bg-status-warning-bg p-4 pr-12 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-status-warning-bg text-status-warning-text shadow-sm">
               <AlertCircle className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 font-sans flex items-center gap-1.5">
+              <h4 className="text-sm font-bold text-text-heading font-sans flex items-center gap-1.5">
                 <span>{t('profile.reminder.title')}</span>
-                <span className="text-[10px] font-extrabold bg-amber-100/85 text-amber-900 px-2 py-0.5 rounded-full border border-amber-200">
+                <span className="text-[10px] font-extrabold bg-status-warning-bg text-status-warning-text px-2 py-0.5 rounded-full border border-status-warning-text/30">
                   {t('profile.reminder.percentageDone', { percentage: completion.percentage })}
                 </span>
               </h4>
-              <p className="text-xs text-slate-600 font-sans mt-1">
-                {t('profile.reminder.missingMessage')}<span className="font-semibold text-slate-800">{missingNames}</span>.
+              <p className="text-xs text-text-body font-sans mt-1">
+                {t('profile.reminder.missingMessage')}<span className="font-semibold text-text-heading">{missingNames}</span>.
               </p>
             </div>
           </div>
@@ -98,7 +98,7 @@ export const RequiredFieldReminder: React.FC<RequiredFieldReminderProps> = ({
           <div className="flex items-center gap-3 self-end md:self-auto">
             <button
               onClick={onNavigateToProfile}
-              className="inline-flex items-center space-x-1 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-98"
+              className="inline-flex items-center space-x-1 rounded-xl bg-btn-primary-bg px-4 py-2 text-xs font-bold text-btn-primary-text shadow-sm transition-all hover:bg-btn-primary-hover active:scale-98"
               id="btn-complete-profile-now"
             >
               <span>{t('profile.reminder.goToProfile')}</span>
@@ -109,7 +109,7 @@ export const RequiredFieldReminder: React.FC<RequiredFieldReminderProps> = ({
           {/* Dismiss button */}
           <button
             onClick={handleDismiss}
-            className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="absolute top-4 right-4 p-1.5 rounded-lg text-text-muted hover:text-text-body hover:bg-bg-subtle transition-colors"
             id="btn-dismiss-reminder"
             title={t('profile.reminder.dismissTooltip')}
           >

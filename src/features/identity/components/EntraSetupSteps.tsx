@@ -148,8 +148,8 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
   return (
     <div className="space-y-6" id="entra-setup-flow">
       {errorMsg && (
-        <div className="flex items-start space-x-2 rounded-xl bg-rose-50 p-4 text-sm text-rose-800 border border-rose-100" id="entra-error-banner">
-          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+        <div className="flex items-start space-x-2 rounded-xl bg-status-error-bg p-4 text-sm text-status-error-text border border-status-error-text/20" id="entra-error-banner">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
           <span className="font-medium">{errorMsg}</span>
         </div>
       )}
@@ -158,15 +158,15 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       {subStep === 1 && (
         <div className="space-y-5" id="entra-step-1">
           <div>
-            <h3 className="text-base font-bold text-slate-900">{t('setupWizard.entra.modeTitle')}</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <h3 className="text-base font-bold text-text-heading">{t('setupWizard.entra.modeTitle')}</h3>
+            <p className="text-xs text-text-muted mt-1">
               {t('setupWizard.entra.modeSubtitle')}
             </p>
           </div>
 
           <div className="space-y-3">
             <label className={`flex items-start space-x-3.5 rounded-xl border p-4 transition-all cursor-pointer ${
-              loginMode === 'BOTH' ? 'border-blue-500 bg-blue-50/20' : 'border-slate-200 hover:bg-slate-50'
+              loginMode === 'BOTH' ? 'border-link-primary bg-status-info-bg' : 'border-card-border hover:bg-card-header-bg'
             }`}>
               <input
                 type="radio"
@@ -174,18 +174,18 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 value="BOTH"
                 checked={loginMode === 'BOTH'}
                 onChange={() => setLoginMode('BOTH')}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                className="mt-1 h-4 w-4 text-link-primary focus:ring-link-primary/20"
               />
               <div>
-                <span className="block text-sm font-semibold text-slate-800">{t('setupWizard.entra.modeBothTitle')}</span>
-                <span className="block text-xs text-slate-500 mt-0.5">
+                <span className="block text-sm font-semibold text-text-heading">{t('setupWizard.entra.modeBothTitle')}</span>
+                <span className="block text-xs text-text-muted mt-0.5">
                   {t('setupWizard.entra.modeBothDesc')}
                 </span>
               </div>
             </label>
 
             <label className={`flex items-start space-x-3.5 rounded-xl border p-4 transition-all cursor-pointer ${
-              loginMode === 'MICROSOFT_ONLY' ? 'border-blue-500 bg-blue-50/20' : 'border-slate-200 hover:bg-slate-50'
+              loginMode === 'MICROSOFT_ONLY' ? 'border-link-primary bg-status-info-bg' : 'border-card-border hover:bg-card-header-bg'
             }`}>
               <input
                 type="radio"
@@ -193,18 +193,18 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 value="MICROSOFT_ONLY"
                 checked={loginMode === 'MICROSOFT_ONLY'}
                 onChange={() => setLoginMode('MICROSOFT_ONLY')}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                className="mt-1 h-4 w-4 text-link-primary focus:ring-link-primary/20"
               />
               <div>
-                <span className="block text-sm font-semibold text-slate-800">{t('setupWizard.entra.modeMicrosoftOnlyTitle')}</span>
-                <span className="block text-xs text-slate-500 mt-0.5">
+                <span className="block text-sm font-semibold text-text-heading">{t('setupWizard.entra.modeMicrosoftOnlyTitle')}</span>
+                <span className="block text-xs text-text-muted mt-0.5">
                   {t('setupWizard.entra.modeMicrosoftOnlyDesc')}
                 </span>
               </div>
             </label>
 
             <label className={`flex items-start space-x-3.5 rounded-xl border p-4 transition-all cursor-pointer ${
-              loginMode === 'LOCAL_ONLY' ? 'border-blue-500 bg-blue-50/20' : 'border-slate-200 hover:bg-slate-50'
+              loginMode === 'LOCAL_ONLY' ? 'border-link-primary bg-status-info-bg' : 'border-card-border hover:bg-card-header-bg'
             }`}>
               <input
                 type="radio"
@@ -212,11 +212,11 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 value="LOCAL_ONLY"
                 checked={loginMode === 'LOCAL_ONLY'}
                 onChange={() => setLoginMode('LOCAL_ONLY')}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                className="mt-1 h-4 w-4 text-link-primary focus:ring-link-primary/20"
               />
               <div>
-                <span className="block text-sm font-semibold text-slate-800">{t('setupWizard.entra.modeLocalOnlyTitle')}</span>
-                <span className="block text-xs text-slate-500 mt-0.5">
+                <span className="block text-sm font-semibold text-text-heading">{t('setupWizard.entra.modeLocalOnlyTitle')}</span>
+                <span className="block text-xs text-text-muted mt-0.5">
                   {t('setupWizard.entra.modeLocalOnlyDesc')}
                 </span>
               </div>
@@ -227,7 +227,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             <button
               onClick={handleModeSelectionSubmit}
               disabled={saving}
-              className="flex-1 inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="flex-1 inline-flex items-center justify-center rounded-xl bg-btn-primary-bg px-4 py-2.5 text-sm font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ChevronRight className="h-4 w-4 mr-1.5" />}
               {loginMode === 'LOCAL_ONLY' ? t('setupWizard.entra.confirmSkipBtn') : t('setupWizard.entra.continueBtn')}
@@ -235,7 +235,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             <button
               onClick={handleSkipFlow}
               disabled={saving}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-card-border text-sm font-semibold text-text-body hover:bg-card-header-bg transition-colors"
             >
               {t('setupWizard.entra.skipStepBtn')}
             </button>
@@ -247,55 +247,55 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       {subStep === 2 && (
         <div className="space-y-6" id="entra-step-2">
           {/* Detailed app registration guidance */}
-          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-xs space-y-3.5 text-slate-700">
-            <div className="flex items-center space-x-2 text-slate-900 font-bold border-b border-slate-100 pb-2">
-              <Globe className="h-4 w-4 text-blue-600" />
+          <div className="rounded-xl border border-card-border bg-card-header-bg p-4 text-xs space-y-3.5 text-text-body">
+            <div className="flex items-center space-x-2 text-text-heading font-bold border-b border-card-border pb-2">
+              <Globe className="h-4 w-4 text-link-primary" />
               <span>{t('setupWizard.entra.guideTitle')}</span>
             </div>
 
-            <ol className="list-decimal pl-4 space-y-2 text-slate-600 leading-relaxed">
+            <ol className="list-decimal pl-4 space-y-2 text-text-body leading-relaxed">
               <li>
-                {t('setupWizard.entra.guideStep1_1')} <a href="https://entra.microsoft.com" target="_blank" rel="noreferrer" className="text-blue-600 font-medium underline">{t('setupWizard.entra.guideStep1_2')}</a>.
+                {t('setupWizard.entra.guideStep1_1')} <a href="https://entra.microsoft.com" target="_blank" rel="noreferrer" className="text-link-primary font-medium underline">{t('setupWizard.entra.guideStep1_2')}</a>.
               </li>
               <li>
-                {t('setupWizard.entra.guideStep2_1')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep2_2')}</span>{t('setupWizard.entra.guideStep2_3')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep2_4')}</span>.
+                {t('setupWizard.entra.guideStep2_1')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep2_2')}</span>{t('setupWizard.entra.guideStep2_3')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep2_4')}</span>.
               </li>
               <li>
-                {t('setupWizard.entra.guideStep3_1')} <span className="font-mono text-blue-700">{t('setupWizard.entra.guideStep3_2')}</span>{t('setupWizard.entra.guideStep3_3')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep3_4')}</span> {t('setupWizard.entra.guideStep3_5')}
+                {t('setupWizard.entra.guideStep3_1')} <span className="font-mono text-link-primary">{t('setupWizard.entra.guideStep3_2')}</span>{t('setupWizard.entra.guideStep3_3')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep3_4')}</span> {t('setupWizard.entra.guideStep3_5')}
               </li>
               <li>
-                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep4_2')}</span>{t('setupWizard.entra.guideStep4_3')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep4_4')}</span> {t('setupWizard.entra.guideStep4_5')}
+                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep4_2')}</span>{t('setupWizard.entra.guideStep4_3')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep4_4')}</span> {t('setupWizard.entra.guideStep4_5')}
               </li>
               <li>
-                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep5_1')}</span>{t('setupWizard.entra.guideStep5_2')} <span className="italic text-rose-700 font-semibold">{t('setupWizard.entra.guideStep5_3')}</span> {t('setupWizard.entra.guideStep5_4')}
+                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep5_1')}</span>{t('setupWizard.entra.guideStep5_2')} <span className="italic text-status-error-text font-semibold">{t('setupWizard.entra.guideStep5_3')}</span> {t('setupWizard.entra.guideStep5_4')}
               </li>
               <li>
-                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep6_1')}</span>{t('setupWizard.entra.guideStep6_2')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep6_3')}</span>{t('setupWizard.entra.guideStep6_4')} <span className="font-semibold text-slate-800">{t('setupWizard.entra.guideStep6_5')}</span>:
-                <ul className="list-disc pl-4 mt-1 space-y-0.5 text-[11px] text-slate-500">
-                  <li><span className="font-semibold text-slate-700">{t('setupWizard.entra.guideStep6_6')}</span> {t('setupWizard.entra.guideStep6_7')}</li>
-                  <li><span className="font-semibold text-slate-700">{t('setupWizard.entra.guideStep6_8')}</span> {t('setupWizard.entra.guideStep6_9')}</li>
+                {t('setupWizard.entra.guideStep4_1')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep6_1')}</span>{t('setupWizard.entra.guideStep6_2')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep6_3')}</span>{t('setupWizard.entra.guideStep6_4')} <span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep6_5')}</span>:
+                <ul className="list-disc pl-4 mt-1 space-y-0.5 text-[11px] text-text-muted">
+                  <li><span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep6_6')}</span> {t('setupWizard.entra.guideStep6_7')}</li>
+                  <li><span className="font-semibold text-text-heading">{t('setupWizard.entra.guideStep6_8')}</span> {t('setupWizard.entra.guideStep6_9')}</li>
                 </ul>
               </li>
               <li>
-                <span className="font-bold text-rose-700">{t('setupWizard.entra.guideStep7_1')}</span> Click <span className="font-bold text-slate-800">{t('setupWizard.entra.guideStep7_2')}</span>{t('setupWizard.entra.guideStep7_3')}
+                <span className="font-bold text-status-error-text">{t('setupWizard.entra.guideStep7_1')}</span> Click <span className="font-bold text-text-heading">{t('setupWizard.entra.guideStep7_2')}</span>{t('setupWizard.entra.guideStep7_3')}
               </li>
             </ol>
           </div>
 
           {/* COPY REDIRECT URI BLOCK */}
-          <div className="rounded-xl border border-blue-100 bg-blue-50/20 p-4 space-y-2">
-            <span className="block text-xs font-bold text-blue-900 uppercase tracking-wider">{t('setupWizard.entra.redirectUriTitle')}</span>
+          <div className="rounded-xl border border-link-primary/20 bg-status-info-bg p-4 space-y-2">
+            <span className="block text-xs font-bold text-text-heading uppercase tracking-wider">{t('setupWizard.entra.redirectUriTitle')}</span>
             <div className="flex items-center space-x-2">
               <input
                 type="text"
                 readOnly
                 value={redirectUri}
-                className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none"
+                className="flex-1 rounded-lg border border-input-border bg-card-bg px-3 py-2 text-xs font-mono text-text-body focus:outline-none"
               />
               <button
                 type="button"
                 onClick={copyToClipboard}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-btn-primary-bg text-btn-primary-text hover:bg-btn-primary-hover transition-colors"
                 title={t('setupWizard.entra.copyRedirectTooltip')}
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -306,7 +306,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
           {/* CREDENTIALS FORM */}
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="tenant-id">
+              <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5" htmlFor="tenant-id">
                 {t('setupWizard.entra.tenantIdLabel')}
               </label>
               <input
@@ -315,13 +315,13 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 required
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-mono text-slate-900 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 py-2.5 text-sm font-mono text-text-body focus:border-input-border-focus focus:outline-none"
                 placeholder="e.g. 8f635c91-477c-473d-986c-..."
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="client-id">
+              <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5" htmlFor="client-id">
                 {t('setupWizard.entra.clientIdLabel')}
               </label>
               <input
@@ -330,13 +330,13 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                 required
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-mono text-slate-900 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 py-2.5 text-sm font-mono text-text-body focus:border-input-border-focus focus:outline-none"
                 placeholder="e.g. 1a2b3c4d-5e6f-7a8b-..."
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="client-secret">
+              <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5" htmlFor="client-secret">
                 {t('setupWizard.entra.clientSecretLabel')}
               </label>
               <div className="relative">
@@ -346,13 +346,13 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
                   required
                   value={clientSecret}
                   onChange={(e) => setClientSecret(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white pl-3.5 pr-11 py-2.5 text-sm font-mono text-slate-900 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-input-border bg-card-bg pl-3.5 pr-11 py-2.5 text-sm font-mono text-text-body focus:border-input-border-focus focus:outline-none"
                   placeholder="e.g. ABC123~xyz789_abcdefgh..."
                 />
                 <button
                   type="button"
                   onClick={() => setShowSecret(!showSecret)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-body transition-colors"
                 >
                   {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -363,7 +363,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
           <div className="pt-3 flex space-x-3">
             <button
               onClick={() => setSubStep(1)}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-card-border bg-card-bg px-4 text-sm font-semibold text-text-body hover:bg-card-header-bg transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-1.5" />
               {t('setupWizard.entra.backBtn')}
@@ -371,14 +371,14 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             <button
               onClick={() => setSubStep(3)}
               disabled={!tenantId.trim() || !clientId.trim() || !clientSecret.trim()}
-              className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
             >
               {t('setupWizard.entra.continueValidationBtn')}
               <ArrowRight className="h-4 w-4 ml-1.5" />
             </button>
             <button
               onClick={handleSkipFlow}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-card-border text-sm font-semibold text-text-muted hover:bg-card-header-bg transition-colors"
             >
               {t('setupWizard.entra.skipBtn')}
             </button>
@@ -390,39 +390,39 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       {subStep === 3 && (
         <div className="space-y-6" id="entra-step-3">
           <div>
-            <h3 className="text-base font-bold text-slate-900">{t('setupWizard.entra.validateTitle')}</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <h3 className="text-base font-bold text-text-heading">{t('setupWizard.entra.validateTitle')}</h3>
+            <p className="text-xs text-text-muted mt-1">
               {t('setupWizard.entra.validateSubtitle')}
             </p>
           </div>
 
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-xs space-y-2 text-slate-600">
+          <div className="rounded-xl border border-card-border bg-card-header-bg p-4 text-xs space-y-2 text-text-body">
             <div className="flex justify-between">
-              <span className="font-semibold text-slate-700">{t('setupWizard.entra.targetTenantLabel')}</span>
+              <span className="font-semibold text-text-heading">{t('setupWizard.entra.targetTenantLabel')}</span>
               <span className="font-mono">{tenantId}</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-semibold text-slate-700">{t('setupWizard.entra.targetClientIdLabel')}</span>
+              <span className="font-semibold text-text-heading">{t('setupWizard.entra.targetClientIdLabel')}</span>
               <span className="font-mono">{clientId}</span>
             </div>
           </div>
 
           {!testResult && !testing && (
-            <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
-              <HelpCircle className="h-10 w-10 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-700">{t('setupWizard.entra.readyToTestTitle')}</p>
-              <p className="text-xs text-slate-500 mt-0.5 px-6">
+            <div className="text-center py-6 border-2 border-dashed border-card-border rounded-xl">
+              <HelpCircle className="h-10 w-10 text-text-muted mx-auto mb-2" />
+              <p className="text-sm font-semibold text-text-heading">{t('setupWizard.entra.readyToTestTitle')}</p>
+              <p className="text-xs text-text-muted mt-0.5 px-6">
                 {t('setupWizard.entra.readyToTestDesc')}
               </p>
             </div>
           )}
 
           {testing && (
-            <div className="flex flex-col items-center justify-center py-8 bg-slate-50 border border-slate-100 rounded-xl space-y-3">
-              <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+            <div className="flex flex-col items-center justify-center py-8 bg-card-header-bg border border-card-border rounded-xl space-y-3">
+              <Loader2 className="h-8 w-8 text-link-primary animate-spin" />
               <div className="text-center">
-                <p className="text-sm font-semibold text-slate-800">{t('setupWizard.entra.testingTitle')}</p>
-                <p className="text-xs text-slate-500">{t('setupWizard.entra.testingSubtitle')}</p>
+                <p className="text-sm font-semibold text-text-heading">{t('setupWizard.entra.testingTitle')}</p>
+                <p className="text-xs text-text-muted">{t('setupWizard.entra.testingSubtitle')}</p>
               </div>
             </div>
           )}
@@ -430,21 +430,21 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
           {testResult && (
             <div className="space-y-4" id="entra-test-results">
               {testResult.success ? (
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50/20 p-4 flex items-start space-x-3">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="rounded-xl border border-status-success-text/20 bg-status-success-bg p-4 flex items-start space-x-3">
+                  <CheckCircle2 className="h-5 w-5 text-status-success-text shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-bold text-emerald-900">{t('setupWizard.entra.handshakeSuccessTitle')}</h4>
-                    <p className="text-xs text-emerald-700 mt-0.5">
+                    <h4 className="text-sm font-bold text-text-heading">{t('setupWizard.entra.handshakeSuccessTitle')}</h4>
+                    <p className="text-xs text-status-success-text mt-0.5">
                       {t('setupWizard.entra.handshakeSuccessDesc')}
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="rounded-xl border border-rose-100 bg-rose-50/20 p-4 flex items-start space-x-3">
-                  <XCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                <div className="rounded-xl border border-status-error-text/20 bg-status-error-bg p-4 flex items-start space-x-3">
+                  <XCircle className="h-5 w-5 text-status-error-text shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-bold text-rose-900">{t('setupWizard.entra.handshakeFailedTitle')}</h4>
-                    <p className="text-xs text-rose-700 mt-0.5">
+                    <h4 className="text-sm font-bold text-text-heading">{t('setupWizard.entra.handshakeFailedTitle')}</h4>
+                    <p className="text-xs text-status-error-text mt-0.5">
                       {testResult.error || t('setupWizard.entra.handshakeFailedDesc')}
                     </p>
                   </div>
@@ -453,22 +453,22 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
 
               {testResult.permissions && (
                 <div className="space-y-3">
-                  <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">{t('setupWizard.entra.scopesCheckedTitle')}</span>
+                  <span className="block text-xs font-bold text-text-muted uppercase tracking-wider">{t('setupWizard.entra.scopesCheckedTitle')}</span>
                   <div className="space-y-2.5">
                     {testResult.permissions.map((p, idx) => (
-                      <div key={idx} className="rounded-xl border border-slate-150 p-3 bg-white space-y-1.5">
+                      <div key={idx} className="rounded-xl border border-card-border p-3 bg-card-bg space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-mono font-bold text-slate-800">{p.permission}</span>
+                          <span className="text-xs font-mono font-bold text-text-heading">{p.permission}</span>
                           <span className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                             p.status === 'Granted' 
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
-                              : 'bg-rose-50 text-rose-700 border border-rose-100'
+                              ? 'bg-status-success-bg text-status-success-text border border-status-success-text/20' 
+                              : 'bg-status-error-bg text-status-error-text border border-status-error-text/20'
                           }`}>
                             {p.status === 'Granted' ? <Check className="h-3 w-3 mr-0.5" /> : <XCircle className="h-3 w-3 mr-0.5" />}
                             {p.status}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 leading-relaxed">{p.explanation}</p>
+                        <p className="text-xs text-text-muted leading-relaxed">{p.explanation}</p>
                       </div>
                     ))}
                   </div>
@@ -481,7 +481,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             <button
               onClick={() => setSubStep(2)}
               disabled={testing}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-card-border bg-card-bg px-4 text-sm font-semibold text-text-body hover:bg-card-header-bg transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-1.5" />
               {t('setupWizard.entra.backBtn')}
@@ -489,7 +489,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             <button
               onClick={handleTestConnection}
               disabled={testing}
-              className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors disabled:opacity-50"
+              className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
             >
               {testing ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
               {t('setupWizard.entra.runValidationTestBtn')}
@@ -497,7 +497,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             {testResult?.success && (
               <button
                 onClick={() => setSubStep(4)}
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg px-4 text-sm font-semibold text-btn-primary-text hover:bg-btn-primary-hover transition-colors"
               >
                 {t('setupWizard.entra.nextBtn')}
                 <ArrowRight className="h-4 w-4 ml-1.5" />
@@ -505,7 +505,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             )}
             <button
               onClick={handleSkipFlow}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-card-border text-sm font-semibold text-text-muted hover:bg-card-header-bg transition-colors"
             >
               {t('setupWizard.entra.skipBtn')}
             </button>
@@ -517,46 +517,46 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
       {subStep === 4 && (
         <div className="space-y-6" id="entra-step-4">
           <div>
-            <h3 className="text-base font-bold text-slate-900">{t('setupWizard.entra.mappingTitle')}</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <h3 className="text-base font-bold text-text-heading">{t('setupWizard.entra.mappingTitle')}</h3>
+            <p className="text-xs text-text-muted mt-1">
               {t('setupWizard.entra.mappingSubtitle')}
             </p>
           </div>
 
           {/* Sync Strategy Choice */}
           <div className="space-y-3">
-            <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">{t('setupWizard.entra.importStrategyTitle')}</span>
+            <span className="block text-xs font-bold text-text-muted uppercase tracking-wider">{t('setupWizard.entra.importStrategyTitle')}</span>
             
             <div className="space-y-2">
-              <label className="flex items-start space-x-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors cursor-pointer">
+              <label className="flex items-start space-x-3 rounded-lg border border-card-border p-3 hover:bg-card-header-bg transition-colors cursor-pointer">
                 <input
                   type="radio"
                   name="importStrategy"
                   value="FIRST_LOGIN"
                   checked={importStrategy === 'FIRST_LOGIN'}
                   onChange={() => setImportStrategy('FIRST_LOGIN')}
-                  className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  className="mt-0.5 h-4 w-4 text-link-primary focus:ring-link-primary/20"
                 />
                 <div>
-                  <span className="block text-xs font-bold text-slate-800">{t('setupWizard.entra.strategyFirstLoginTitle')}</span>
-                  <span className="block text-[11px] text-slate-500 mt-0.5">
+                  <span className="block text-xs font-bold text-text-heading">{t('setupWizard.entra.strategyFirstLoginTitle')}</span>
+                  <span className="block text-[11px] text-text-muted mt-0.5">
                     {t('setupWizard.entra.strategyFirstLoginDesc')}
                   </span>
                 </div>
               </label>
 
-              <label className="flex items-start space-x-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition-colors cursor-pointer">
+              <label className="flex items-start space-x-3 rounded-lg border border-card-border p-3 hover:bg-card-header-bg transition-colors cursor-pointer">
                 <input
                   type="radio"
                   name="importStrategy"
                   value="ALL_USERS"
                   checked={importStrategy === 'ALL_USERS'}
                   onChange={() => setImportStrategy('ALL_USERS')}
-                  className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  className="mt-0.5 h-4 w-4 text-link-primary focus:ring-link-primary/20"
                 />
                 <div>
-                  <span className="block text-xs font-bold text-slate-800">{t('setupWizard.entra.strategyAllUsersTitle')}</span>
-                  <span className="block text-[11px] text-slate-500 mt-0.5">
+                  <span className="block text-xs font-bold text-text-heading">{t('setupWizard.entra.strategyAllUsersTitle')}</span>
+                  <span className="block text-[11px] text-text-muted mt-0.5">
                     {t('setupWizard.entra.strategyAllUsersDesc')}
                   </span>
                 </div>
@@ -566,50 +566,50 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
 
           {/* Fixed Attribute Mapping shown as an informational confirmation screen (not editable) */}
           <div className="space-y-2.5">
-            <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
-              <Info className="h-4 w-4 text-blue-600" />
+            <div className="flex items-center space-x-1.5 text-xs font-bold text-text-muted uppercase tracking-wider">
+              <Info className="h-4 w-4 text-link-primary" />
               <span>{t('setupWizard.entra.attributeMappingTitle')}</span>
             </div>
 
-            <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
+            <div className="rounded-xl border border-card-border overflow-hidden bg-card-bg">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <tr className="bg-card-header-bg border-b border-card-border text-[10px] font-bold text-text-muted uppercase tracking-wider">
                     <th className="p-3">{t('setupWizard.entra.tableHeadEntra')}</th>
                     <th className="p-3">{t('setupWizard.entra.tableHeadLocal')}</th>
                     <th className="p-3">{t('setupWizard.entra.tableHeadFallback')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                <tbody className="divide-y divide-card-border text-text-body font-medium">
                   <tr>
-                    <td className="p-3 font-mono text-blue-600 font-semibold">userPrincipalName</td>
-                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldUsername')}</td>
-                    <td className="p-3 text-slate-400 italic">{t('setupWizard.entra.tableFallbackNone')}</td>
+                    <td className="p-3 font-mono text-link-primary font-semibold">userPrincipalName</td>
+                    <td className="p-3 font-bold text-text-heading">{t('setupWizard.entra.tableFieldUsername')}</td>
+                    <td className="p-3 text-text-muted italic">{t('setupWizard.entra.tableFallbackNone')}</td>
                   </tr>
                   <tr>
-                    <td className="p-3 font-mono text-blue-600 font-semibold">mail</td>
-                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldEmail')}</td>
-                    <td className="p-3 text-slate-500">{t('setupWizard.entra.tableFallbackUpn')}</td>
+                    <td className="p-3 font-mono text-link-primary font-semibold">mail</td>
+                    <td className="p-3 font-bold text-text-heading">{t('setupWizard.entra.tableFieldEmail')}</td>
+                    <td className="p-3 text-text-muted">{t('setupWizard.entra.tableFallbackUpn')}</td>
                   </tr>
                   <tr>
-                    <td className="p-3 font-mono text-blue-600 font-semibold">givenName</td>
-                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldFirstName')}</td>
-                    <td className="p-3 text-slate-500">{t('setupWizard.entra.tableFallbackUsername')}</td>
+                    <td className="p-3 font-mono text-link-primary font-semibold">givenName</td>
+                    <td className="p-3 font-bold text-text-heading">{t('setupWizard.entra.tableFieldFirstName')}</td>
+                    <td className="p-3 text-text-muted">{t('setupWizard.entra.tableFallbackUsername')}</td>
                   </tr>
                   <tr>
-                    <td className="p-3 font-mono text-blue-600 font-semibold">surname</td>
-                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldLastName')}</td>
-                    <td className="p-3 text-slate-500">{t('setupWizard.entra.tableFallbackEmpty')}</td>
+                    <td className="p-3 font-mono text-link-primary font-semibold">surname</td>
+                    <td className="p-3 font-bold text-text-heading">{t('setupWizard.entra.tableFieldLastName')}</td>
+                    <td className="p-3 text-text-muted">{t('setupWizard.entra.tableFallbackEmpty')}</td>
                   </tr>
                   <tr>
-                    <td className="p-3 font-mono text-blue-600 font-semibold">department</td>
-                    <td className="p-3 font-bold text-slate-800">{t('setupWizard.entra.tableFieldOu')}</td>
-                    <td className="p-3 text-slate-500">{t('setupWizard.entra.tableFallbackRoot')}</td>
+                    <td className="p-3 font-mono text-link-primary font-semibold">department</td>
+                    <td className="p-3 font-bold text-text-heading">{t('setupWizard.entra.tableFieldOu')}</td>
+                    <td className="p-3 text-text-muted">{t('setupWizard.entra.tableFallbackRoot')}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <p className="text-[10px] text-slate-400 leading-normal">
+            <p className="text-[10px] text-text-muted leading-normal">
               {t('setupWizard.entra.attributeMappingFooter')}
             </p>
           </div>
@@ -618,7 +618,7 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             <button
               onClick={() => setSubStep(3)}
               disabled={saving}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-card-border bg-card-bg px-4 text-sm font-semibold text-text-body hover:bg-card-header-bg transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-1.5" />
               {t('setupWizard.entra.backBtn')}
@@ -626,14 +626,14 @@ export function EntraSetupSteps({ onSave, onSkip }: EntraSetupProps) {
             <button
               onClick={handleFinalSave}
               disabled={saving}
-              className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
               {t('setupWizard.entra.saveAndFinishBtn')}
             </button>
             <button
               onClick={handleSkipFlow}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-card-border text-sm font-semibold text-text-muted hover:bg-card-header-bg transition-colors"
             >
               {t('setupWizard.entra.skipBtn')}
             </button>

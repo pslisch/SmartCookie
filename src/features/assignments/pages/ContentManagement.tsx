@@ -485,7 +485,7 @@ export const ContentManagement: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-text-muted" />
       </div>
     );
   }
@@ -499,7 +499,7 @@ export const ContentManagement: React.FC = () => {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="flex items-center space-x-2.5 rounded-xl border border-red-100 bg-red-50 p-4 text-red-700 shadow-sm"
+            className="flex items-center space-x-2.5 rounded-xl border border-card-border bg-status-error-bg p-4 text-status-error-text shadow-sm"
           >
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm font-medium">{error}</span>
@@ -510,7 +510,7 @@ export const ContentManagement: React.FC = () => {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="flex items-center space-x-2.5 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-700 shadow-sm"
+            className="flex items-center space-x-2.5 rounded-xl border border-card-border bg-status-success-bg p-4 text-status-success-text shadow-sm"
           >
             <CheckCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm font-medium">{success}</span>
@@ -519,8 +519,8 @@ export const ContentManagement: React.FC = () => {
       </AnimatePresence>
 
       {/* Main navigation tabs and Creation button */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 gap-4">
-        <div className="flex bg-slate-100 p-1 rounded-xl self-start">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-card-border pb-4 gap-4">
+        <div className="flex bg-bg-subtle p-1 rounded-xl self-start">
           <button
             onClick={() => {
               setActiveTab('lessons');
@@ -528,8 +528,8 @@ export const ContentManagement: React.FC = () => {
             }}
             className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${
               activeTab === 'lessons'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-card-bg text-text-heading shadow-sm'
+                : 'text-text-muted hover:text-text-heading'
             }`}
             id="tab-btn-lessons"
           >
@@ -541,8 +541,8 @@ export const ContentManagement: React.FC = () => {
             }}
             className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${
               activeTab === 'courses'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-card-bg text-text-heading shadow-sm'
+                : 'text-text-muted hover:text-text-heading'
             }`}
             id="tab-btn-courses"
           >
@@ -558,7 +558,7 @@ export const ContentManagement: React.FC = () => {
                 setSuccess('');
                 setShowImportWizard(true);
               }}
-              className="flex items-center justify-center space-x-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-slate-950"
+              className="flex items-center justify-center space-x-1.5 rounded-xl bg-bg-inverse px-4 py-2.5 text-sm font-bold text-text-inverse shadow-sm transition-colors hover:bg-bg-inverse/90"
               id="btn-import-scorm-package"
             >
               <Upload className="h-4 w-4" />
@@ -572,7 +572,7 @@ export const ContentManagement: React.FC = () => {
               setSuccess('');
               setShowCreateModal(true);
             }}
-            className="flex items-center justify-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+            className="flex items-center justify-center space-x-1.5 rounded-xl bg-link-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-link-primary-hover"
             id="btn-create-lesson-or-course"
           >
             <Plus className="h-4 w-4" />
@@ -585,17 +585,17 @@ export const ContentManagement: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left main column: List of items */}
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-bold text-slate-800 font-sans">
+          <h2 className="text-lg font-bold text-text-heading font-sans">
             {activeTab === 'lessons' ? t('content.allLessons') : t('content.allCourses')}
           </h2>
 
           {activeTab === 'lessons' ? (
             lessons.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-400">
+              <div className="rounded-2xl border border-dashed border-card-border bg-card-bg p-12 text-center text-text-muted">
                 {t('content.noLessons')}
               </div>
             ) : (
-              <div className="divide-y divide-slate-150 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm" id="lessons-list">
+              <div className="divide-y divide-card-border rounded-2xl border border-card-border bg-card-bg overflow-hidden shadow-sm" id="lessons-list">
                 {lessons.map((lesson) => {
                   const isExpanded = !!expandedLessonIds[lesson.id];
                   const hasScorm = !!lesson.content;
@@ -603,11 +603,11 @@ export const ContentManagement: React.FC = () => {
                   return (
                     <div key={lesson.id} className="transition-colors">
                       {/* Primary Lesson Row */}
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 hover:bg-slate-50/50 gap-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 hover:bg-card-header-bg gap-4">
                         <div className="flex items-start sm:items-center gap-3 min-w-0">
                           <button
                             onClick={() => toggleLessonExpansion(lesson.id)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors mt-0.5 sm:mt-0 flex-shrink-0"
+                            className="p-1 rounded-lg text-text-muted hover:text-text-heading hover:bg-bg-subtle transition-colors mt-0.5 sm:mt-0 flex-shrink-0"
                             title={isExpanded ? t('content.hideDetailsBtn') : t('content.detailsBtn')}
                           >
                             {isExpanded ? (
@@ -619,17 +619,17 @@ export const ContentManagement: React.FC = () => {
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-bold text-slate-800 text-sm sm:text-base font-sans truncate">
+                              <h4 className="font-bold text-text-heading text-sm sm:text-base font-sans truncate">
                                 {lesson.title}
                               </h4>
                               {hasScorm && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200/60 flex-shrink-0">
-                                  <FileCode2 className="h-3 w-3 text-blue-500" />
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-status-info-bg text-status-info-text border border-card-border flex-shrink-0">
+                                  <FileCode2 className="h-3 w-3 text-link-primary" />
                                   <span>{t('content.scormBadge')}</span>
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-slate-400 mt-0.5">
+                            <p className="text-xs text-text-muted mt-0.5">
                               {t('content.createdAt', { date: new Date(lesson.createdAt).toLocaleDateString() })}
                             </p>
                           </div>
@@ -641,16 +641,16 @@ export const ContentManagement: React.FC = () => {
                           {hasScorm ? (
                             <button
                               onClick={() => handlePreviewLesson(lesson)}
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50/80 hover:bg-amber-100 text-amber-800 text-xs font-bold transition-all shadow-xs"
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-card-border bg-status-warning-bg hover:bg-status-warning-bg/80 text-status-warning-text text-xs font-bold transition-all shadow-xs"
                               title={t('content.previewTooltip')}
                             >
-                              <Eye className="h-3.5 w-3.5 text-amber-600" />
+                              <Eye className="h-3.5 w-3.5 text-status-warning-text" />
                               <span>{t('content.previewBtn')}</span>
                             </button>
                           ) : (
                             <button
                               disabled
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-300 text-xs font-bold cursor-not-allowed"
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-card-border bg-bg-subtle text-text-muted/40 text-xs font-bold cursor-not-allowed"
                               title={t('content.previewDisabledTooltip')}
                             >
                               <Eye className="h-3.5 w-3.5" />
@@ -661,10 +661,10 @@ export const ContentManagement: React.FC = () => {
                           {/* Edit Action: non-functional placeholder for future Lesson Builder */}
                           <button
                             disabled
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-xs font-bold cursor-not-allowed"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-card-border bg-bg-subtle text-text-muted text-xs font-bold cursor-not-allowed"
                             title={t('content.editTooltip')}
                           >
-                            <Pencil className="h-3.5 w-3.5 text-slate-400" />
+                            <Pencil className="h-3.5 w-3.5 text-text-muted" />
                             <span>{t('content.editBtn')}</span>
                           </button>
 
@@ -672,8 +672,8 @@ export const ContentManagement: React.FC = () => {
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-sans ${
                               lesson.status === 'PUBLISHED'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                : 'bg-slate-50 text-slate-600 border border-slate-100'
+                                ? 'bg-status-success-bg text-status-success-text border border-card-border'
+                                : 'bg-bg-subtle text-text-muted border border-card-border'
                             }`}
                           >
                             {lesson.status === 'PUBLISHED' ? t('content.published') : t('content.draft')}
@@ -684,8 +684,8 @@ export const ContentManagement: React.FC = () => {
                             onClick={() => handleToggleLessonPublish(lesson)}
                             className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-colors shadow-sm ${
                               lesson.status === 'PUBLISHED'
-                                ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
-                                : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                ? 'border-card-border bg-status-error-bg text-status-error-text hover:bg-status-error-bg/80'
+                                : 'border-card-border bg-status-success-bg text-status-success-text hover:bg-status-success-bg/80'
                             }`}
                             title={lesson.status === 'PUBLISHED' ? t('content.unpublishTooltip') : t('content.publishTooltip')}
                           >
@@ -706,33 +706,33 @@ export const ContentManagement: React.FC = () => {
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="bg-slate-50/80 border-t border-slate-100 px-6 py-4 overflow-hidden"
+                            className="bg-card-header-bg border-t border-card-border px-6 py-4 overflow-hidden"
                           >
                             {lesson.content ? (
                               <div className="space-y-4">
                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                                   <div className="space-y-1.5 flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="text-xs font-extrabold text-slate-800">
+                                      <span className="text-xs font-extrabold text-text-heading">
                                         {lesson.content.title}
                                       </span>
-                                      <span className="text-[10px] font-bold text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded">
+                                      <span className="text-[10px] font-bold text-text-muted bg-bg-subtle px-2 py-0.5 rounded">
                                         {t('content.versionLabel', { version: lesson.content.version })}
                                       </span>
                                       <span
                                         className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold border ${
                                           lesson.content.status === 'PUBLISHED'
-                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                            ? 'bg-status-success-bg text-status-success-text border-card-border'
                                             : lesson.content.status === 'ARCHIVED'
-                                            ? 'bg-slate-200 text-slate-600 border-slate-300'
-                                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                                            ? 'bg-bg-subtle text-text-muted border-card-border'
+                                            : 'bg-status-warning-bg text-status-warning-text border-card-border'
                                         }`}
                                       >
                                         {lesson.content.status}
                                       </span>
                                     </div>
 
-                                    <p className="text-xs text-slate-500 font-medium">
+                                    <p className="text-xs text-text-muted font-medium">
                                       {lesson.content.description || t('content.noDescription')}
                                     </p>
                                   </div>
@@ -741,7 +741,7 @@ export const ContentManagement: React.FC = () => {
                                   <div className="flex items-center gap-2 flex-wrap self-start">
                                     <button
                                       onClick={() => handleViewHistory(lesson.content!.contentGroupId, lesson.content!.title)}
-                                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-blue-600 bg-white border border-slate-200 rounded-lg hover:border-blue-200 shadow-2xs transition-colors"
+                                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-text-muted hover:text-link-primary bg-card-bg border border-card-border rounded-lg hover:border-card-border shadow-2xs transition-colors"
                                       title={t('content.versionHistoryBtn')}
                                     >
                                       <History className="h-3.5 w-3.5" />
@@ -750,7 +750,7 @@ export const ContentManagement: React.FC = () => {
 
                                     <button
                                       onClick={() => handleDownloadZip(lesson.content!.id)}
-                                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-lg hover:border-slate-300 shadow-2xs transition-colors"
+                                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-text-muted hover:text-text-heading bg-card-bg border border-card-border rounded-lg hover:border-card-border shadow-2xs transition-colors"
                                       title={t('content.downloadZipBtn')}
                                     >
                                       <Download className="h-3.5 w-3.5" />
@@ -760,7 +760,7 @@ export const ContentManagement: React.FC = () => {
                                     {lesson.content.status === 'DRAFT' && (
                                       <button
                                         onClick={() => handlePublishContent(lesson.content!.id)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-colors"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-white bg-link-primary hover:bg-link-primary-hover rounded-lg shadow-2xs transition-colors"
                                       >
                                         <CheckCircle2 className="h-3.5 w-3.5" />
                                         <span>{t('content.publishContentBtn')}</span>
@@ -770,7 +770,7 @@ export const ContentManagement: React.FC = () => {
                                     {lesson.content.status !== 'ARCHIVED' && (
                                       <button
                                         onClick={() => handleArchiveContent(lesson.content!.id)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-rose-700 bg-white border border-slate-200 hover:border-rose-200 rounded-lg shadow-2xs transition-colors"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-text-muted hover:text-status-error-text bg-card-bg border border-card-border hover:border-card-border shadow-2xs transition-colors"
                                       >
                                         <Archive className="h-3.5 w-3.5" />
                                         <span>{t('content.archiveContentBtn')}</span>
@@ -780,7 +780,7 @@ export const ContentManagement: React.FC = () => {
                                     {lesson.content.status === 'ARCHIVED' && (
                                       <button
                                         onClick={() => handleRestoreContent(lesson.content!.id)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-white bg-slate-700 hover:bg-slate-800 rounded-lg shadow-2xs transition-colors"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-text-inverse bg-bg-inverse hover:bg-bg-inverse/90 rounded-lg shadow-2xs transition-colors"
                                       >
                                         <FileCheck className="h-3.5 w-3.5" />
                                         <span>{t('content.restoreContentBtn')}</span>
@@ -790,24 +790,24 @@ export const ContentManagement: React.FC = () => {
                                 </div>
 
                                 {/* Metadata Badges */}
-                                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/60 text-xs">
+                                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-card-border text-xs">
                                   {lesson.content.category && (
-                                    <div className="flex items-center gap-1.5 text-slate-600 font-bold bg-white px-2.5 py-1 rounded-md border border-slate-200/60">
-                                      <Folder className="h-3.5 w-3.5 text-slate-400" />
+                                    <div className="flex items-center gap-1.5 text-text-body font-bold bg-card-bg px-2.5 py-1 rounded-md border border-card-border">
+                                      <Folder className="h-3.5 w-3.5 text-text-muted" />
                                       <span>{lesson.content.category.name}</span>
                                     </div>
                                   )}
 
                                   {lesson.content.author && (
-                                    <span className="inline-flex items-center gap-1 bg-white text-slate-600 px-2.5 py-1 rounded-md font-bold border border-slate-200/60">
-                                      <User className="h-3 w-3 text-slate-400" />
+                                    <span className="inline-flex items-center gap-1 bg-card-bg text-text-body px-2.5 py-1 rounded-md font-bold border border-card-border">
+                                      <User className="h-3 w-3 text-text-muted" />
                                       {t('content.authorLabel', { author: lesson.content.author })}
                                     </span>
                                   )}
 
                                   {lesson.content.language && (
-                                    <span className="inline-flex items-center gap-1 bg-white text-slate-600 px-2.5 py-1 rounded-md font-bold border border-slate-200/60">
-                                      <Globe className="h-3 w-3 text-slate-400" />
+                                    <span className="inline-flex items-center gap-1 bg-card-bg text-text-body px-2.5 py-1 rounded-md font-bold border border-card-border">
+                                      <Globe className="h-3 w-3 text-text-muted" />
                                       {t('content.languageLabel', { language: lesson.content.language })}
                                     </span>
                                   )}
@@ -817,9 +817,9 @@ export const ContentManagement: React.FC = () => {
                                       {lesson.content.tags.map((tg) => (
                                         <span
                                           key={tg.id}
-                                          className="inline-flex items-center gap-1 text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-200/60"
+                                          className="inline-flex items-center gap-1 text-[10px] font-bold bg-status-info-bg text-status-info-text px-2 py-0.5 rounded-md border border-card-border"
                                         >
-                                          <Tag className="h-2.5 w-2.5 text-blue-400" />
+                                          <Tag className="h-2.5 w-2.5 text-link-primary" />
                                           {tg.tag}
                                         </span>
                                       ))}
@@ -829,7 +829,7 @@ export const ContentManagement: React.FC = () => {
                               </div>
                             ) : (
                               <div className="py-2 flex items-center justify-between">
-                                <p className="text-xs text-slate-400 italic">
+                                <p className="text-xs text-text-muted italic">
                                   {t('content.noLinkedScorm')}
                                 </p>
                                 {hasImportPermission && (
@@ -839,7 +839,7 @@ export const ContentManagement: React.FC = () => {
                                       setSuccess('');
                                       setShowImportWizard(true);
                                     }}
-                                    className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 underline"
+                                    className="flex items-center gap-1 text-xs font-bold text-link-primary hover:text-link-primary-hover underline"
                                   >
                                     <Upload className="h-3 w-3" />
                                     <span>{t('content.importScormBtn')}</span>
@@ -856,28 +856,28 @@ export const ContentManagement: React.FC = () => {
               </div>
             )
           ) : courses.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center text-slate-400">
+            <div className="rounded-2xl border border-dashed border-card-border bg-card-bg p-12 text-center text-text-muted">
               {t('content.noCourses')}
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm" id="courses-list">
+            <div className="divide-y divide-card-border rounded-2xl border border-card-border bg-card-bg overflow-hidden shadow-sm" id="courses-list">
               {courses.map((course) => (
                 <div
                   key={course.id}
-                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 hover:bg-slate-50/50 transition-colors gap-4 ${
-                    selectedCourse?.id === course.id ? 'bg-blue-50/30 border-l-4 border-l-blue-600' : ''
+                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 hover:bg-card-header-bg transition-colors gap-4 ${
+                    selectedCourse?.id === course.id ? 'bg-status-info-bg/30 border-l-4 border-l-link-primary' : ''
                   }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-2.5">
-                      <h4 className="font-bold text-slate-800 text-sm sm:text-base font-sans">
+                      <h4 className="font-bold text-text-heading text-sm sm:text-base font-sans">
                         {course.title}
                       </h4>
-                      <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-lg">
+                      <span className="text-xs font-bold text-text-muted bg-bg-subtle px-2 py-0.5 rounded-lg">
                         {t('content.lessonsCount', { count: (course.courseLessons || []).length })}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-text-muted mt-1">
                       {t('content.createdAt', { date: new Date(course.createdAt).toLocaleDateString() })}
                     </p>
                   </div>
@@ -887,8 +887,8 @@ export const ContentManagement: React.FC = () => {
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-sans ${
                         course.status === 'PUBLISHED'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                          : 'bg-slate-50 text-slate-600 border border-slate-100'
+                          ? 'bg-status-success-bg text-status-success-text border border-card-border'
+                          : 'bg-bg-subtle text-text-muted border border-card-border'
                       }`}
                     >
                       {course.status === 'PUBLISHED' ? t('content.published') : t('content.draft')}
@@ -899,8 +899,8 @@ export const ContentManagement: React.FC = () => {
                       onClick={() => handleSelectCourse(course)}
                       className={`flex items-center space-x-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
                         selectedCourse?.id === course.id
-                          ? 'border-blue-300 bg-blue-100 text-blue-700'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                          ? 'border-card-border bg-status-info-bg text-status-info-text'
+                          : 'border-card-border bg-card-bg text-text-muted hover:bg-card-header-bg'
                       }`}
                     >
                       <span>{t('content.structureBtn')}</span>
@@ -912,8 +912,8 @@ export const ContentManagement: React.FC = () => {
                       onClick={() => handleToggleCoursePublish(course)}
                       className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-colors shadow-sm ${
                         course.status === 'PUBLISHED'
-                          ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
-                          : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                          ? 'border-card-border bg-status-error-bg text-status-error-text hover:bg-status-error-bg/80'
+                          : 'border-card-border bg-status-success-bg text-status-success-text hover:bg-status-success-bg/80'
                       }`}
                       title={course.status === 'PUBLISHED' ? t('content.unpublishTooltip') : t('content.publishTooltip')}
                     >
@@ -932,20 +932,20 @@ export const ContentManagement: React.FC = () => {
 
         {/* Right sidebar column: Structure and Ordering manager for Courses */}
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-slate-800 font-sans">
+          <h2 className="text-lg font-bold text-text-heading font-sans">
             {t('content.courseStructureTitle')}
           </h2>
 
           {selectedCourse ? (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 space-y-4 shadow-sm">
-              <div className="border-b border-slate-200 pb-3 flex justify-between items-center">
+            <div className="rounded-2xl border border-card-border bg-card-header-bg p-4 space-y-4 shadow-sm">
+              <div className="border-b border-card-border pb-3 flex justify-between items-center">
                 <div>
-                  <span className="text-[10px] font-bold text-blue-600 tracking-wider uppercase">{t('content.editingCourse')}</span>
-                  <h3 className="font-bold text-slate-800 text-base">{selectedCourse.title}</h3>
+                  <span className="text-[10px] font-bold text-link-primary tracking-wider uppercase">{t('content.editingCourse')}</span>
+                  <h3 className="font-bold text-text-heading text-base">{selectedCourse.title}</h3>
                 </div>
                 <button
                   onClick={() => setSelectedCourse(null)}
-                  className="text-slate-400 hover:text-slate-600 text-xs font-semibold"
+                  className="text-text-muted hover:text-text-heading text-xs font-semibold"
                 >
                   {t('content.deselectBtn')}
                 </button>
@@ -953,9 +953,9 @@ export const ContentManagement: React.FC = () => {
 
               {/* Orderable lists */}
               <div className="space-y-2">
-                <span className="text-xs font-bold text-slate-500">{t('content.orderedList')}</span>
+                <span className="text-xs font-bold text-text-muted">{t('content.orderedList')}</span>
                 {courseLessons.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic py-2 text-center border border-dashed border-slate-200 rounded-xl bg-white">
+                  <p className="text-xs text-text-muted italic py-2 text-center border border-dashed border-card-border rounded-xl bg-card-bg">
                     {t('content.noLessonsInCourse')}
                   </p>
                 ) : (
@@ -963,15 +963,15 @@ export const ContentManagement: React.FC = () => {
                     {courseLessons.map((les, index) => (
                       <div
                         key={les.id}
-                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-white text-xs shadow-sm"
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-card-border bg-card-bg text-xs shadow-sm"
                       >
                         <div className="flex items-center space-x-2 truncate">
-                          <span className="font-bold text-slate-400 w-4 text-center">
+                          <span className="font-bold text-text-muted w-4 text-center">
                             {index + 1}
                           </span>
-                          <span className="font-bold text-slate-700 truncate">{les.title}</span>
+                          <span className="font-bold text-text-heading truncate">{les.title}</span>
                           {les.status === 'DRAFT' && (
-                            <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
+                            <span className="text-[9px] font-bold text-text-muted bg-bg-subtle px-1 py-0.5 rounded">
                               {t('content.draftBadge')}
                             </span>
                           )}
@@ -981,7 +981,7 @@ export const ContentManagement: React.FC = () => {
                           <button
                             onClick={() => moveLessonOrder(index, 'up')}
                             disabled={index === 0}
-                            className="p-1 rounded text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+                            className="p-1 rounded text-text-muted hover:bg-bg-subtle disabled:opacity-30"
                             title={t('content.arrowUpTooltip')}
                           >
                             <ArrowUp className="h-3 w-3" />
@@ -989,14 +989,14 @@ export const ContentManagement: React.FC = () => {
                           <button
                             onClick={() => moveLessonOrder(index, 'down')}
                             disabled={index === courseLessons.length - 1}
-                            className="p-1 rounded text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+                            className="p-1 rounded text-text-muted hover:bg-bg-subtle disabled:opacity-30"
                             title={t('content.arrowDownTooltip')}
                           >
                             <ArrowDown className="h-3 w-3" />
                           </button>
                           <button
                             onClick={() => handleRemoveLessonFromCourse(les.id)}
-                            className="p-1 rounded text-red-500 hover:bg-red-50"
+                            className="p-1 rounded text-status-error-text hover:bg-status-error-bg"
                             title={t('content.removeLessonTooltip')}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -1012,7 +1012,7 @@ export const ContentManagement: React.FC = () => {
               <button
                 onClick={handleSaveCourseLessons}
                 disabled={isActionLoading}
-                className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-slate-800 text-white font-bold py-2 text-sm shadow hover:bg-slate-950 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-bg-inverse text-text-inverse font-bold py-2 text-sm shadow hover:bg-bg-inverse/90 transition-colors disabled:opacity-50"
               >
                 {isActionLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -1022,8 +1022,8 @@ export const ContentManagement: React.FC = () => {
               </button>
 
               {/* Picker list to add lessons */}
-              <div className="border-t border-slate-200 pt-3 space-y-2">
-                <span className="text-xs font-bold text-slate-500">{t('content.addLessonToCourse')}</span>
+              <div className="border-t border-card-border pt-3 space-y-2">
+                <span className="text-xs font-bold text-text-muted">{t('content.addLessonToCourse')}</span>
                 <div className="space-y-1 max-h-48 overflow-y-auto">
                   {lessons
                     .filter((l) => !courseLessons.some((cl) => cl.id === l.id))
@@ -1031,14 +1031,14 @@ export const ContentManagement: React.FC = () => {
                       <button
                         key={l.id}
                         onClick={() => handleAddLessonToCourse(l)}
-                        className="w-full flex items-center justify-between p-2 rounded-lg border border-slate-100 bg-white text-xs hover:border-blue-300 hover:bg-blue-50/20 text-left"
+                        className="w-full flex items-center justify-between p-2 rounded-lg border border-card-border bg-card-bg text-xs hover:border-card-border hover:bg-card-header-bg text-left"
                       >
-                        <span className="font-bold text-slate-700 truncate">{l.title}</span>
-                        <PlusCircle className="h-4 w-4 text-blue-600 flex-shrink-0 ml-2" />
+                        <span className="font-bold text-text-heading truncate">{l.title}</span>
+                        <PlusCircle className="h-4 w-4 text-link-primary flex-shrink-0 ml-2" />
                       </button>
                     ))}
                   {lessons.filter((l) => !courseLessons.some((cl) => cl.id === l.id)).length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-2">
+                    <p className="text-xs text-text-muted italic text-center py-2">
                       {t('content.allLessonsInCourse')}
                     </p>
                   )}
@@ -1046,7 +1046,7 @@ export const ContentManagement: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center text-slate-400 text-sm">
+            <div className="rounded-2xl border border-dashed border-card-border bg-card-bg p-6 text-center text-text-muted text-sm">
               {t('content.selectCourseFirst')}
             </div>
           )}
@@ -1055,26 +1055,26 @@ export const ContentManagement: React.FC = () => {
 
       {/* VERSION HISTORY MODAL */}
       {historyGroupId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[80vh]"
+            className="bg-card-bg w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[80vh]"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-card-border bg-card-header-bg">
               <div>
-                <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
-                  <History className="h-5 w-5 text-blue-600" />
+                <h3 className="font-bold text-text-heading text-base flex items-center gap-2">
+                  <History className="h-5 w-5 text-link-primary" />
                   <span>{t('content.versionHistoryModal.title')}</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5 font-medium truncate">
+                <p className="text-xs text-text-muted mt-0.5 font-medium truncate">
                   {historyTitle}
                 </p>
               </div>
               <button
                 onClick={() => setHistoryGroupId(null)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                className="rounded-xl p-2 text-text-muted hover:bg-bg-subtle hover:text-text-heading transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1084,40 +1084,40 @@ export const ContentManagement: React.FC = () => {
             <div className="p-6 overflow-y-auto flex-1 space-y-4">
               {isHistoryLoading ? (
                 <div className="flex flex-col items-center justify-center py-12 space-y-2">
-                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                  <p className="text-xs text-slate-400 font-bold">{t('content.messages.fetchVersionsErr')}</p>
+                  <Loader2 className="h-6 w-6 animate-spin text-link-primary" />
+                  <p className="text-xs text-text-muted font-bold">{t('content.messages.fetchVersionsErr')}</p>
                 </div>
               ) : historyVersions.length === 0 ? (
-                <p className="text-slate-400 text-center py-8 text-xs font-bold">{t('content.versionHistoryModal.noVersions')}</p>
+                <p className="text-text-muted text-center py-8 text-xs font-bold">{t('content.versionHistoryModal.noVersions')}</p>
               ) : (
-                <div className="divide-y divide-slate-100 border border-slate-150 rounded-2xl overflow-hidden shadow-xs">
+                <div className="divide-y divide-card-border border border-card-border rounded-2xl overflow-hidden shadow-xs">
                   {historyVersions.map((ver) => (
                     <div
                       key={ver.id}
-                      className="flex items-center justify-between p-4 bg-white hover:bg-slate-50/20 transition-colors"
+                      className="flex items-center justify-between p-4 bg-card-bg hover:bg-card-header-bg transition-colors"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-slate-800 text-sm">
+                          <span className="font-extrabold text-text-heading text-sm">
                             {t('content.versionLabel', { version: ver.version })}
                           </span>
                           <span
                             className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold border ${
                               ver.status === 'PUBLISHED'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                ? 'bg-status-success-bg text-status-success-text border-card-border'
                                 : ver.status === 'ARCHIVED'
-                                ? 'bg-slate-100 text-slate-500 border-slate-200'
-                                : 'bg-amber-50 text-amber-700 border-amber-100'
+                                ? 'bg-bg-subtle text-text-muted border-card-border'
+                                : 'bg-status-warning-bg text-status-warning-text border-card-border'
                             }`}
                           >
                             {ver.status}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 font-bold">
+                        <p className="text-xs text-text-muted font-bold">
                           {t('content.versionHistoryModal.uploaded', { date: new Date(ver.createdAt).toLocaleString() })}
                         </p>
                         {ver.author && (
-                          <p className="text-[10px] text-slate-500 font-semibold">
+                          <p className="text-[10px] text-text-muted font-semibold">
                             {t('content.authorLabel', { author: ver.author })}
                           </p>
                         )}
@@ -1126,7 +1126,7 @@ export const ContentManagement: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDownloadZip(ver.id)}
-                          className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                          className="flex items-center gap-1.5 rounded-lg border border-card-border px-3 py-1.5 text-xs font-bold text-text-body hover:bg-card-header-bg transition-colors"
                         >
                           <Download className="h-3.5 w-3.5" />
                           <span>{t('content.downloadZipBtn')}</span>
@@ -1138,8 +1138,8 @@ export const ContentManagement: React.FC = () => {
               )}
 
               {/* MVP Notice */}
-              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-500" />
+              <div className="bg-status-info-bg border border-card-border rounded-xl p-3 text-xs text-status-info-text flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-link-primary" />
                 <span>
                   {t('content.versionHistoryModal.mvpNote')}
                 </span>
@@ -1147,10 +1147,10 @@ export const ContentManagement: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+            <div className="px-6 py-4 border-t border-card-border bg-card-header-bg flex justify-end">
               <button
                 onClick={() => setHistoryGroupId(null)}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                className="rounded-xl border border-card-border bg-card-bg px-4 py-2 text-xs font-bold text-text-body shadow-sm transition-colors hover:bg-card-header-bg"
               >
                 {t('content.versionHistoryModal.closeBtn')}
               </button>
@@ -1161,19 +1161,19 @@ export const ContentManagement: React.FC = () => {
 
       {/* STUB CREATION MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100"
+            className="w-full max-w-md rounded-2xl bg-card-bg p-6 shadow-xl border border-card-border"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-lg font-bold text-slate-900 font-sans">
+            <div className="flex items-center justify-between border-b border-card-border pb-3 mb-4">
+              <h3 className="text-lg font-bold text-text-heading font-sans">
                 {activeTab === 'lessons' ? t('content.createModal.newLessonTitle') : t('content.createModal.newCourseTitle')}
               </h3>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-text-muted hover:text-text-heading"
               >
                 {t('content.createModal.cancelBtn')}
               </button>
@@ -1184,7 +1184,7 @@ export const ContentManagement: React.FC = () => {
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
                   {t('content.createModal.titleLabel')}
                 </label>
                 <input
@@ -1195,7 +1195,7 @@ export const ContentManagement: React.FC = () => {
                   placeholder={
                     activeTab === 'lessons' ? t('content.createModal.lessonPlaceholder') : t('content.createModal.coursePlaceholder')
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-bold text-slate-800 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-card-border bg-card-bg px-3.5 py-2.5 text-sm font-bold text-text-heading placeholder-text-muted shadow-sm focus:border-link-primary focus:outline-none"
                 />
               </div>
 
@@ -1203,14 +1203,14 @@ export const ContentManagement: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="flex-1 rounded-xl border border-card-border px-4 py-2.5 text-sm font-bold text-text-muted hover:bg-card-header-bg transition-colors"
                 >
                   {t('content.createModal.cancelBtn')}
                 </button>
                 <button
                   type="submit"
                   disabled={isActionLoading || !titleInput.trim()}
-                  className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-1.5"
+                  className="flex-1 rounded-xl bg-link-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-link-primary-hover transition-colors disabled:opacity-50 flex items-center justify-center space-x-1.5"
                 >
                   {isActionLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1226,7 +1226,7 @@ export const ContentManagement: React.FC = () => {
 
       {/* CONTENT IMPORT WIZARD MODAL */}
       {showImportWizard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
           <div className="w-full max-w-3xl my-8">
             <ContentImportWizard
               onClose={() => setShowImportWizard(false)}

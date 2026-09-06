@@ -2,7 +2,7 @@ import { prisma } from '../db/prisma';
 import { emailService } from '../email/email.service';
 import { permissionResolverService } from '../../features/rbac/services/permissionResolver.service';
 import crypto from 'crypto';
-import { NotificationType } from '@prisma/client';
+import { NotificationType, ThemeStatus } from '@prisma/client';
 import { entraSyncService } from '../../features/identity/services/entraSync.service';
 
 async function shouldSendNotification(
@@ -114,6 +114,7 @@ export class ScheduledTasksService {
     await this.purgeExpiredAssignments();
     await this.sendBasicReminders();
     await this.runEntraSync();
+    await this.activateScheduledThemes();
     console.log('[Scheduler] All periodic tasks finished.');
   }
 
@@ -327,6 +328,23 @@ export class ScheduledTasksService {
       });
       console.log(`[Scheduler] Purged ${deleteResult.count} expired soft-deleted learning groups.`);
     }
+
+    // 3. Purge Themes
+    const themesToPurge = await prisma.theme.findMany({
+      where: {
+        deletedAt: { not: null },
+        permanentDeleteAt: { lte: now }
+      },
+      select: { id: true }
+    });
+
+    if (themesToPurge.length > 0) {
+      const themeIds = themesToPurge.map((t) => t.id);
+      const deleteResult = await prisma.theme.deleteMany({
+        where: { id: { in: themeIds } }
+      });
+      console.log(`[Scheduler] Purged ${deleteResult.count} expired soft-deleted themes.`);
+    }
   }
 
   /**
@@ -486,6 +504,143 @@ export class ScheduledTasksService {
       }
     } catch (err: any) {
       console.error('[Scheduler] Error in runEntraSync:', err);
+    }
+  }
+
+  /**
+   * Finds all READY themes with scheduledActivationAt <= now and deletedAt null,
+   * grouped by company. For each, attempts the atomic activation transaction
+   * (target -> ACTIVE, previous Active -> READY, clear scheduledActivationAt).
+   *
+   * On failure: sets scheduledActivationFailedAt = now,
+   * scheduledActivationFailedReason = error message; leaves the theme READY with
+   * schedule cleared (does not retry indefinitely); leaves current Active theme untouched.
+   */
+  async activateScheduledThemes() {
+    const now = new Date();
+
+    const dueThemes = await prisma.theme.findMany({
+      where: {
+        status: ThemeStatus.READY,
+        scheduledActivationAt: { lte: now },
+        deletedAt: null,
+      },
+      orderBy: {
+        scheduledActivationAt: 'asc',
+      },
+    });
+
+    if (dueThemes.length === 0) {
+      return;
+    }
+
+    console.log(`[Scheduler] Found ${dueThemes.length} scheduled theme activation(s) due.`);
+
+    // Group by companyId
+    const companyThemeMap = new Map<string, typeof dueThemes>();
+    for (const theme of dueThemes) {
+      const list = companyThemeMap.get(theme.companyId) || [];
+      list.push(theme);
+      companyThemeMap.set(theme.companyId, list);
+    }
+
+    for (const [companyId, themes] of companyThemeMap.entries()) {
+      for (const theme of themes) {
+        try {
+          console.log(
+            `[Scheduler] Activating scheduled theme "${theme.name}" (ID: ${theme.id}) for company ${companyId}...`
+          );
+
+          // Validate that referenced fonts exist before activating
+          const fontIds = [
+            theme.generalFontId,
+            theme.navFontId,
+            theme.headingsFontId,
+            theme.buttonsFontId,
+            theme.formsFontId,
+            theme.cardsFontId,
+            theme.linksFontId,
+            theme.statusFontId,
+          ].filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
+
+          if (fontIds.length > 0) {
+            const existingFonts = await prisma.font.findMany({
+              where: {
+                id: { in: fontIds },
+                companyId,
+              },
+              select: { id: true },
+            });
+            const foundSet = new Set(existingFonts.map((f) => f.id));
+            const danglingIds = fontIds.filter((id) => !foundSet.has(id));
+            if (danglingIds.length > 0) {
+              throw new Error(
+                `Font reference(s) ${danglingIds.join(', ')} do not exist in company font library.`
+              );
+            }
+          }
+
+          // Atomic activation transaction (same as immediate activate in Task 6):
+          await prisma.$transaction(async (tx) => {
+            // 1. Demote any currently ACTIVE theme(s) for this company to READY
+            await tx.theme.updateMany({
+              where: {
+                companyId,
+                status: ThemeStatus.ACTIVE,
+                id: { not: theme.id },
+                deletedAt: null,
+              },
+              data: {
+                status: ThemeStatus.READY,
+              },
+            });
+
+            // 2. Promote target theme to ACTIVE and clear scheduled timestamps
+            await tx.theme.update({
+              where: { id: theme.id },
+              data: {
+                status: ThemeStatus.ACTIVE,
+                scheduledActivationAt: null,
+                scheduledActivationFailedAt: null,
+                scheduledActivationFailedReason: null,
+              },
+            });
+          });
+
+          console.log(
+            `[Scheduler] Successfully activated scheduled theme "${theme.name}" (ID: ${theme.id}) for company ${companyId}.`
+          );
+        } catch (err: any) {
+          const errorMessage = err?.message || 'Unknown error during scheduled activation.';
+          console.error(
+            `[Scheduler] Failed to activate scheduled theme "${theme.name}" (ID: ${theme.id}) for company ${companyId}:`,
+            err
+          );
+
+          // On failure: set scheduledActivationFailedAt = now, scheduledActivationFailedReason = error message;
+          // leave the theme READY with schedule cleared (do not retry indefinitely);
+          // leave the current Active theme untouched.
+          try {
+            await prisma.theme.update({
+              where: { id: theme.id },
+              data: {
+                status: ThemeStatus.READY,
+                scheduledActivationAt: null,
+                scheduledActivationFailedAt: new Date(),
+                scheduledActivationFailedReason: errorMessage,
+              },
+            });
+            console.log(
+              `[Scheduler] Marked scheduled activation as failed for theme "${theme.name}" (ID: ${theme.id}). Current active theme remains untouched.`
+            );
+          } catch (updateErr: any) {
+            console.error(
+              `[Scheduler] Failed to record scheduled activation failure for theme "${theme.name}" (ID: ${theme.id}):`,
+              updateErr
+            );
+          }
+        }
+      }
     }
   }
 }

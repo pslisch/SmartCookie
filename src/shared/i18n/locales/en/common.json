@@ -162,7 +162,11 @@
     "fieldBuilder": "Field Builder",
     "fieldBuilderDesc": "Create and customize system-wide profile field definitions, categories, and edit permissions.",
     "fieldBuilderSubtitle": "Manage profile field categories, edit field attributes, and configure role-based access control.",
-    "manageFieldsBtn": "Configure Fields"
+    "manageFieldsBtn": "Configure Fields",
+    "themeManagement": "Theme Management",
+    "themeManagementDesc": "Manage themes, customize color palettes and typography, and preview branding styles.",
+    "themeManagementSubtitle": "Create, customize, and configure application themes and visual styles.",
+    "manageThemesBtn": "Manage Themes"
   },
   "management": {
     "titleHub": "Management Hub",

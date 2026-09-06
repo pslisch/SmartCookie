@@ -75,40 +75,40 @@ export const ExpiringGroupsTab: React.FC = () => {
 
   return (
     <div className="space-y-6" id="expiring-groups-tab-container">
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+      <div className="bg-card-bg rounded-2xl border border-card-border p-6 shadow-sm">
+        <div className="flex items-center justify-between border-b border-card-border pb-4 mb-6">
           <div>
-            <h3 className="text-base font-bold text-slate-900">{t('organization.expiring.title')}</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <h3 className="text-base font-bold text-text-heading">{t('organization.expiring.title')}</h3>
+            <p className="text-xs text-text-muted mt-1">
               {t('organization.expiring.description')}
             </p>
           </div>
           <button
             onClick={fetchExpiringGroups}
-            className="rounded-lg border border-slate-200 p-2 hover:bg-slate-50 transition-colors"
+            className="rounded-lg border border-card-border p-2 hover:bg-card-header-bg transition-colors"
             title={t('organization.expiring.refreshList')}
           >
-            <RefreshCw className={`h-4 w-4 text-slate-600 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 text-text-body ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-xl bg-rose-50 border border-rose-100 p-4 text-xs text-rose-800 flex items-start space-x-2.5">
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
+          <div className="mb-4 rounded-xl bg-status-error-bg border border-status-error-text/20 p-4 text-xs text-status-error-text flex items-start space-x-2.5">
+            <AlertCircle className="h-4 w-4 shrink-0 text-status-error-text mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
         {loading && expiringGroups.length === 0 ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 text-indigo-600 animate-spin mr-2" />
-            <span className="text-sm font-semibold text-slate-500">{t('organization.expiring.retrieving')}</span>
+            <Loader2 className="h-6 w-6 text-link-primary animate-spin mr-2" />
+            <span className="text-sm font-semibold text-text-muted">{t('organization.expiring.retrieving')}</span>
           </div>
         ) : expiringGroups.length === 0 ? (
-          <div className="text-center py-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
-            <Check className="h-10 w-10 text-emerald-500 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-700">{t('organization.expiring.noGroupsTitle')}</p>
-            <p className="text-xs text-slate-400 mt-1">{t('organization.expiring.noGroupsDesc')}</p>
+          <div className="text-center py-12 rounded-2xl border border-dashed border-card-border bg-card-header-bg">
+            <Check className="h-10 w-10 text-status-success-text mx-auto mb-3" />
+            <p className="text-sm font-semibold text-text-body">{t('organization.expiring.noGroupsTitle')}</p>
+            <p className="text-xs text-text-muted mt-1">{t('organization.expiring.noGroupsDesc')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -122,21 +122,21 @@ export const ExpiringGroupsTab: React.FC = () => {
               return (
                 <div
                   key={group.id}
-                  className="flex flex-col md:flex-row md:items-center justify-between border border-amber-200 bg-amber-50/10 rounded-2xl p-4 shadow-sm"
+                  className="flex flex-col md:flex-row md:items-center justify-between border border-status-warning-text/20 bg-status-warning-bg/10 rounded-2xl p-4 shadow-sm"
                   id={`expiring-row-${group.id}`}
                 >
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
-                      <h4 className="font-bold text-slate-800 text-sm">{group.name}</h4>
-                      <span className="inline-flex items-center space-x-1 rounded-md bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-bold px-1.5 py-0.5">
+                      <h4 className="font-bold text-text-heading text-sm">{group.name}</h4>
+                      <span className="inline-flex items-center space-x-1 rounded-md bg-status-error-bg border border-status-error-text/20 text-status-error-text text-[10px] font-bold px-1.5 py-0.5">
                         <Clock className="h-3 w-3 shrink-0" />
                         <span>{t('organization.expiring.hoursRemaining', { count: hoursLeft })}</span>
                       </span>
                     </div>
 
-                    <div className="flex items-center space-x-4 text-xs text-slate-500">
+                    <div className="flex items-center space-x-4 text-xs text-text-muted">
                       <span className="flex items-center space-x-1">
-                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                        <Calendar className="h-3.5 w-3.5 text-text-muted" />
                         <span>{t('organization.expiring.expirationDate', { date: expiresDate.toLocaleString() })}</span>
                       </span>
                     </div>
@@ -145,25 +145,25 @@ export const ExpiringGroupsTab: React.FC = () => {
                   {/* Extension Controls */}
                   <div className="mt-4 md:mt-0 flex items-center space-x-3 shrink-0">
                     {isExtending ? (
-                      <div className="flex items-center space-x-2 bg-white border border-slate-200 p-1.5 rounded-xl shadow-inner">
+                      <div className="flex items-center space-x-2 bg-card-bg border border-input-border p-1.5 rounded-xl shadow-inner">
                         <input
                           type="date"
                           value={newExtensionDate}
                           onChange={(e) => setNewExtensionDate(e.target.value)}
-                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none font-bold text-slate-700"
+                          className="rounded-lg border border-input-border bg-card-bg px-2 py-1 text-xs focus:border-input-border-focus focus:outline-none font-bold text-text-body"
                           min={new Date().toISOString().split('T')[0]}
                         />
                         <button
                           onClick={() => handleExtendGroup(group.id)}
                           disabled={!newExtensionDate}
-                          className="rounded-lg bg-emerald-50 p-1 text-emerald-600 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                          className="rounded-lg bg-status-success-bg p-1 text-status-success-text hover:bg-status-success-bg/80 transition-colors disabled:opacity-50"
                           title={t('organization.expiring.saveExtension')}
                         >
                           <Check className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setExtendingGroupId(null)}
-                          className="rounded-lg bg-rose-50 p-1 text-rose-600 hover:bg-rose-100 transition-colors"
+                          className="rounded-lg bg-status-error-bg p-1 text-status-error-text hover:bg-status-error-bg/80 transition-colors"
                           title={t('organization.expiring.cancel')}
                         >
                           <X className="h-4 w-4" />
@@ -178,7 +178,7 @@ export const ExpiringGroupsTab: React.FC = () => {
                           defaultDate.setDate(defaultDate.getDate() + 7);
                           setNewExtensionDate(defaultDate.toISOString().split('T')[0]);
                         }}
-                        className="rounded-xl border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-300 px-4 py-2 text-xs font-bold text-indigo-700 shadow-sm transition-all"
+                        className="rounded-xl border border-link-primary/20 bg-status-info-bg/50 hover:bg-status-info-bg hover:border-link-primary/40 px-4 py-2 text-xs font-bold text-link-primary shadow-sm transition-all"
                       >
                         {t('organization.expiring.extendBtn')}
                       </button>

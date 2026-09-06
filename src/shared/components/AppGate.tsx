@@ -374,23 +374,23 @@ export function AppGate({ children }: AppGateProps) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 text-slate-800" id="appgate-loading-view">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-bg-app text-text-heading" id="appgate-loading-view">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="flex flex-col items-center space-y-4"
         >
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white font-extrabold text-3xl shadow-md">
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-btn-primary-bg text-text-inverse font-extrabold text-3xl shadow-md">
             S
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-              className="absolute -inset-1.5 rounded-2xl border-2 border-blue-600 border-t-transparent opacity-60"
+              className="absolute -inset-1.5 rounded-2xl border-2 border-btn-primary-bg border-t-transparent opacity-60"
             />
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">SmartCookie</h1>
-            <p className="text-sm text-slate-500 font-medium">{t('appGate.verifying')}</p>
+            <h1 className="text-xl font-bold tracking-tight text-text-heading">SmartCookie</h1>
+            <p className="text-sm text-text-muted font-medium">{t('appGate.verifying')}</p>
           </div>
         </motion.div>
       </div>
@@ -399,20 +399,20 @@ export function AppGate({ children }: AppGateProps) {
 
   if (setupError) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 text-slate-800" id="appgate-error-view">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-bg-app text-text-heading" id="appgate-error-view">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center space-y-6 max-w-md p-6 bg-white rounded-2xl shadow-sm border border-slate-200"
+          className="flex flex-col items-center space-y-6 max-w-md p-6 bg-card-bg rounded-2xl shadow-sm border border-card-border"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600" id="appgate-error-icon">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-status-error-bg text-status-error-text" id="appgate-error-icon">
             <AlertTriangle className="h-6 w-6" />
           </div>
           <div className="text-center space-y-2">
-            <h1 className="text-lg font-bold tracking-tight text-slate-900" id="appgate-error-title">
+            <h1 className="text-lg font-bold tracking-tight text-text-heading" id="appgate-error-title">
               {t('appGate.statusVerificationTitle', 'Verification Failure')}
             </h1>
-            <p className="text-sm text-slate-600 font-medium text-center" id="appgate-error-description">
+            <p className="text-sm text-text-body font-medium text-center" id="appgate-error-description">
               {t('appGate.statusVerificationError', 'Unable to verify application status - please check server logs and try again')}
             </p>
           </div>
@@ -420,7 +420,7 @@ export function AppGate({ children }: AppGateProps) {
             type="button"
             id="appgate-retry-button"
             onClick={handleRefresh}
-            className="w-full inline-flex justify-center items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition"
+            className="w-full inline-flex justify-center items-center rounded-lg bg-btn-primary-bg px-4 py-2 text-sm font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-btn-primary-bg transition"
           >
             {t('appGate.retry', 'Retry')}
           </button>

@@ -176,21 +176,21 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
   const hasAnyErrors = validationResults.some((r) => !r.valid);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4" id="bulk-import-modal">
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xl max-w-3xl w-full flex flex-col max-h-[85vh]" id="bulk-import-card">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-bg-overlay backdrop-blur-sm flex items-center justify-center p-4" id="bulk-import-modal">
+      <div className="bg-card-bg rounded-2xl border border-card-border shadow-xl max-w-3xl w-full flex flex-col max-h-[85vh]" id="bulk-import-card">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-card-border shrink-0">
           <div>
-            <h3 className="text-lg font-extrabold text-slate-900" id="bulk-import-title">
+            <h3 className="text-lg font-extrabold text-text-heading" id="bulk-import-title">
               {t('organization.bulkImport.title')}
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-text-muted mt-0.5">
               {t('organization.bulkImport.subtitle')}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
+            className="rounded-lg p-1.5 text-text-muted hover:text-text-body hover:bg-card-header-bg transition-colors"
             aria-label="Close"
             id="bulk-import-close-btn"
           >
@@ -201,8 +201,8 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
         {/* Content Area */}
         <div className="p-6 overflow-y-auto flex-1 min-h-0" id="bulk-import-content">
           {error && (
-            <div className="mb-6 flex items-start space-x-3 rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-700" id="bulk-import-error">
-              <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="mb-6 flex items-start space-x-3 rounded-xl bg-status-error-bg border border-status-error-text/20 p-4 text-sm text-status-error-text" id="bulk-import-error">
+              <AlertCircle className="h-5 w-5 text-status-error-text shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <span className="font-semibold">Error</span>
                 <p className="text-xs leading-relaxed">{error}</p>
@@ -213,23 +213,23 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
           {step === 'upload' && (
             <div className="space-y-6" id="bulk-import-step-upload">
               {/* Template Download Block */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/40 to-indigo-50/20">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-card-border bg-card-header-bg">
                 <div className="flex items-start space-x-3.5">
-                  <div className="rounded-xl bg-blue-100 p-2 text-blue-600 mt-0.5">
+                  <div className="rounded-xl bg-status-info-bg p-2 text-link-primary mt-0.5">
                     <FileText className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900">
+                    <h4 className="text-sm font-bold text-text-heading">
                       {t('organization.bulkImport.downloadTemplate')}
                     </h4>
-                    <p className="text-xs text-slate-500 max-w-md mt-0.5">
+                    <p className="text-xs text-text-muted max-w-md mt-0.5">
                       Get the pre-formatted CSV template. It automatically includes columns for system requirements and any custom organization profile fields.
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={handleDownloadTemplate}
-                  className="inline-flex items-center justify-center space-x-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/10 shrink-0"
+                  className="inline-flex items-center justify-center space-x-2 rounded-xl bg-btn-primary-bg px-4 py-2 text-xs font-semibold text-btn-primary-text hover:bg-btn-primary-hover transition-colors shadow-sm shrink-0"
                   id="btn-download-template"
                 >
                   <Download className="h-4 w-4" />
@@ -246,8 +246,8 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
                 onClick={() => fileInputRef.current?.click()}
                 className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-10 cursor-pointer transition-all ${
                   isDragActive
-                    ? 'border-blue-500 bg-blue-50/50'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                    ? 'border-input-border-focus bg-status-info-bg/50'
+                    : 'border-card-border hover:border-input-border hover:bg-card-header-bg'
                 }`}
                 id="bulk-import-dropzone"
               >
@@ -261,21 +261,21 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
 
                 {loading ? (
                   <div className="flex flex-col items-center space-y-3">
-                    <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
-                    <p className="text-sm font-bold text-slate-700">
+                    <Loader2 className="h-10 w-10 text-link-primary animate-spin" />
+                    <p className="text-sm font-bold text-text-body">
                       {t('organization.bulkImport.validating')}
                     </p>
                   </div>
                 ) : (
                   <div className="text-center space-y-4">
-                    <div className="mx-auto rounded-full bg-slate-50 p-4 w-16 h-16 flex items-center justify-center text-slate-400">
+                    <div className="mx-auto rounded-full bg-card-header-bg p-4 w-16 h-16 flex items-center justify-center text-text-muted">
                       <Upload className="h-8 w-8" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-bold text-slate-800">
+                      <p className="text-sm font-bold text-text-heading">
                         {t('organization.bulkImport.dropzoneText')}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-text-muted">
                         {t('organization.bulkImport.dropzoneSubtext')}
                       </p>
                     </div>
@@ -289,25 +289,25 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
             <div className="space-y-6" id="bulk-import-step-validate">
               {/* Warnings & Block messages */}
               {hasAnyErrors ? (
-                <div className="p-4 rounded-xl border border-red-200 bg-red-50 flex items-start space-x-3" id="validate-error-banner">
-                  <XCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                <div className="p-4 rounded-xl border border-status-error-text/20 bg-status-error-bg flex items-start space-x-3" id="validate-error-banner">
+                  <XCircle className="h-5 w-5 text-status-error-text shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-red-950">
+                    <h4 className="text-sm font-bold text-status-error-text">
                       {t('organization.bulkImport.warningAllOrNothing')}
                     </h4>
-                    <p className="text-xs text-red-700 leading-relaxed">
+                    <p className="text-xs text-status-error-text leading-relaxed">
                       {t('organization.bulkImport.fixAllErrors')}
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-xl border border-green-200 bg-green-50 flex items-start space-x-3" id="validate-success-banner">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <div className="p-4 rounded-xl border border-status-success-text/20 bg-status-success-bg flex items-start space-x-3" id="validate-success-banner">
+                  <CheckCircle2 className="h-5 w-5 text-status-success-text shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-green-950">
+                    <h4 className="text-sm font-bold text-status-success-text">
                       {t('organization.bulkImport.allValid')}
                     </h4>
-                    <p className="text-xs text-green-700 leading-relaxed">
+                    <p className="text-xs text-status-success-text leading-relaxed">
                       {t('organization.bulkImport.allValidDesc')}
                     </p>
                   </div>
@@ -316,12 +316,12 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
 
               {/* Rows List */}
               <div className="space-y-3">
-                <h4 className="text-sm font-extrabold text-slate-400 uppercase tracking-wider">
+                <h4 className="text-sm font-extrabold text-text-muted uppercase tracking-wider">
                   {t('organization.bulkImport.validatingTitle')}
                 </h4>
-                <div className="border border-slate-100 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto" id="validation-table">
-                  <table className="min-w-full divide-y divide-slate-100 text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider">
+                <div className="border border-card-border rounded-xl overflow-hidden max-h-[300px] overflow-y-auto" id="validation-table">
+                  <table className="min-w-full divide-y divide-card-border text-left text-xs">
+                    <thead className="bg-card-header-bg text-text-muted font-semibold uppercase tracking-wider">
                       <tr>
                         <th className="px-4 py-3 text-center">{t('organization.bulkImport.rowCol')}</th>
                         <th className="px-4 py-3">{t('organization.bulkImport.emailCol')}</th>
@@ -329,26 +329,26 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
                         <th className="px-4 py-3">{t('organization.bulkImport.errorsCol')}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-card-border bg-card-bg">
                       {validationResults.map((res, idx) => (
                         <tr
                           key={idx}
-                          className={`hover:bg-slate-50/50 ${!res.valid ? 'bg-red-50/10' : ''}`}
+                          className={`hover:bg-card-header-bg ${!res.valid ? 'bg-status-error-bg/10' : ''}`}
                         >
-                          <td className="px-4 py-3.5 text-center font-mono font-medium text-slate-500">{res.row}</td>
-                          <td className="px-4 py-3.5 font-semibold text-slate-900">{res.email || '-'}</td>
+                          <td className="px-4 py-3.5 text-center font-mono font-medium text-text-muted">{res.row}</td>
+                          <td className="px-4 py-3.5 font-semibold text-text-heading">{res.email || '-'}</td>
                           <td className="px-4 py-3.5 text-center">
                             {res.valid ? (
-                              <span className="inline-flex items-center rounded-full bg-green-50 border border-green-100 px-2 py-0.5 text-2xs font-semibold text-green-700">
+                              <span className="inline-flex items-center rounded-full bg-status-success-bg border border-status-success-text/20 px-2 py-0.5 text-2xs font-semibold text-status-success-text">
                                 {t('organization.bulkImport.validBadge')}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center rounded-full bg-red-50 border border-red-100 px-2 py-0.5 text-2xs font-semibold text-red-700">
+                              <span className="inline-flex items-center rounded-full bg-status-error-bg border border-status-error-text/20 px-2 py-0.5 text-2xs font-semibold text-status-error-text">
                                 {t('organization.bulkImport.invalidBadge')}
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5 text-red-600 font-medium">
+                          <td className="px-4 py-3.5 text-status-error-text font-medium">
                             {res.errors && res.errors.length > 0 ? (
                               <ul className="list-disc pl-4 space-y-0.5">
                                 {res.errors.map((err, errIdx) => (
@@ -356,7 +356,7 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
                                 ))}
                               </ul>
                             ) : (
-                              <span className="text-slate-400 font-normal">-</span>
+                              <span className="text-text-muted font-normal">-</span>
                             )}
                           </td>
                         </tr>
@@ -370,14 +370,14 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
 
           {step === 'success' && (
             <div className="flex flex-col items-center justify-center text-center py-8 space-y-4" id="bulk-import-step-success">
-              <div className="rounded-full bg-green-50 p-4 border border-green-100 text-green-600 animate-bounce">
+              <div className="rounded-full bg-status-success-bg p-4 border border-status-success-text/20 text-status-success-text animate-bounce">
                 <CheckCircle2 className="h-12 w-12" />
               </div>
               <div className="space-y-1 max-w-md">
-                <h4 className="text-lg font-extrabold text-slate-900">
+                <h4 className="text-lg font-extrabold text-text-heading">
                   {t('organization.bulkImport.successTitle')}
                 </h4>
-                <p className="text-sm text-slate-500 leading-relaxed">
+                <p className="text-sm text-text-muted leading-relaxed">
                   {t('organization.bulkImport.successMessage', { count: importedCount })}
                 </p>
               </div>
@@ -386,11 +386,11 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 border-t border-slate-100 shrink-0 flex items-center justify-end space-x-3 bg-slate-50/50 rounded-b-2xl">
+        <div className="p-6 border-t border-card-border shrink-0 flex items-center justify-end space-x-3 bg-card-header-bg rounded-b-2xl">
           {step === 'upload' && (
             <button
               onClick={onClose}
-              className="px-5 py-2.5 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+              className="px-5 py-2.5 text-sm font-semibold text-text-body hover:text-text-heading hover:bg-card-header-bg rounded-xl transition-colors"
               id="bulk-import-cancel"
             >
               {t('organization.usersTab.cancelBtn')}
@@ -401,7 +401,7 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
             <>
               <button
                 onClick={handleReset}
-                className="px-5 py-2.5 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+                className="px-5 py-2.5 text-sm font-semibold text-text-body hover:text-text-heading hover:bg-card-header-bg rounded-xl transition-colors"
                 id="bulk-import-back"
               >
                 {t('organization.bulkImport.backToUploadBtn')}
@@ -410,10 +410,10 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
               <button
                 disabled={loading || hasAnyErrors}
                 onClick={handleConfirm}
-                className={`flex items-center justify-center space-x-2 px-6 py-2.5 text-sm font-semibold text-white rounded-xl shadow-sm transition-colors ${
+                className={`flex items-center justify-center space-x-2 px-6 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition-colors ${
                   hasAnyErrors
-                    ? 'bg-slate-300 cursor-not-allowed shadow-none'
-                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/10'
+                    ? 'bg-bg-subtle text-text-muted cursor-not-allowed shadow-none'
+                    : 'bg-btn-primary-bg hover:bg-btn-primary-hover text-btn-primary-text'
                 }`}
                 id="bulk-import-confirm"
               >
@@ -438,7 +438,7 @@ export const BulkImportWizard: React.FC<BulkImportWizardProps> = ({ onClose, onS
                 onSuccess();
                 onClose();
               }}
-              className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm shadow-blue-600/10"
+              className="px-6 py-2.5 text-sm font-semibold text-btn-primary-text bg-btn-primary-bg hover:bg-btn-primary-hover rounded-xl transition-colors shadow-sm"
               id="bulk-import-done"
             >
               {t('organization.bulkImport.doneBtn')}

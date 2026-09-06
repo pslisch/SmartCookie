@@ -419,31 +419,31 @@ export const FieldBuilder: React.FC = () => {
     <div className="space-y-8" id="field-builder-root">
       {/* Messages */}
       {error && (
-        <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4 text-sm text-red-600 flex items-start gap-3 shadow-sm animate-fade-in" id="field-builder-error">
-          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-red-500" />
+        <div className="rounded-2xl border border-card-border bg-status-error-bg/50 p-4 text-sm text-status-error-text flex items-start gap-3 shadow-sm animate-fade-in" id="field-builder-error">
+          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-status-error-text" />
           <div>
             <p className="font-bold">{t('fieldBuilder.errorSaving')}</p>
-            <p className="mt-1 text-red-500/90 font-medium">{error}</p>
+            <p className="mt-1 text-status-error-text/90 font-medium">{error}</p>
           </div>
         </div>
       )}
 
       {success && (
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4 text-sm text-emerald-700 flex items-start gap-3 shadow-sm animate-fade-in" id="field-builder-success">
-          <Shield className="h-5 w-5 shrink-0 mt-0.5 text-emerald-600" />
+        <div className="rounded-2xl border border-card-border bg-status-success-bg/50 p-4 text-sm text-status-success-text flex items-start gap-3 shadow-sm animate-fade-in" id="field-builder-success">
+          <Shield className="h-5 w-5 shrink-0 mt-0.5 text-status-success-text" />
           <p className="font-semibold">{success}</p>
         </div>
       )}
 
       {/* Top action bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/50 border border-slate-100 rounded-3xl p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-card-header-bg/50 border border-card-border rounded-3xl p-6">
         <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700 shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-status-info-bg text-status-info-text shadow-sm">
             <Layers className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 font-sans">{t('fieldBuilder.categoriesSection')}</h2>
-            <p className="text-xs text-slate-500 font-sans mt-0.5">Define your organizational profile layout categories.</p>
+            <h2 className="text-lg font-bold text-text-heading font-sans">{t('fieldBuilder.categoriesSection')}</h2>
+            <p className="text-xs text-text-muted font-sans mt-0.5">Define your organizational profile layout categories.</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -453,15 +453,15 @@ export const FieldBuilder: React.FC = () => {
               setCategoryFormName('');
               setShowCategoryModal(true);
             }}
-            className="inline-flex items-center space-x-2 rounded-2xl bg-white border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50"
+            className="inline-flex items-center space-x-2 rounded-2xl bg-card-bg border border-card-border px-4 py-2.5 text-xs font-bold text-text-body shadow-sm transition-all hover:bg-card-header-bg"
             id="btn-add-category"
           >
-            <FolderPlus className="h-4 w-4 text-slate-500" />
+            <FolderPlus className="h-4 w-4 text-text-muted" />
             <span>{t('fieldBuilder.createCategory')}</span>
           </button>
           <button
             onClick={() => handleOpenFieldModal(null)}
-            className="inline-flex items-center space-x-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700"
+            className="inline-flex items-center space-x-2 rounded-2xl bg-btn-primary-bg px-4 py-2.5 text-xs font-bold text-btn-primary-text shadow-sm transition-all hover:bg-btn-primary-hover"
             id="btn-add-custom-field"
           >
             <Plus className="h-4 w-4" />
@@ -472,7 +472,7 @@ export const FieldBuilder: React.FC = () => {
 
       {loading ? (
         <div className="flex justify-center items-center py-24" id="field-builder-loading">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-card-border border-t-link-primary" />
         </div>
       ) : (
         <div className="space-y-6" id="categories-accordion-list">
@@ -482,23 +482,23 @@ export const FieldBuilder: React.FC = () => {
             return (
               <div
                 key={cat.id}
-                className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm"
+                className="rounded-3xl border border-card-border bg-card-bg overflow-hidden shadow-sm"
                 id={`category-card-${cat.id}`}
               >
                 {/* Category Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 p-5">
+                <div className="flex items-center justify-between border-b border-card-border bg-card-header-bg/50 p-5">
                   <div className="flex items-center space-x-3">
                     <button
                       onClick={() => toggleCategoryCollapse(cat.id)}
-                      className="text-slate-400 hover:text-slate-600"
+                      className="text-text-muted hover:text-text-body"
                       title={isCollapsed ? "Expand" : "Collapse"}
                     >
                       {isCollapsed ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
                     </button>
                     <div>
-                      <h3 className="font-bold text-slate-900 font-sans flex items-center gap-2">
+                      <h3 className="font-bold text-text-heading font-sans flex items-center gap-2">
                         <span>{cat.name}</span>
-                        <span className="text-xs font-normal text-slate-400 bg-slate-100 border px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-normal text-text-muted bg-bg-subtle border border-card-border px-2 py-0.5 rounded-full">
                           {cat.fields.length} {cat.fields.length === 1 ? 'field' : 'fields'}
                         </span>
                       </h3>
@@ -510,7 +510,7 @@ export const FieldBuilder: React.FC = () => {
                     <button
                       onClick={() => handleMoveCategory(cat, 'up')}
                       disabled={catIndex === 0}
-                      className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none"
+                      className="p-2 rounded-xl text-text-muted hover:text-text-body hover:bg-bg-subtle disabled:opacity-30 disabled:pointer-events-none"
                       title={t('fieldBuilder.moveUp')}
                     >
                       <ArrowUp className="h-4 w-4" />
@@ -518,21 +518,21 @@ export const FieldBuilder: React.FC = () => {
                     <button
                       onClick={() => handleMoveCategory(cat, 'down')}
                       disabled={catIndex === categories.length - 1}
-                      className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none"
+                      className="p-2 rounded-xl text-text-muted hover:text-text-body hover:bg-bg-subtle disabled:opacity-30 disabled:pointer-events-none"
                       title={t('fieldBuilder.moveDown')}
                     >
                       <ArrowDown className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleStartRenameCategory(cat)}
-                      className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                      className="p-2 rounded-xl text-text-muted hover:text-link-primary hover:bg-status-info-bg"
                       title={t('fieldBuilder.renameCategory')}
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteCategory(cat.id)}
-                      className="p-2 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50"
+                      className="p-2 rounded-xl text-text-muted hover:text-status-error-text hover:bg-status-error-bg"
                       title={t('fieldBuilder.deleteCategory')}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -544,21 +544,21 @@ export const FieldBuilder: React.FC = () => {
                 {!isCollapsed && (
                   <div className="p-4 sm:p-6 overflow-x-auto">
                     {cat.fields.length === 0 ? (
-                      <div className="text-center py-8 text-slate-400 text-sm font-sans flex flex-col items-center justify-center">
-                        <HelpCircle className="h-8 w-8 text-slate-300 mb-2" />
+                      <div className="text-center py-8 text-text-muted text-sm font-sans flex flex-col items-center justify-center">
+                        <HelpCircle className="h-8 w-8 text-text-muted mb-2" />
                         <p>{t('fieldBuilder.noCategories')}</p>
                         <button
                           onClick={() => handleOpenFieldModal(null, cat.id)}
-                          className="mt-3 inline-flex items-center space-x-1.5 text-xs text-blue-600 font-bold hover:underline"
+                          className="mt-3 inline-flex items-center space-x-1.5 text-xs text-link-primary font-bold hover:underline"
                         >
                           <Plus className="h-3 w-3" />
                           <span>{t('fieldBuilder.addFieldBtn')}</span>
                         </button>
                       </div>
                     ) : (
-                      <table className="min-w-full divide-y divide-slate-100 text-sm">
+                      <table className="min-w-full divide-y divide-card-border text-sm">
                         <thead>
-                          <tr className="text-slate-400 text-left text-xs font-bold tracking-wider">
+                          <tr className="text-text-muted text-left text-xs font-bold tracking-wider">
                             <th className="pb-3 pr-4">{t('fieldBuilder.fieldName')}</th>
                             <th className="pb-3 px-4">{t('fieldBuilder.fieldType')}</th>
                             <th className="pb-3 px-4">Attributes</th>
@@ -566,43 +566,43 @@ export const FieldBuilder: React.FC = () => {
                             <th className="pb-3 pl-4 text-right">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-card-border">
                           {cat.fields.map((field, index) => (
-                            <tr key={field.id} className="hover:bg-slate-50/50 transition-colors">
+                            <tr key={field.id} className="hover:bg-card-header-bg/50 transition-colors">
                               {/* Field Name & Desc */}
                               <td className="py-4 pr-4 max-w-sm">
-                                <p className="font-bold text-slate-800 font-sans flex items-center gap-1.5">
+                                <p className="font-bold text-text-heading font-sans flex items-center gap-1.5">
                                   <span>{field.name}</span>
                                   {field.isSystemField && (
-                                    <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-100">
+                                    <span className="text-[10px] bg-status-info-bg text-status-info-text font-bold px-2 py-0.5 rounded-full border border-card-border">
                                       {t('fieldBuilder.systemFieldBadge')}
                                     </span>
                                   )}
                                 </p>
                                 {field.description && (
-                                  <p className="text-xs text-slate-500 mt-1 line-clamp-1 font-sans">{field.description}</p>
+                                  <p className="text-xs text-text-muted mt-1 line-clamp-1 font-sans">{field.description}</p>
                                 )}
                               </td>
                               {/* Field Type */}
-                              <td className="py-4 px-4 font-mono text-xs text-slate-500">
+                              <td className="py-4 px-4 font-mono text-xs text-text-muted">
                                 {field.fieldType}
                               </td>
                               {/* Attributes */}
                               <td className="py-4 px-4">
                                 <div className="flex flex-wrap gap-1.5">
                                   {field.required && (
-                                    <span className="text-[10px] bg-red-50 text-red-700 font-bold px-2 py-0.5 rounded-full border border-red-100">
+                                    <span className="text-[10px] bg-status-error-bg text-status-error-text font-bold px-2 py-0.5 rounded-full border border-card-border">
                                       {t('fieldBuilder.requiredBadge')}
                                     </span>
                                   )}
                                   {!field.visible && (
-                                    <span className="text-[10px] bg-slate-150 text-slate-600 font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                    <span className="text-[10px] bg-bg-subtle text-text-muted font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                                       <EyeOff className="h-3 w-3" />
                                       <span>{t('fieldBuilder.hiddenBadge')}</span>
                                     </span>
                                   )}
                                   {!field.editableByUser && (
-                                    <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-100 inline-flex items-center gap-1">
+                                    <span className="text-[10px] bg-status-warning-bg text-status-warning-text font-bold px-2 py-0.5 rounded-full border border-card-border inline-flex items-center gap-1">
                                       <Lock className="h-3 w-3" />
                                       <span>{t('fieldBuilder.readOnlyBadge')}</span>
                                     </span>
@@ -615,7 +615,7 @@ export const FieldBuilder: React.FC = () => {
                                   <button
                                     onClick={() => handleMoveField(field.id, 'up')}
                                     disabled={index === 0}
-                                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-150 disabled:opacity-20 disabled:pointer-events-none"
+                                    className="p-1 rounded-lg text-text-muted hover:text-text-body hover:bg-bg-subtle disabled:opacity-20 disabled:pointer-events-none"
                                     title={t('fieldBuilder.moveUp')}
                                   >
                                     <ArrowUp className="h-3.5 w-3.5" />
@@ -623,7 +623,7 @@ export const FieldBuilder: React.FC = () => {
                                   <button
                                     onClick={() => handleMoveField(field.id, 'down')}
                                     disabled={index === cat.fields.length - 1}
-                                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-150 disabled:opacity-20 disabled:pointer-events-none"
+                                    className="p-1 rounded-lg text-text-muted hover:text-text-body hover:bg-bg-subtle disabled:opacity-20 disabled:pointer-events-none"
                                     title={t('fieldBuilder.moveDown')}
                                   >
                                     <ArrowDown className="h-3.5 w-3.5" />
@@ -635,14 +635,14 @@ export const FieldBuilder: React.FC = () => {
                                 <div className="flex items-center justify-end space-x-2">
                                   <button
                                     onClick={() => handleOpenRolesModal(field)}
-                                    className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                                    className="p-2 rounded-xl text-text-muted hover:text-link-primary hover:bg-status-info-bg"
                                     title="Authorized Role Editors"
                                   >
                                     <Shield className="h-4 w-4" />
                                   </button>
                                   <button
                                     onClick={() => handleOpenFieldModal(field, cat.id)}
-                                    className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                                    className="p-2 rounded-xl text-text-muted hover:text-link-primary hover:bg-status-info-bg"
                                     title={t('fieldBuilder.editField')}
                                   >
                                     <Edit2 className="h-4 w-4" />
@@ -650,7 +650,7 @@ export const FieldBuilder: React.FC = () => {
                                   {field.isSystemField ? (
                                     <button
                                       onClick={() => alert(t('fieldBuilder.deleteDisabledSystem'))}
-                                      className="p-2 rounded-xl text-slate-300 cursor-not-allowed"
+                                      className="p-2 rounded-xl text-text-muted/40 cursor-not-allowed"
                                       title={t('fieldBuilder.deleteDisabledSystem')}
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -658,7 +658,7 @@ export const FieldBuilder: React.FC = () => {
                                   ) : (
                                     <button
                                       onClick={() => handleDeleteField(field)}
-                                      className="p-2 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                      className="p-2 rounded-xl text-text-muted hover:text-status-error-text hover:bg-status-error-bg"
                                       title={t('fieldBuilder.deleteField')}
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -678,12 +678,12 @@ export const FieldBuilder: React.FC = () => {
           })}
 
           {/* Unassigned Fields Category */}
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50/20 overflow-hidden shadow-sm" id="unassigned-fields-card">
-            <div className="flex items-center justify-between border-b border-dashed border-slate-200 bg-slate-100/30 p-5">
+          <div className="rounded-3xl border border-dashed border-card-border bg-card-header-bg/20 overflow-hidden shadow-sm" id="unassigned-fields-card">
+            <div className="flex items-center justify-between border-b border-dashed border-card-border bg-bg-subtle/30 p-5">
               <div className="flex items-center space-x-3">
-                <h3 className="font-bold text-slate-800 font-sans flex items-center gap-2">
+                <h3 className="font-bold text-text-heading font-sans flex items-center gap-2">
                   <span>{t('fieldBuilder.unassignedFields')}</span>
-                  <span className="text-xs font-normal text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-normal text-text-muted bg-bg-subtle border border-card-border px-2 py-0.5 rounded-full">
                     {unassignedFields.length} {unassignedFields.length === 1 ? 'field' : 'fields'}
                   </span>
                 </h3>
@@ -692,11 +692,11 @@ export const FieldBuilder: React.FC = () => {
 
             <div className="p-4 sm:p-6 overflow-x-auto">
               {unassignedFields.length === 0 ? (
-                <p className="text-center py-6 text-slate-400 text-xs font-sans">No unassigned fields exist. All fields are categorized.</p>
+                <p className="text-center py-6 text-text-muted text-xs font-sans">No unassigned fields exist. All fields are categorized.</p>
               ) : (
-                <table className="min-w-full divide-y divide-slate-100 text-sm">
+                <table className="min-w-full divide-y divide-card-border text-sm">
                   <thead>
-                    <tr className="text-slate-400 text-left text-xs font-bold tracking-wider">
+                    <tr className="text-text-muted text-left text-xs font-bold tracking-wider">
                       <th className="pb-3 pr-4">{t('fieldBuilder.fieldName')}</th>
                       <th className="pb-3 px-4">{t('fieldBuilder.fieldType')}</th>
                       <th className="pb-3 px-4">Attributes</th>
@@ -704,43 +704,43 @@ export const FieldBuilder: React.FC = () => {
                       <th className="pb-3 pl-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-card-border">
                     {unassignedFields.map((field, index) => (
-                      <tr key={field.id} className="hover:bg-slate-100/40 transition-colors">
+                      <tr key={field.id} className="hover:bg-card-header-bg/40 transition-colors">
                         {/* Field Name */}
                         <td className="py-4 pr-4 max-w-sm">
-                          <p className="font-bold text-slate-800 font-sans flex items-center gap-1.5">
+                          <p className="font-bold text-text-heading font-sans flex items-center gap-1.5">
                             <span>{field.name}</span>
                             {field.isSystemField && (
-                              <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-100">
+                              <span className="text-[10px] bg-status-info-bg text-status-info-text font-bold px-2 py-0.5 rounded-full border border-card-border">
                                 {t('fieldBuilder.systemFieldBadge')}
                               </span>
                             )}
                           </p>
                           {field.description && (
-                            <p className="text-xs text-slate-500 mt-1 line-clamp-1 font-sans">{field.description}</p>
+                            <p className="text-xs text-text-muted mt-1 line-clamp-1 font-sans">{field.description}</p>
                           )}
                         </td>
                         {/* Type */}
-                        <td className="py-4 px-4 font-mono text-xs text-slate-500">
+                        <td className="py-4 px-4 font-mono text-xs text-text-muted">
                           {field.fieldType}
                         </td>
                         {/* Attributes */}
                         <td className="py-4 px-4">
                           <div className="flex flex-wrap gap-1.5">
                             {field.required && (
-                              <span className="text-[10px] bg-red-50 text-red-700 font-bold px-2 py-0.5 rounded-full border border-red-100">
+                              <span className="text-[10px] bg-status-error-bg text-status-error-text font-bold px-2 py-0.5 rounded-full border border-card-border">
                                 {t('fieldBuilder.requiredBadge')}
                               </span>
                             )}
                             {!field.visible && (
-                              <span className="text-[10px] bg-slate-150 text-slate-600 font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                              <span className="text-[10px] bg-bg-subtle text-text-muted font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                                 <EyeOff className="h-3 w-3" />
                                 <span>{t('fieldBuilder.hiddenBadge')}</span>
                               </span>
                             )}
                             {!field.editableByUser && (
-                              <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-100 inline-flex items-center gap-1">
+                              <span className="text-[10px] bg-status-warning-bg text-status-warning-text font-bold px-2 py-0.5 rounded-full border border-card-border inline-flex items-center gap-1">
                                 <Lock className="h-3 w-3" />
                                 <span>{t('fieldBuilder.readOnlyBadge')}</span>
                               </span>
@@ -753,14 +753,14 @@ export const FieldBuilder: React.FC = () => {
                             <button
                               onClick={() => handleMoveField(field.id, 'up')}
                               disabled={index === 0}
-                              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-150 disabled:opacity-20 disabled:pointer-events-none"
+                              className="p-1 rounded-lg text-text-muted hover:text-text-body hover:bg-bg-subtle disabled:opacity-20 disabled:pointer-events-none"
                             >
                               <ArrowUp className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => handleMoveField(field.id, 'down')}
                               disabled={index === unassignedFields.length - 1}
-                              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-150 disabled:opacity-20 disabled:pointer-events-none"
+                              className="p-1 rounded-lg text-text-muted hover:text-text-body hover:bg-bg-subtle disabled:opacity-20 disabled:pointer-events-none"
                             >
                               <ArrowDown className="h-3.5 w-3.5" />
                             </button>
@@ -771,14 +771,14 @@ export const FieldBuilder: React.FC = () => {
                           <div className="flex items-center justify-end space-x-2">
                             <button
                               onClick={() => handleOpenRolesModal(field)}
-                              className="p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50"
+                              className="p-2 rounded-xl text-text-muted hover:text-link-primary hover:bg-status-info-bg"
                               title="Authorized Role Editors"
                             >
                               <Shield className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleOpenFieldModal(field, '')}
-                              className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                              className="p-2 rounded-xl text-text-muted hover:text-link-primary hover:bg-status-info-bg"
                               title={t('fieldBuilder.editField')}
                             >
                               <Edit2 className="h-4 w-4" />
@@ -786,7 +786,7 @@ export const FieldBuilder: React.FC = () => {
                             {field.isSystemField ? (
                               <button
                                 onClick={() => alert(t('fieldBuilder.deleteDisabledSystem'))}
-                                className="p-2 rounded-xl text-slate-300 cursor-not-allowed"
+                                className="p-2 rounded-xl text-text-muted/40 cursor-not-allowed"
                                 title={t('fieldBuilder.deleteDisabledSystem')}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -794,7 +794,7 @@ export const FieldBuilder: React.FC = () => {
                             ) : (
                               <button
                                 onClick={() => handleDeleteField(field)}
-                                className="p-2 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                className="p-2 rounded-xl text-text-muted hover:text-status-error-text hover:bg-status-error-bg"
                                 title={t('fieldBuilder.deleteField')}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -814,18 +814,18 @@ export const FieldBuilder: React.FC = () => {
 
       {/* Category Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" id="category-modal">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-app/40 backdrop-blur-sm" id="category-modal">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md rounded-3xl border border-slate-100 bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-3xl border border-card-border bg-card-bg p-6 shadow-xl"
           >
-            <h3 className="text-lg font-bold text-slate-900 font-sans mb-4">
+            <h3 className="text-lg font-bold text-text-heading font-sans mb-4">
               {editingCategory ? t('fieldBuilder.renameCategory') : t('fieldBuilder.createCategory')}
             </h3>
             <form onSubmit={handleSaveCategory} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                   {t('fieldBuilder.newCategoryName')}
                 </label>
                 <input
@@ -833,7 +833,7 @@ export const FieldBuilder: React.FC = () => {
                   value={categoryFormName}
                   onChange={(e) => setCategoryFormName(e.target.value)}
                   placeholder={t('fieldBuilder.categoryPlaceholder')}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm"
+                  className="w-full rounded-2xl border border-card-border bg-card-bg text-text-heading px-4 py-3 text-sm focus:border-link-primary focus:outline-none shadow-sm"
                   required
                 />
               </div>
@@ -841,13 +841,13 @@ export const FieldBuilder: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCategoryModal(false)}
-                  className="rounded-2xl border border-slate-200 px-5 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                  className="rounded-2xl border border-card-border px-5 py-2.5 text-xs font-bold text-text-body transition-colors hover:bg-card-header-bg"
                 >
                   {t('rbac.cancelBtn')}
                 </button>
                 <button
                   type="submit"
-                  className="rounded-2xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+                  className="rounded-2xl bg-btn-primary-bg px-5 py-2.5 text-xs font-bold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover"
                 >
                   {t('rbac.saveBtn')}
                 </button>
@@ -859,19 +859,19 @@ export const FieldBuilder: React.FC = () => {
 
       {/* Field Create/Edit Modal */}
       {showFieldModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto" id="field-modal">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-app/40 backdrop-blur-sm overflow-y-auto" id="field-modal">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg rounded-3xl border border-slate-100 bg-white p-6 shadow-xl my-8"
+            className="w-full max-w-lg rounded-3xl border border-card-border bg-card-bg p-6 shadow-xl my-8"
           >
-            <h3 className="text-lg font-bold text-slate-900 font-sans mb-4">
+            <h3 className="text-lg font-bold text-text-heading font-sans mb-4">
               {editingField ? t('fieldBuilder.editField') : t('fieldBuilder.createField')}
             </h3>
             <form onSubmit={handleSaveField} className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                   {t('fieldBuilder.fieldName')}
                 </label>
                 <input
@@ -879,14 +879,14 @@ export const FieldBuilder: React.FC = () => {
                   value={fieldName}
                   onChange={(e) => setFieldName(e.target.value)}
                   placeholder={t('fieldBuilder.fieldNamePlaceholder')}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm"
+                  className="w-full rounded-2xl border border-card-border bg-card-bg text-text-heading px-4 py-3 text-sm focus:border-link-primary focus:outline-none shadow-sm"
                   required
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                   {t('fieldBuilder.fieldDesc')}
                 </label>
                 <textarea
@@ -894,19 +894,19 @@ export const FieldBuilder: React.FC = () => {
                   onChange={(e) => setFieldDescription(e.target.value)}
                   placeholder={t('fieldBuilder.fieldDescPlaceholder')}
                   rows={2}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm"
+                  className="w-full rounded-2xl border border-card-border bg-card-bg text-text-heading px-4 py-3 text-sm focus:border-link-primary focus:outline-none shadow-sm"
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                   {t('fieldBuilder.fieldCategory')}
                 </label>
                 <select
                   value={fieldCategoryId}
                   onChange={(e) => setFieldCategoryId(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm bg-white"
+                  className="w-full rounded-2xl border border-card-border bg-card-bg text-text-heading px-4 py-3 text-sm focus:border-link-primary focus:outline-none shadow-sm"
                 >
                   <option value="">-- {t('fieldBuilder.unassignedFields')} --</option>
                   {categories.map(c => (
@@ -917,13 +917,13 @@ export const FieldBuilder: React.FC = () => {
 
               {/* Type - Read Only for System Fields */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                   {t('fieldBuilder.fieldType')}
                 </label>
                 {editingField?.isSystemField ? (
-                  <div className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500 font-semibold font-mono flex items-center justify-between">
+                  <div className="w-full rounded-2xl border border-card-border bg-card-header-bg px-4 py-3 text-sm text-text-muted font-semibold font-mono flex items-center justify-between">
                     <span>{fieldType}</span>
-                    <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">
+                    <span className="text-[10px] bg-status-info-bg text-status-info-text font-bold px-2 py-0.5 rounded">
                       {t('fieldBuilder.fieldTypeReadOnly')}
                     </span>
                   </div>
@@ -931,7 +931,7 @@ export const FieldBuilder: React.FC = () => {
                   <select
                     value={fieldType}
                     onChange={(e) => setFieldType(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm bg-white font-mono"
+                    className="w-full rounded-2xl border border-card-border bg-card-bg text-text-heading px-4 py-3 text-sm focus:border-link-primary focus:outline-none shadow-sm font-mono"
                   >
                     <option value="TEXT">TEXT (Single Line)</option>
                     <option value="MULTILINE">MULTILINE (Rich Text/Paragraph)</option>
@@ -949,7 +949,7 @@ export const FieldBuilder: React.FC = () => {
               {/* Options for Dropdown/Radio */}
               {(fieldType === 'DROPDOWN' || fieldType === 'RADIO') && (
                 <div className="animate-fade-in">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                     {t('fieldBuilder.options')}
                   </label>
                   <input
@@ -957,7 +957,7 @@ export const FieldBuilder: React.FC = () => {
                     value={fieldOptions}
                     onChange={(e) => setFieldOptions(e.target.value)}
                     placeholder={t('fieldBuilder.optionsPlaceholder')}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm"
+                    className="w-full rounded-2xl border border-card-border bg-card-bg text-text-heading px-4 py-3 text-sm focus:border-link-primary focus:outline-none shadow-sm"
                     required
                   />
                 </div>
@@ -966,7 +966,7 @@ export const FieldBuilder: React.FC = () => {
               {/* Validation Rules */}
               {!editingField?.isSystemField && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                     {t('fieldBuilder.validationRules')}
                   </label>
                   <input
@@ -974,7 +974,7 @@ export const FieldBuilder: React.FC = () => {
                     value={fieldValidationRules}
                     onChange={(e) => setFieldValidationRules(e.target.value)}
                     placeholder={t('fieldBuilder.validationRulesPlaceholder')}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm font-mono"
+                    className="w-full rounded-2xl border border-card-border bg-card-bg text-text-heading px-4 py-3 text-sm focus:border-link-primary focus:outline-none shadow-sm font-mono"
                   />
                 </div>
               )}
@@ -982,7 +982,7 @@ export const FieldBuilder: React.FC = () => {
               {/* Default Value */}
               {!editingField?.isSystemField && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                     {t('fieldBuilder.defaultValue')}
                   </label>
                   <input
@@ -990,45 +990,45 @@ export const FieldBuilder: React.FC = () => {
                     value={fieldDefaultValue}
                     onChange={(e) => setFieldDefaultValue(e.target.value)}
                     placeholder={t('fieldBuilder.defaultValuePlaceholder')}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none shadow-sm"
+                    className="w-full rounded-2xl border border-card-border bg-card-bg text-text-heading px-4 py-3 text-sm focus:border-link-primary focus:outline-none shadow-sm"
                   />
                 </div>
               )}
 
               {/* Attributes Checklist */}
-              <div className="bg-slate-50/50 rounded-2xl border border-slate-100 p-4 space-y-3">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Field Behaviors</p>
+              <div className="bg-card-header-bg/50 rounded-2xl border border-card-border p-4 space-y-3">
+                <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Field Behaviors</p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   {/* Required */}
-                  <label className="flex items-center space-x-2.5 cursor-pointer text-sm font-medium text-slate-700">
+                  <label className="flex items-center space-x-2.5 cursor-pointer text-sm font-medium text-text-body">
                     <input
                       type="checkbox"
                       checked={fieldRequired}
                       onChange={(e) => setFieldRequired(e.target.checked)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                      className="rounded border-card-border text-link-primary focus:ring-link-primary h-4 w-4"
                     />
                     <span>{t('fieldBuilder.required')}</span>
                   </label>
 
                   {/* Visible */}
-                  <label className="flex items-center space-x-2.5 cursor-pointer text-sm font-medium text-slate-700">
+                  <label className="flex items-center space-x-2.5 cursor-pointer text-sm font-medium text-text-body">
                     <input
                       type="checkbox"
                       checked={fieldVisible}
                       onChange={(e) => setFieldVisible(e.target.checked)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                      className="rounded border-card-border text-link-primary focus:ring-link-primary h-4 w-4"
                     />
                     <span>{t('fieldBuilder.visible')}</span>
                   </label>
 
                   {/* Editable by end-user - Read Only for System Fields */}
                   {editingField?.isSystemField ? (
-                    <div className="flex items-center space-x-2.5 text-sm font-medium text-slate-400 cursor-not-allowed">
+                    <div className="flex items-center space-x-2.5 text-sm font-medium text-text-muted cursor-not-allowed">
                       <input
                         type="checkbox"
                         checked={fieldEditableByUser}
                         disabled
-                        className="rounded border-slate-200 text-slate-300 h-4 w-4"
+                        className="rounded border-card-border text-text-muted h-4 w-4"
                       />
                       <span className="flex items-center gap-1">
                         <span>{t('fieldBuilder.editableByUser')}</span>
@@ -1036,12 +1036,12 @@ export const FieldBuilder: React.FC = () => {
                       </span>
                     </div>
                   ) : (
-                    <label className="flex items-center space-x-2.5 cursor-pointer text-sm font-medium text-slate-700">
+                    <label className="flex items-center space-x-2.5 cursor-pointer text-sm font-medium text-text-body">
                       <input
                         type="checkbox"
                         checked={fieldEditableByUser}
                         onChange={(e) => setFieldEditableByUser(e.target.checked)}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                        className="rounded border-card-border text-link-primary focus:ring-link-primary h-4 w-4"
                       />
                       <span>{t('fieldBuilder.editableByUser')}</span>
                     </label>
@@ -1050,17 +1050,17 @@ export const FieldBuilder: React.FC = () => {
               </div>
 
               {/* Form Buttons */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end space-x-3 pt-4 border-t border-card-border">
                 <button
                   type="button"
                   onClick={() => setShowFieldModal(false)}
-                  className="rounded-2xl border border-slate-200 px-5 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                  className="rounded-2xl border border-card-border px-5 py-2.5 text-xs font-bold text-text-body transition-colors hover:bg-card-header-bg"
                 >
                   {t('rbac.cancelBtn')}
                 </button>
                 <button
                   type="submit"
-                  className="rounded-2xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+                  className="rounded-2xl bg-btn-primary-bg px-5 py-2.5 text-xs font-bold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover"
                 >
                   {t('rbac.saveBtn')}
                 </button>
@@ -1072,65 +1072,65 @@ export const FieldBuilder: React.FC = () => {
 
       {/* Authorized Role Editors Modal */}
       {showRolesModal && roleFieldTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" id="roles-modal">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-app/40 backdrop-blur-sm" id="roles-modal">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md rounded-3xl border border-slate-100 bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-3xl border border-card-border bg-card-bg p-6 shadow-xl"
           >
             <div className="flex items-center space-x-3 mb-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-status-info-bg text-status-info-text shadow-sm">
                 <Shield className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900 font-sans">{t('fieldBuilder.rolesHeader')}</h3>
-                <p className="text-xs text-slate-500 font-sans mt-0.5">{roleFieldTarget.name}</p>
+                <h3 className="text-lg font-bold text-text-heading font-sans">{t('fieldBuilder.rolesHeader')}</h3>
+                <p className="text-xs text-text-muted font-sans mt-0.5">{roleFieldTarget.name}</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-500 font-medium mb-4">
+            <p className="text-xs text-text-muted font-medium mb-4">
               {t('fieldBuilder.rolesDesc')}
             </p>
 
-            <div className="max-h-60 overflow-y-auto border border-slate-100 rounded-2xl divide-y divide-slate-100 bg-slate-50/30 mb-6 p-2 space-y-1">
+            <div className="max-h-60 overflow-y-auto border border-card-border rounded-2xl divide-y divide-card-border bg-card-header-bg/30 mb-6 p-2 space-y-1">
               {roles.length === 0 ? (
-                <p className="text-slate-400 text-xs p-4 text-center">No organizational roles found.</p>
+                <p className="text-text-muted text-xs p-4 text-center">No organizational roles found.</p>
               ) : (
                 roles.map((role) => {
                   const isChecked = selectedRoleIds.includes(role.id);
                   return (
                     <label
                       key={role.id}
-                      className="flex items-center space-x-3 p-2.5 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors"
+                      className="flex items-center space-x-3 p-2.5 rounded-xl cursor-pointer hover:bg-card-header-bg transition-colors"
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => handleToggleRoleSelection(role.id)}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                        className="rounded border-card-border text-link-primary focus:ring-link-primary h-4 w-4"
                       />
-                      <span className="text-sm font-bold text-slate-700">{role.name}</span>
+                      <span className="text-sm font-bold text-text-body">{role.name}</span>
                     </label>
                   );
                 })
               )}
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+            <div className="flex justify-end space-x-3 pt-4 border-t border-card-border">
               <button
                 type="button"
                 onClick={() => {
                   setShowRolesModal(false);
                   setRoleFieldTarget(null);
                 }}
-                className="rounded-2xl border border-slate-200 px-5 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                className="rounded-2xl border border-card-border px-5 py-2.5 text-xs font-bold text-text-body transition-colors hover:bg-card-header-bg"
               >
                 {t('rbac.cancelBtn')}
               </button>
               <button
                 type="button"
                 onClick={handleSaveRolePermissions}
-                className="rounded-2xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+                className="rounded-2xl bg-btn-primary-bg px-5 py-2.5 text-xs font-bold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover"
               >
                 {t('rbac.saveBtn')}
               </button>

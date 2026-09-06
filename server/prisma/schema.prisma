@@ -111,6 +111,8 @@ model Company {
   mailConfigStepCompletedAt       DateTime? @map("mail_config_step_completed_at")
   identityProviderStepCompletedAt DateTime? @map("identity_provider_step_completed_at")
   emailConfig                     EmailConfig?
+  themes                          Theme[]
+  fonts                           Font[]
 
   @@map("companies")
 }
@@ -770,5 +772,95 @@ model SyncLog {
 
   @@map("sync_logs")
 }
+
+enum ThemeStatus {
+  DRAFT
+  READY
+  ACTIVE
+}
+
+enum ThemeLockType {
+  EDIT
+  TEST
+}
+
+model Theme {
+  id                              String         @id @default(uuid())
+  companyId                       String         @map("company_id")
+  company                         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name                            String
+  status                          ThemeStatus    @default(DRAFT)
+  isSmartCookieDefault            Boolean        @default(false) @map("is_smart_cookie_default")
+  colorValues                     Json           @map("color_values")
+  darkColorValues                 Json?          @map("dark_color_values")
+  generalFontId                   String?        @map("general_font_id")
+  generalFont                     Font?          @relation("ThemeGeneralFont", fields: [generalFontId], references: [id], onDelete: SetNull)
+  navFontId                       String?        @map("nav_font_id")
+  navFont                         Font?          @relation("ThemeNavFont", fields: [navFontId], references: [id], onDelete: SetNull)
+  headingsFontId                  String?        @map("headings_font_id")
+  headingsFont                    Font?          @relation("ThemeHeadingsFont", fields: [headingsFontId], references: [id], onDelete: SetNull)
+  buttonsFontId                   String?        @map("buttons_font_id")
+  buttonsFont                     Font?          @relation("ThemeButtonsFont", fields: [buttonsFontId], references: [id], onDelete: SetNull)
+  formsFontId                     String?        @map("forms_font_id")
+  formsFont                       Font?          @relation("ThemeFormsFont", fields: [formsFontId], references: [id], onDelete: SetNull)
+  cardsFontId                     String?        @map("cards_font_id")
+  cardsFont                       Font?          @relation("ThemeCardsFont", fields: [cardsFontId], references: [id], onDelete: SetNull)
+  linksFontId                     String?        @map("links_font_id")
+  linksFont                       Font?          @relation("ThemeLinksFont", fields: [linksFontId], references: [id], onDelete: SetNull)
+  statusFontId                    String?        @map("status_font_id")
+  statusFont                      Font?          @relation("ThemeStatusFont", fields: [statusFontId], references: [id], onDelete: SetNull)
+  baseFontSize                    Int            @default(16) @map("base_font_size")
+  scheduledActivationAt           DateTime?      @map("scheduled_activation_at")
+  scheduledActivationFailedAt     DateTime?      @map("scheduled_activation_failed_at")
+  scheduledActivationFailedReason String?        @db.Text @map("scheduled_activation_failed_reason")
+  deletedAt                       DateTime?      @map("deleted_at")
+  permanentDeleteAt               DateTime?      @map("permanent_delete_at")
+  deletionBatchId                 String?        @map("deletion_batch_id")
+  createdById                     String         @map("created_by_id")
+  createdAt                       DateTime       @default(now()) @map("created_at")
+  updatedAt                       DateTime       @updatedAt @map("updated_at")
+
+  themeLock                       ThemeLock?
+
+  @@map("themes")
+}
+
+model Font {
+  id                  String    @id @default(uuid())
+  companyId           String    @map("company_id")
+  company             Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  familyName          String    @map("family_name")
+  format              String?
+  weight              String?
+  style               String?
+  storagePath         String?   @map("storage_path")
+  isSystem            Boolean   @default(false) @map("is_system")
+  createdById         String    @map("created_by_id")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  generalFontThemes   Theme[]   @relation("ThemeGeneralFont")
+  navFontThemes       Theme[]   @relation("ThemeNavFont")
+  headingsFontThemes  Theme[]   @relation("ThemeHeadingsFont")
+  buttonsFontThemes   Theme[]   @relation("ThemeButtonsFont")
+  formsFontThemes     Theme[]   @relation("ThemeFormsFont")
+  cardsFontThemes     Theme[]   @relation("ThemeCardsFont")
+  linksFontThemes     Theme[]   @relation("ThemeLinksFont")
+  statusFontThemes    Theme[]   @relation("ThemeStatusFont")
+
+  @@unique([companyId, familyName])
+  @@map("fonts")
+}
+
+model ThemeLock {
+  id        String        @id @default(uuid())
+  themeId   String        @unique @map("theme_id")
+  theme     Theme         @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  userId    String        @map("user_id")
+  lockType  ThemeLockType @map("lock_type")
+  lockedAt  DateTime      @default(now()) @map("locked_at")
+
+  @@map("theme_locks")
+}
+
 
 

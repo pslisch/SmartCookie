@@ -74,18 +74,18 @@ export function AccountInformationTab() {
   if (loading) {
     return (
       <div className="flex h-64 flex-col items-center justify-center space-y-3" id="account-info-loading">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="text-sm font-medium text-slate-500">Loading account information...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-link-primary" />
+        <span className="text-sm font-medium text-text-muted">Loading account information...</span>
       </div>
     );
   }
 
   if (error || !info) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center space-y-3 max-w-lg mx-auto" id="account-info-error">
-        <AlertCircle className="mx-auto h-8 w-8 text-red-600" />
-        <h4 className="text-sm font-bold text-red-900">Failed to Load Account Info</h4>
-        <p className="text-xs text-red-700">{error || 'Could not fetch details.'}</p>
+      <div className="rounded-2xl border border-card-border bg-status-error-bg p-6 text-center space-y-3 max-w-lg mx-auto" id="account-info-error">
+        <AlertCircle className="mx-auto h-8 w-8 text-status-error-text" />
+        <h4 className="text-sm font-bold text-status-error-text">Failed to Load Account Info</h4>
+        <p className="text-xs text-status-error-text">{error || 'Could not fetch details.'}</p>
       </div>
     );
   }
@@ -93,38 +93,38 @@ export function AccountInformationTab() {
   const items = [
     {
       id: 'userId',
-      icon: <User className="h-4 w-4 text-slate-500" />,
+      icon: <User className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.userId'),
       value: info.userId,
-      className: 'font-mono text-xs select-all bg-slate-50 px-2 py-0.5 rounded border border-slate-200/50',
+      className: 'font-mono text-xs select-all bg-card-header-bg px-2 py-0.5 rounded border border-card-border/50',
     },
     {
       id: 'createdAt',
-      icon: <Calendar className="h-4 w-4 text-slate-500" />,
+      icon: <Calendar className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.createdDate'),
       value: formatDate(info.createdAt),
     },
     {
       id: 'lastLogin',
-      icon: <Clock className="h-4 w-4 text-slate-500" />,
+      icon: <Clock className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.lastLogin'),
       value: formatDate(info.lastLoginAt),
     },
     {
       id: 'loginProvider',
-      icon: <Key className="h-4 w-4 text-slate-500" />,
+      icon: <Key className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.loginProvider'),
       value: info.loginProvider,
     },
     {
       id: 'accountStatus',
-      icon: <Activity className="h-4 w-4 text-slate-500" />,
+      icon: <Activity className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.status'),
       value: (
         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
           info.status === 'ACTIVE' 
-            ? 'bg-green-50 text-green-700 border border-green-200/60' 
-            : 'bg-amber-50 text-amber-700 border border-amber-200/60'
+            ? 'bg-status-success-bg text-status-success-text border border-card-border/60' 
+            : 'bg-status-warning-bg text-status-warning-text border border-card-border/60'
         }`}>
           {info.status}
         </span>
@@ -132,25 +132,25 @@ export function AccountInformationTab() {
     },
     {
       id: 'role',
-      icon: <Shield className="h-4 w-4 text-slate-500" />,
+      icon: <Shield className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.assignedRoles'),
       value: info.role,
     },
     {
       id: 'organization',
-      icon: <Building className="h-4 w-4 text-slate-500" />,
+      icon: <Building className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.assignedOrganization'),
       value: info.organization,
     },
     {
       id: 'groups',
-      icon: <Users className="h-4 w-4 text-slate-500" />,
+      icon: <Users className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.assignedGroups'),
       value: info.groups.length > 0 ? info.groups.join(', ') : t('profile.account.none'),
     },
     {
       id: 'subgroups',
-      icon: <GitBranch className="h-4 w-4 text-slate-500" />,
+      icon: <GitBranch className="h-4 w-4 text-text-muted" />,
       label: t('profile.account.assignedSubgroups'),
       value: info.subgroups.length > 0 ? info.subgroups.join(', ') : t('profile.account.none'),
     },
@@ -158,13 +158,13 @@ export function AccountInformationTab() {
 
   return (
     <div className="space-y-6" id="account-info-container">
-      <div className="flex items-center space-x-3 pb-4 border-b border-slate-100">
-        <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
+      <div className="flex items-center space-x-3 pb-4 border-b border-card-border">
+        <div className="rounded-xl bg-status-info-bg p-2.5 text-status-info-text">
           <User className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-base font-bold text-slate-900">{t('profile.account.title')}</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="text-base font-bold text-text-heading">{t('profile.account.title')}</h3>
+          <p className="text-xs text-text-muted">
             {t('profile.account.description')}
           </p>
         </div>
@@ -174,14 +174,14 @@ export function AccountInformationTab() {
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex flex-col space-y-1.5 pb-4 border-b border-slate-50 md:border-b-0"
+            className="flex flex-col space-y-1.5 pb-4 border-b border-card-border md:border-b-0"
             id={`account-field-wrapper-${item.id}`}
           >
-            <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500">
+            <div className="flex items-center space-x-2 text-xs font-semibold text-text-muted">
               {item.icon}
               <span>{item.label}</span>
             </div>
-            <div className="text-sm font-semibold text-slate-900 pl-6">
+            <div className="text-sm font-semibold text-text-heading pl-6">
               {typeof item.value === 'string' ? (
                 <span className={item.className}>{item.value}</span>
               ) : (

@@ -402,15 +402,15 @@ export const UsersTab: React.FC = () => {
       {/* Title block with action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-bold text-slate-900">{t('organization.usersTab.title')}</h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h3 className="text-lg font-bold text-text-heading">{t('organization.usersTab.title')}</h3>
+          <p className="text-xs text-text-muted mt-0.5">
             {t('organization.usersTab.subtitle')}
           </p>
         </div>
         {hasUsersEdit && (
           <button
             onClick={() => setShowBulkImport(true)}
-            className="inline-flex items-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/10 shrink-0"
+            className="inline-flex items-center space-x-1.5 rounded-xl bg-btn-primary-bg px-4 py-2.5 text-xs font-semibold text-btn-primary-text hover:bg-btn-primary-hover transition-colors shadow-sm shrink-0"
             id="btn-open-bulk-import"
           >
             <Upload className="h-4 w-4" />
@@ -421,14 +421,14 @@ export const UsersTab: React.FC = () => {
 
       {/* Global Alerts */}
       {successMsg && (
-        <div className="flex items-center space-x-2.5 rounded-xl bg-green-50 border border-green-100 p-4 text-sm text-green-700" id="users-tab-success">
-          <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+        <div className="flex items-center space-x-2.5 rounded-xl bg-status-success-bg border border-status-success-text/20 p-4 text-sm text-status-success-text" id="users-tab-success">
+          <CheckCircle2 className="h-4 w-4 text-status-success-text shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
       {errorMsg && (
-        <div className="flex items-center space-x-2.5 rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-700" id="users-tab-error">
-          <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+        <div className="flex items-center space-x-2.5 rounded-xl bg-status-error-bg border border-status-error-text/20 p-4 text-sm text-status-error-text" id="users-tab-error">
+          <AlertCircle className="h-4 w-4 text-status-error-text shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -436,13 +436,13 @@ export const UsersTab: React.FC = () => {
       {/* Filters bar */}
       <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3" id="users-filters-form">
         <div className="md:col-span-4 relative">
-          <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-text-muted" />
           <input
             type="text"
             placeholder={t('organization.usersTab.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            className="w-full pl-10 pr-4 py-2 text-sm border border-input-border rounded-xl focus:outline-none focus:ring-2 focus:ring-link-primary/20 bg-card-bg text-text-body"
             id="input-user-search"
           />
         </div>
@@ -454,7 +454,7 @@ export const UsersTab: React.FC = () => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            className="w-full px-3 py-2 text-sm border border-input-border rounded-xl focus:outline-none focus:ring-2 focus:ring-link-primary/20 bg-card-bg text-text-body"
             id="select-filter-status"
           >
             <option value="">{t('organization.usersTab.allStatuses')}</option>
@@ -471,7 +471,7 @@ export const UsersTab: React.FC = () => {
               setRoleFilter(e.target.value);
               setPage(1);
             }}
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            className="w-full px-3 py-2 text-sm border border-input-border rounded-xl focus:outline-none focus:ring-2 focus:ring-link-primary/20 bg-card-bg text-text-body"
             id="select-filter-role"
           >
             <option value="">{t('organization.usersTab.allRoles')}</option>
@@ -490,7 +490,7 @@ export const UsersTab: React.FC = () => {
               setOrgUnitFilter(e.target.value);
               setPage(1);
             }}
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            className="w-full px-3 py-2 text-sm border border-input-border rounded-xl focus:outline-none focus:ring-2 focus:ring-link-primary/20 bg-card-bg text-text-body"
             id="select-filter-org-unit"
           >
             <option value="">{t('organization.usersTab.allOrgUnits')}</option>
@@ -505,7 +505,7 @@ export const UsersTab: React.FC = () => {
         <div className="md:col-span-1">
           <button
             type="submit"
-            className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors border border-slate-200"
+            className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-card-header-bg hover:bg-card-border/50 px-3 py-2 text-sm font-semibold text-text-body transition-colors border border-card-border"
             id="btn-filter-submit"
           >
             <Filter className="h-4 w-4" />
@@ -517,17 +517,17 @@ export const UsersTab: React.FC = () => {
       <div className="relative" id="users-list-layout">
         {loading ? (
           <div className="flex items-center justify-center py-20" id="users-loading-state">
-            <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+            <Loader2 className="h-8 w-8 text-link-primary animate-spin" />
           </div>
         ) : users.length === 0 ? (
-          <div className="text-center py-16 border border-slate-100 rounded-2xl bg-white space-y-2" id="users-empty-state">
-            <User className="h-10 w-10 text-slate-300 mx-auto" />
-            <p className="text-sm font-bold text-slate-700">{t('organization.usersTab.noUsersFound')}</p>
+          <div className="text-center py-16 border border-card-border rounded-2xl bg-card-bg space-y-2" id="users-empty-state">
+            <User className="h-10 w-10 text-text-muted mx-auto" />
+            <p className="text-sm font-bold text-text-body">{t('organization.usersTab.noUsersFound')}</p>
           </div>
         ) : (
-          <div className="border border-slate-200/80 rounded-2xl bg-white shadow-sm overflow-hidden" id="users-list-table-container">
-            <table className="min-w-full divide-y divide-slate-100 text-left text-xs" id="users-list-table">
-              <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider">
+          <div className="border border-card-border rounded-2xl bg-card-bg shadow-sm overflow-hidden" id="users-list-table-container">
+            <table className="min-w-full divide-y divide-card-border text-left text-xs" id="users-list-table">
+              <thead className="bg-card-header-bg text-text-muted font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-4">{t('organization.usersTab.nameCol')}</th>
                   <th className="px-6 py-4">{t('organization.usersTab.emailCol')}</th>
@@ -537,41 +537,41 @@ export const UsersTab: React.FC = () => {
                   <th className="px-6 py-4 text-right">{t('organization.usersTab.actionsCol')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-card-border bg-card-bg">
                 {users.map((u) => (
                   <tr
                     key={u.id}
                     onClick={() => handleViewDetail(u.id)}
-                    className="hover:bg-slate-50/50 cursor-pointer transition-colors"
+                    className="hover:bg-card-header-bg cursor-pointer transition-colors"
                   >
-                    <td className="px-6 py-4 font-bold text-slate-900">{u.name}</td>
-                    <td className="px-6 py-4 text-slate-600 font-medium">{u.email}</td>
+                    <td className="px-6 py-4 font-bold text-text-heading">{u.name}</td>
+                    <td className="px-6 py-4 text-text-muted font-medium">{u.email}</td>
                     <td className="px-6 py-4 text-center">
                       {u.status === 'ACTIVE' && (
-                        <span className="inline-flex items-center rounded-full bg-green-50 border border-green-100 px-2.5 py-1 text-2xs font-semibold text-green-700">
+                        <span className="inline-flex items-center rounded-full bg-status-success-bg border border-status-success-text/20 px-2.5 py-1 text-2xs font-semibold text-status-success-text">
                           Active
                         </span>
                       )}
                       {u.status === 'PENDING' && (
-                        <span className="inline-flex items-center rounded-full bg-amber-50 border border-amber-100 px-2.5 py-1 text-2xs font-semibold text-amber-700">
+                        <span className="inline-flex items-center rounded-full bg-status-warning-bg border border-status-warning-text/20 px-2.5 py-1 text-2xs font-semibold text-status-warning-text">
                           Pending
                         </span>
                       )}
                       {u.status === 'ARCHIVED' && (
-                        <span className="inline-flex items-center rounded-full bg-slate-50 border border-slate-200/50 px-2.5 py-1 text-2xs font-semibold text-slate-600">
+                        <span className="inline-flex items-center rounded-full bg-card-header-bg border border-card-border px-2.5 py-1 text-2xs font-semibold text-text-muted">
                           Archived
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 font-semibold text-slate-700">{u.role?.name || '-'}</td>
-                    <td className="px-6 py-4 font-semibold text-slate-700">{u.organizationUnit?.name || '-'}</td>
+                    <td className="px-6 py-4 font-semibold text-text-body">{u.role?.name || '-'}</td>
+                    <td className="px-6 py-4 font-semibold text-text-body">{u.organizationUnit?.name || '-'}</td>
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleViewDetail(u.id);
                         }}
-                        className="text-blue-600 hover:text-blue-800 font-bold"
+                        className="text-link-primary hover:text-link-primary/80 font-bold"
                       >
                         {t('organization.usersTab.editBtn')}
                       </button>
@@ -583,26 +583,26 @@ export const UsersTab: React.FC = () => {
 
             {/* Pagination footer */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/30" id="users-pagination">
-                <span className="text-xs text-slate-500 font-medium">
-                  Showing <span className="font-semibold text-slate-800">{users.length}</span> of{' '}
-                  <span className="font-semibold text-slate-800">{total}</span> users
+              <div className="flex items-center justify-between px-6 py-4 border-t border-card-border bg-card-header-bg" id="users-pagination">
+                <span className="text-xs text-text-muted font-medium">
+                  Showing <span className="font-semibold text-text-heading">{users.length}</span> of{' '}
+                  <span className="font-semibold text-text-heading">{total}</span> users
                 </span>
                 <div className="flex items-center space-x-2">
                   <button
                     disabled={page === 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                    className="p-1.5 rounded-lg border border-card-border bg-card-bg text-text-body hover:bg-card-header-bg disabled:opacity-50 transition-colors"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <span className="text-xs font-bold text-slate-700">
+                  <span className="text-xs font-bold text-text-body">
                     {page} / {totalPages}
                   </span>
                   <button
                     disabled={page === totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                    className="p-1.5 rounded-lg border border-card-border bg-card-bg text-text-body hover:bg-card-header-bg disabled:opacity-50 transition-colors"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -614,26 +614,26 @@ export const UsersTab: React.FC = () => {
 
         {/* Slide-over details panel */}
         {selectedUserId && (
-          <div className="fixed inset-0 z-40 bg-slate-900/10 backdrop-blur-3xs" id="user-details-overlay">
-            <div className="absolute top-0 right-0 h-full w-full max-w-lg bg-white border-l border-slate-200 shadow-2xl flex flex-col" id="user-details-panel">
+          <div className="fixed inset-0 z-40 bg-bg-overlay/40 backdrop-blur-3xs" id="user-details-overlay">
+            <div className="absolute top-0 right-0 h-full w-full max-w-lg bg-card-bg border-l border-card-border shadow-2xl flex flex-col" id="user-details-panel">
               {/* Slide-over header */}
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div className="p-6 border-b border-card-border flex items-center justify-between shrink-0">
                 <div className="flex items-center space-x-3">
-                  <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
+                  <div className="rounded-xl bg-status-info-bg p-2.5 text-link-primary">
                     <User className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-base font-bold text-text-heading">
                       {t('organization.usersTab.userDetailTitle')}
                     </h3>
-                    <p className="text-xs text-slate-500 leading-normal">
+                    <p className="text-xs text-text-muted leading-normal">
                       {userDetail?.name || '-'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={handleCloseDetail}
-                  className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="rounded-lg p-1.5 text-text-muted hover:text-text-body hover:bg-card-header-bg transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -642,58 +642,58 @@ export const UsersTab: React.FC = () => {
               {/* Slide-over Content */}
               {loadingDetail ? (
                 <div className="flex-1 flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                  <Loader2 className="h-8 w-8 text-link-primary animate-spin" />
                 </div>
               ) : (
                 <form onSubmit={handleSaveUser} className="flex-1 flex flex-col min-h-0">
                   <div className="flex-1 overflow-y-auto p-6 space-y-8">
                     {/* Basic info form */}
                     <div className="space-y-4">
-                      <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
+                      <h4 className="text-xs font-extrabold text-text-muted uppercase tracking-wider">
                         Account Information
                       </h4>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-500">First Name</label>
+                          <label className="text-xs font-bold text-text-muted">First Name</label>
                           <input
                             type="text"
                             disabled={!hasUsersEdit}
                             value={editFirstName}
                             onChange={(e) => setEditFirstName(e.target.value)}
-                            className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white disabled:bg-slate-50 disabled:cursor-not-allowed"
+                            className="w-full px-3 py-2 text-xs border border-input-border rounded-xl focus:outline-none focus:ring-2 focus:ring-link-primary/20 bg-card-bg text-text-body disabled:bg-card-header-bg disabled:cursor-not-allowed"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-500">Last Name</label>
+                          <label className="text-xs font-bold text-text-muted">Last Name</label>
                           <input
                             type="text"
                             disabled={!hasUsersEdit}
                             value={editLastName}
                             onChange={(e) => setEditLastName(e.target.value)}
-                            className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white disabled:bg-slate-50 disabled:cursor-not-allowed"
+                            className="w-full px-3 py-2 text-xs border border-input-border rounded-xl focus:outline-none focus:ring-2 focus:ring-link-primary/20 bg-card-bg text-text-body disabled:bg-card-header-bg disabled:cursor-not-allowed"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500">Email Address</label>
+                        <label className="text-xs font-bold text-text-muted">Email Address</label>
                         <input
                           type="email"
                           disabled={true}
                           value={userDetail?.email || ''}
-                          className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 text-slate-500 cursor-not-allowed"
+                          className="w-full px-3 py-2 text-xs border border-input-border rounded-xl bg-card-header-bg text-text-muted cursor-not-allowed"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500">Role</label>
+                        <label className="text-xs font-bold text-text-muted">Role</label>
                         <select
                           disabled={!hasUsersEdit}
                           value={editRoleId}
                           onChange={(e) => setEditRoleId(e.target.value)}
-                          className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white disabled:bg-slate-50 disabled:cursor-not-allowed"
+                          className="w-full px-3 py-2 text-xs border border-input-border rounded-xl focus:outline-none focus:ring-2 focus:ring-link-primary/20 bg-card-bg text-text-body disabled:bg-card-header-bg disabled:cursor-not-allowed"
                         >
                           <option value="">Select Role</option>
                           {roles.map((r) => (
@@ -705,12 +705,12 @@ export const UsersTab: React.FC = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500">Organization Unit</label>
+                        <label className="text-xs font-bold text-text-muted">Organization Unit</label>
                         <select
                           disabled={!hasUsersEdit}
                           value={editOrgUnitId}
                           onChange={(e) => setEditOrgUnitId(e.target.value)}
-                          className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white disabled:bg-slate-50 disabled:cursor-not-allowed"
+                          className="w-full px-3 py-2 text-xs border border-input-border rounded-xl focus:outline-none focus:ring-2 focus:ring-link-primary/20 bg-card-bg text-text-body disabled:bg-card-header-bg disabled:cursor-not-allowed"
                         >
                           <option value="">Select Organization Unit</option>
                           {orgUnits.map((ou) => (
@@ -723,24 +723,24 @@ export const UsersTab: React.FC = () => {
 
                       {/* Learning Groups checklist */}
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500">Learning Cohorts / Groups</label>
+                        <label className="text-xs font-bold text-text-muted">Learning Cohorts / Groups</label>
                         {learningGroups.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic">No learning cohorts defined.</p>
+                          <p className="text-xs text-text-muted italic">No learning cohorts defined.</p>
                         ) : (
-                          <div className="border border-slate-100 rounded-xl p-3 max-h-[140px] overflow-y-auto space-y-2 bg-white">
+                          <div className="border border-card-border rounded-xl p-3 max-h-[140px] overflow-y-auto space-y-2 bg-card-bg">
                             {learningGroups.map((lg) => {
                               const isChecked = editLearningGroupIds.includes(lg.id);
                               return (
                                 <label
                                   key={lg.id}
-                                  className="flex items-center space-x-2.5 text-xs font-medium text-slate-700 cursor-pointer"
+                                  className="flex items-center space-x-2.5 text-xs font-medium text-text-body cursor-pointer"
                                 >
                                   <input
                                     type="checkbox"
                                     disabled={!hasUsersEdit}
                                     checked={isChecked}
                                     onChange={() => handleToggleLearningGroup(lg.id)}
-                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                                    className="rounded border-input-border text-link-primary focus:ring-link-primary/20"
                                   />
                                   <span>{lg.name}</span>
                                 </label>
@@ -754,7 +754,7 @@ export const UsersTab: React.FC = () => {
                     {/* Custom profile fields */}
                     {sortedCategories.map((category) => (
                       <div key={category.id} className="space-y-4">
-                        <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
+                        <h4 className="text-xs font-extrabold text-text-muted uppercase tracking-wider">
                           {category.name}
                         </h4>
                         <div className="space-y-4">
@@ -775,8 +775,8 @@ export const UsersTab: React.FC = () => {
                     ))}
 
                     {/* Admin utility actions panel */}
-                    <div className="pt-6 border-t border-slate-100 space-y-3">
-                      <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
+                    <div className="pt-6 border-t border-card-border space-y-3">
+                      <h4 className="text-xs font-extrabold text-text-muted uppercase tracking-wider">
                         Admin Controls
                       </h4>
 
@@ -785,10 +785,10 @@ export const UsersTab: React.FC = () => {
                           <button
                             type="button"
                             onClick={handleResetPassword}
-                            className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100 transition-colors"
+                            className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 text-xs font-bold text-text-body bg-card-header-bg border border-card-border rounded-xl hover:bg-card-border/50 transition-colors"
                             id="btn-admin-reset-pw"
                           >
-                            <Key className="h-3.5 w-3.5 text-slate-500" />
+                            <Key className="h-3.5 w-3.5 text-text-muted" />
                             <span>{t('organization.usersTab.resetPasswordBtn')}</span>
                           </button>
                         )}
@@ -798,20 +798,20 @@ export const UsersTab: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setShowReactivateModal(true)}
-                              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100/60 transition-colors"
+                              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 text-xs font-bold text-link-primary bg-status-info-bg border border-link-primary/20 rounded-xl hover:bg-status-info-bg/80 transition-colors"
                               id="btn-admin-reactivate"
                             >
-                              <RotateCcw className="h-3.5 w-3.5 text-blue-500" />
+                              <RotateCcw className="h-3.5 w-3.5 text-link-primary" />
                               <span>{t('organization.usersTab.restoreBtn')}</span>
                             </button>
                           ) : (
                             <button
                               type="button"
                               onClick={() => setShowArchiveConfirm(true)}
-                              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 text-xs font-bold text-red-700 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100/60 transition-colors"
+                              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2.5 text-xs font-bold text-status-error-text bg-status-error-bg border border-status-error-text/20 rounded-xl hover:bg-status-error-bg/80 transition-colors"
                               id="btn-admin-archive"
                             >
-                              <Archive className="h-3.5 w-3.5 text-red-500" />
+                              <Archive className="h-3.5 w-3.5 text-status-error-text" />
                               <span>{t('organization.usersTab.archiveBtn')}</span>
                             </button>
                           )
@@ -822,11 +822,11 @@ export const UsersTab: React.FC = () => {
 
                   {/* Slide-over Footer Actions */}
                   {hasUsersEdit && (
-                    <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end space-x-3 shrink-0">
+                    <div className="p-6 border-t border-card-border bg-card-header-bg flex items-center justify-end space-x-3 shrink-0">
                       <button
                         type="button"
                         onClick={handleCloseDetail}
-                        className="px-5 py-2.5 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+                        className="px-5 py-2.5 text-sm font-semibold text-text-body hover:text-text-heading hover:bg-card-header-bg rounded-xl transition-colors"
                         id="user-edit-cancel-btn"
                       >
                         {t('organization.usersTab.cancelBtn')}
@@ -834,7 +834,7 @@ export const UsersTab: React.FC = () => {
                       <button
                         type="submit"
                         disabled={savingDetail}
-                        className="flex items-center justify-center space-x-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm shadow-blue-600/10"
+                        className="flex items-center justify-center space-x-2 rounded-xl bg-btn-primary-bg px-6 py-2.5 text-sm font-semibold text-btn-primary-text hover:bg-btn-primary-hover transition-colors disabled:opacity-50 shadow-sm"
                         id="user-edit-save-btn"
                       >
                         {savingDetail ? (
@@ -857,17 +857,17 @@ export const UsersTab: React.FC = () => {
 
       {/* Archive Confirmation Dialog Modal */}
       {showArchiveConfirm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-3xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xl max-w-md w-full p-6 space-y-6">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-bg-overlay backdrop-blur-3xs flex items-center justify-center p-4">
+          <div className="bg-card-bg rounded-2xl border border-card-border shadow-xl max-w-md w-full p-6 space-y-6">
             <div className="flex items-start space-x-3">
-              <div className="rounded-xl bg-red-50 p-2.5 text-red-600 mt-0.5">
+              <div className="rounded-xl bg-status-error-bg p-2.5 text-status-error-text mt-0.5">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-text-heading">
                   {t('organization.usersTab.archiveTitle', { name: userDetail?.name })}
                 </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-text-muted leading-relaxed">
                   {t('organization.usersTab.archiveBody')}
                 </p>
               </div>
@@ -877,14 +877,14 @@ export const UsersTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowArchiveConfirm(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-text-body hover:text-text-heading hover:bg-card-header-bg rounded-xl transition-colors"
               >
                 {t('organization.usersTab.cancelBtn')}
               </button>
               <button
                 type="button"
                 onClick={handleArchiveUser}
-                className="px-4 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm shadow-red-600/10"
+                className="px-4 py-2 text-xs font-semibold text-btn-primary-text bg-status-error-text hover:bg-status-error-text/90 rounded-xl transition-colors shadow-sm"
               >
                 {t('organization.usersTab.archiveConfirmBtn')}
               </button>
@@ -895,25 +895,25 @@ export const UsersTab: React.FC = () => {
 
       {/* Reactivate Choice Option Dialog Modal */}
       {showReactivateModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-3xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xl max-w-lg w-full p-6 space-y-6">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-bg-overlay backdrop-blur-3xs flex items-center justify-center p-4">
+          <div className="bg-card-bg rounded-2xl border border-card-border shadow-xl max-w-lg w-full p-6 space-y-6">
             <div className="flex items-start space-x-3">
-              <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600 mt-0.5">
+              <div className="rounded-xl bg-status-info-bg p-2.5 text-link-primary mt-0.5">
                 <RotateCcw className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-text-heading">
                   {t('organization.usersTab.reactivateTitle', { name: userDetail?.name })}
                 </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-text-muted leading-relaxed">
                   Choose the reactivation state style behavior below. This delegates directly to the system's dual restoration options.
                 </p>
               </div>
             </div>
 
             {/* Reactivation Radio Choice Options */}
-            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <label className="text-xs font-bold text-slate-500 block mb-1">
+            <div className="space-y-3 bg-card-header-bg p-4 rounded-xl border border-card-border">
+              <label className="text-xs font-bold text-text-muted block mb-1">
                 {t('organization.usersTab.reactivateOptionLabel')}
               </label>
 
@@ -924,9 +924,9 @@ export const UsersTab: React.FC = () => {
                   value="RESTORE"
                   checked={reactivateOption === 'RESTORE'}
                   onChange={() => setReactivateOption('RESTORE')}
-                  className="mt-1.5 text-blue-600 border-slate-300 focus:ring-blue-500/20"
+                  className="mt-1.5 text-link-primary border-input-border focus:ring-link-primary/20"
                 />
-                <span className="text-xs font-bold text-slate-800 leading-relaxed">
+                <span className="text-xs font-bold text-text-heading leading-relaxed">
                   {t('organization.usersTab.reactivateRestore')}
                 </span>
               </label>
@@ -938,9 +938,9 @@ export const UsersTab: React.FC = () => {
                   value="FRESH_START"
                   checked={reactivateOption === 'FRESH_START'}
                   onChange={() => setReactivateOption('FRESH_START')}
-                  className="mt-1.5 text-blue-600 border-slate-300 focus:ring-blue-500/20"
+                  className="mt-1.5 text-link-primary border-input-border focus:ring-link-primary/20"
                 />
-                <span className="text-xs font-bold text-slate-800 leading-relaxed">
+                <span className="text-xs font-bold text-text-heading leading-relaxed">
                   {t('organization.usersTab.reactivateFreshStart')}
                 </span>
               </label>
@@ -950,14 +950,14 @@ export const UsersTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowReactivateModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-text-body hover:text-text-heading hover:bg-card-header-bg rounded-xl transition-colors"
               >
                 {t('organization.usersTab.cancelBtn')}
               </button>
               <button
                 type="button"
                 onClick={handleReactivateUser}
-                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm shadow-blue-600/10"
+                className="px-4 py-2 text-xs font-semibold text-btn-primary-text bg-btn-primary-bg hover:bg-btn-primary-hover rounded-xl transition-colors shadow-sm"
               >
                 {t('organization.usersTab.reactivateConfirmBtn')}
               </button>

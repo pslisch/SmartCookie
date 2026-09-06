@@ -205,6 +205,32 @@ Each reusable service should include:
 - **Consumers**: `src/features/content/components/ScormPlayer.tsx`
 - **Dependencies**: None (Native TypeScript DOM Bridge)
 
+### 39. ThemeResolutionService
+- **Purpose**: Computes effective visual tokens, typography slots, and base font size for a company following the cascading hierarchy: Test override (`?test=:themeId`) > Global Active theme > Smart Cookie Default theme, with per-token fallback guarantees.
+- **Consumers**: `server/src/features/theme/routes/theme.routes.ts`
+- **Dependencies**: Prisma, `@prisma/client`, `themeSeed.ts`
+
+### 40. ThemeLockService
+- **Purpose**: Manages exclusive theme editing (`EDIT`) and preview (`TEST`) locks with 30-second TTLs, heartbeat refreshes, collision detection, and stale lock reclamation.
+- **Consumers**: `server/src/features/theme/routes/theme.routes.ts`
+- **Dependencies**: Prisma, `@prisma/client`
+
+### 41. FontService
+- **Purpose**: Validates uploaded font files using `fontkit` to inspect magic bytes and parse PostScript names/weights/styles, lists fonts with tenant scoping, deletes custom fonts with usage verification, and coordinates atomic cascading font replacement across theme typography slots.
+- **Consumers**: `server/src/features/theme/routes/font.routes.ts`, `server/src/features/theme/routes/theme.routes.ts`
+- **Dependencies**: Prisma, `fontkit`, `fontStorage.service.ts`
+
+### 42. FontStorageService
+- **Purpose**: Manages file system persistence, directory creation, unique file naming, reading, and disk cleanup for custom font assets under the storage path.
+- **Consumers**: `font.service.ts`, `server/src/features/theme/routes/font.routes.ts`
+- **Dependencies**: Node `fs`, `path`
+
+### 43. ThemeRuntimeContext (Client-Side)
+- **Purpose**: React context and hook (`useThemeRuntime`) orchestrating real-time client-side theme application. Injects CSS custom properties into `:root` and `[data-theme="dark"]`, creates dynamic `@font-face` rules for custom fonts, manages ephemeral session test mode state, coordinates theme lock heartbeats, and persists light/dark display mode.
+- **Consumers**: `src/App.tsx`, `src/features/theme/pages/*`, `src/features/theme/components/*`, all UI components consuming semantic tokens.
+- **Dependencies**: React, `lucide-react`
+
+
 
 
 
