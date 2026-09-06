@@ -64,17 +64,17 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 sm:p-6 md:p-8" id="auth-forgot-password-view">
+    <div className="flex min-h-screen items-center justify-center bg-bg-app p-4 sm:p-6 md:p-8" id="auth-forgot-password-view">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="mb-8 text-center" id="forgot-password-header">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white font-extrabold text-2xl shadow-sm mb-3">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-btn-primary-bg text-text-inverse font-extrabold text-2xl shadow-sm mb-3">
             S
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-sans">
+          <h1 className="text-2xl font-bold tracking-tight text-text-heading font-sans">
             {t('forgotPassword.title')}
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-text-muted mt-1">
             {t('forgotPassword.subtitle')}
           </p>
         </div>
@@ -83,33 +83,33 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          className="rounded-2xl border border-card-border bg-card-bg p-6 shadow-sm sm:p-8"
           id="forgot-password-card"
         >
-          <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="mb-6 flex items-center justify-between border-b border-card-border pb-4">
             <div className="flex items-center space-x-2">
-              <Mail className="h-5 w-5 text-blue-600" />
-              <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{t('forgotPassword.badge')}</span>
+              <Mail className="h-5 w-5 text-link-primary" />
+              <span className="text-sm font-bold text-text-heading uppercase tracking-wider">{t('forgotPassword.badge')}</span>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 flex items-start space-x-2 rounded-lg bg-rose-50 p-3.5 text-sm text-rose-800 border border-rose-100">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+            <div className="mb-4 flex items-start space-x-2 rounded-lg bg-status-error-bg p-3.5 text-sm text-status-error-text border border-status-error-text/20">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
               <span className="font-medium">{error}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="mb-6 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-800 border border-emerald-100">
+            <div className="mb-6 rounded-lg bg-status-success-bg p-4 text-sm text-status-success-text border border-status-success-text/20">
               <div className="flex items-start space-x-2">
-                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-success-text" />
                 <span className="font-medium">{successMessage}</span>
               </div>
               <button
                 type="button"
                 onClick={onBackToLogin}
-                className="mt-4 flex items-center text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors uppercase tracking-wider"
+                className="mt-4 flex items-center text-xs font-bold text-link-primary hover:text-link-hover transition-colors uppercase tracking-wider"
               >
                 <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                 {t('forgotPassword.backToLogin')}
@@ -120,7 +120,7 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
           {!successMessage && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="forgot-email">
+                <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1.5" htmlFor="forgot-email">
                   {t('forgotPassword.emailLabel')}
                 </label>
                 <input
@@ -129,7 +129,7 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 py-2.5 text-sm text-text-heading transition-colors placeholder:text-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                   placeholder={t('forgotPassword.emailPlaceholder')}
                 />
               </div>
@@ -137,7 +137,7 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                className="w-full flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover focus:outline-none focus:ring-2 focus:ring-btn-primary-bg focus:ring-offset-2 disabled:opacity-50"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -147,11 +147,11 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                 {t('forgotPassword.button')}
               </button>
 
-              <div className="pt-2 text-center border-t border-slate-100 mt-4">
+              <div className="pt-2 text-center border-t border-card-border mt-4">
                 <button
                   type="button"
                   onClick={onBackToLogin}
-                  className="inline-flex items-center text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-wider"
+                  className="inline-flex items-center text-xs font-bold text-text-muted hover:text-text-heading transition-colors uppercase tracking-wider"
                 >
                   <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                   {t('forgotPassword.backToLogin')}

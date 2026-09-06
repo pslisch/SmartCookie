@@ -82,17 +82,17 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 sm:p-6 md:p-8" id="auth-reset-password-view">
+    <div className="flex min-h-screen items-center justify-center bg-bg-app p-4 sm:p-6 md:p-8" id="auth-reset-password-view">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="mb-8 text-center" id="reset-password-header">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white font-extrabold text-2xl shadow-sm mb-3">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-btn-primary-bg text-text-inverse font-extrabold text-2xl shadow-sm mb-3">
             S
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-sans">
+          <h1 className="text-2xl font-bold tracking-tight text-text-heading font-sans">
             {t('resetPassword.title')}
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-text-muted mt-1">
             {t('resetPassword.subtitle')}
           </p>
         </div>
@@ -101,26 +101,26 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          className="rounded-2xl border border-card-border bg-card-bg p-6 shadow-sm sm:p-8"
           id="reset-password-card"
         >
-          <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="mb-6 flex items-center justify-between border-b border-card-border pb-4">
             <div className="flex items-center space-x-2">
-              <Lock className="h-5 w-5 text-blue-600" />
-              <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{t('resetPassword.badge')}</span>
+              <Lock className="h-5 w-5 text-link-primary" />
+              <span className="text-sm font-bold text-text-heading uppercase tracking-wider">{t('resetPassword.badge')}</span>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 flex items-start space-x-2 rounded-lg bg-rose-50 p-3.5 text-sm text-rose-800 border border-rose-100">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+            <div className="mb-4 flex items-start space-x-2 rounded-lg bg-status-error-bg p-3.5 text-sm text-status-error-text border border-status-error-text/20">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
               <span className="font-medium">{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-4 flex items-start space-x-2 rounded-lg bg-emerald-50 p-3.5 text-sm text-emerald-800 border border-emerald-100 animate-pulse">
-              <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <div className="mb-4 flex items-start space-x-2 rounded-lg bg-status-success-bg p-3.5 text-sm text-status-success-text border border-status-success-text/20 animate-pulse">
+              <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-success-text" />
               <span className="font-medium">{t('resetPassword.success')}</span>
             </div>
           )}
@@ -128,7 +128,7 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
           {!success && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="reset-new-password">
+                <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1.5" htmlFor="reset-new-password">
                   {t('resetPassword.passwordLabel')}
                 </label>
                 <div className="relative">
@@ -138,13 +138,13 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-3.5 pr-10 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-input-border bg-card-bg pl-3.5 pr-10 py-2.5 text-sm text-text-heading transition-colors placeholder:text-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                     placeholder={t('resetPassword.passwordPlaceholder')}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-3 text-text-muted hover:text-text-body"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -152,7 +152,7 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="reset-confirm-password">
+                <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1.5" htmlFor="reset-confirm-password">
                   {t('resetPassword.confirmPasswordLabel')}
                 </label>
                 <input
@@ -161,7 +161,7 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 py-2.5 text-sm text-text-heading transition-colors placeholder:text-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                   placeholder={t('resetPassword.confirmPasswordPlaceholder')}
                 />
               </div>
@@ -169,7 +169,7 @@ export function ResetPassword({ token, onSuccess }: ResetPasswordProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                className="w-full flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover focus:outline-none focus:ring-2 focus:ring-btn-primary-bg focus:ring-offset-2 disabled:opacity-50"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

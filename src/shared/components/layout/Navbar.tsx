@@ -231,9 +231,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               aria-label={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDarkMode ? (
-                <Sun className="h-4 w-4 text-amber-400" />
+                <Sun className="h-4 w-4 text-status-warning-text" />
               ) : (
-                <Moon className="h-4 w-4 text-slate-600" />
+                <Moon className="h-4 w-4 text-text-muted" />
               )}
             </button>
             <div className="relative">
@@ -365,7 +365,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <div className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-base font-semibold text-nav-text hover:bg-card-header-bg transition-colors" id="mobile-theme-row">
                   <div className="flex items-center space-x-2.5">
-                    {isDarkMode ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-slate-600" />}
+                    {isDarkMode ? <Sun className="h-5 w-5 text-status-warning-text" /> : <Moon className="h-5 w-5 text-text-muted" />}
                     <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
                   </div>
                   <button

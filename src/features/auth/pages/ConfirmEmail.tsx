@@ -41,39 +41,39 @@ export function ConfirmEmail({ token, onSuccess }: ConfirmEmailProps) {
   }, [token]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 sm:p-6 md:p-8" id="confirm-email-view">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm" id="confirm-email-card">
+    <div className="flex min-h-screen items-center justify-center bg-bg-app p-4 sm:p-6 md:p-8" id="confirm-email-view">
+      <div className="w-full max-w-md rounded-2xl border border-card-border bg-card-bg p-8 shadow-sm" id="confirm-email-card">
         <div className="mb-6 text-center" id="confirm-email-header">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-status-info-text">
             <Mail className="h-6 w-6" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">{t('profile.confirmEmail.title')}</h2>
-          <p className="mt-1.5 text-sm text-slate-500">
+          <h2 className="text-2xl font-bold text-text-heading">{t('profile.confirmEmail.title')}</h2>
+          <p className="mt-1.5 text-sm text-text-muted">
             {t('profile.confirmEmail.desc')}
           </p>
         </div>
 
         {verifying && (
           <div className="flex flex-col items-center justify-center py-6 space-y-3" id="confirm-email-verifying-state">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <span className="text-sm font-medium text-slate-600">{t('profile.confirmEmail.verifying')}</span>
+            <Loader2 className="h-8 w-8 animate-spin text-link-primary" />
+            <span className="text-sm font-medium text-text-body">{t('profile.confirmEmail.verifying')}</span>
           </div>
         )}
 
         {!verifying && success && (
           <div className="space-y-6 text-center" id="confirm-email-success-state">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-green-600">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-status-success-bg text-status-success-text">
               <CheckCircle className="h-10 w-10" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-950">{t('profile.confirmEmail.successTitle')}</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
+              <h3 className="text-lg font-bold text-text-heading">{t('profile.confirmEmail.successTitle')}</h3>
+              <p className="text-sm text-text-body leading-relaxed">
                 {t('profile.confirmEmail.successDesc')}
               </p>
             </div>
             <button
               onClick={onSuccess}
-              className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/10"
+              className="w-full rounded-xl bg-btn-primary-bg py-2.5 text-sm font-semibold text-btn-primary-text hover:bg-btn-primary-hover transition-colors shadow-sm shadow-btn-primary-bg/10"
               id="confirm-email-login-btn"
             >
               {t('profile.confirmEmail.backToLogin')}
@@ -83,21 +83,21 @@ export function ConfirmEmail({ token, onSuccess }: ConfirmEmailProps) {
 
         {!verifying && error && (
           <div className="space-y-6 text-center" id="confirm-email-error-state">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-status-error-bg text-status-error-text">
               <AlertCircle className="h-10 w-10" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-950">{t('profile.confirmEmail.failedTitle')}</h3>
-              <p className="text-sm text-red-600 font-medium">
+              <h3 className="text-lg font-bold text-text-heading">{t('profile.confirmEmail.failedTitle')}</h3>
+              <p className="text-sm text-status-error-text font-medium">
                 {error}
               </p>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-text-muted leading-relaxed">
                 {t('profile.confirmEmail.failedDesc')}
               </p>
             </div>
             <button
               onClick={onSuccess}
-              className="w-full rounded-xl bg-slate-100 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
+              className="w-full rounded-xl bg-bg-subtle py-2.5 text-sm font-semibold text-text-body hover:bg-card-border transition-colors"
               id="confirm-email-back-btn"
             >
               {t('profile.confirmEmail.backToLogin')}

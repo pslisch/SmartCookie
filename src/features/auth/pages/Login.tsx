@@ -207,46 +207,46 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 sm:p-6 md:p-8" id="auth-login-view">
+    <div className="flex min-h-screen items-center justify-center bg-bg-app p-4 sm:p-6 md:p-8" id="auth-login-view">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="mb-8 text-center" id="login-header">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white font-extrabold text-2xl shadow-sm mb-3">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-btn-primary-bg text-text-inverse font-extrabold text-2xl shadow-sm mb-3">
             S
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-sans">{t('login.title')}</h1>
-          <p className="text-sm text-slate-500 mt-1">{t('login.subtitle')}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-text-heading font-sans">{t('login.title')}</h1>
+          <p className="text-sm text-text-muted mt-1">{t('login.subtitle')}</p>
         </div>
 
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          className="rounded-2xl border border-card-border bg-card-bg p-6 shadow-sm sm:p-8"
           id="login-card"
         >
           {mode === 'login' && (
             <>
-              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="mb-6 flex items-center justify-between border-b border-card-border pb-4">
                 <div className="flex items-center space-x-2">
-                  <Lock className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{t('login.secureAccess')}</span>
+                  <Lock className="h-5 w-5 text-link-primary" />
+                  <span className="text-sm font-bold text-text-heading uppercase tracking-wider">{t('login.secureAccess')}</span>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">
+                <span className="inline-flex items-center rounded-full bg-status-info-bg px-2 py-1 text-xs font-semibold text-status-info-text">
                   {t('login.required')}
                 </span>
               </div>
 
               {error && (
-                <div className="mb-4 flex items-start space-x-2 rounded-lg bg-rose-50 p-3.5 text-sm text-rose-800 border border-rose-100">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="mb-4 flex items-start space-x-2 rounded-lg bg-status-error-bg p-3.5 text-sm text-status-error-text border border-status-error-text/20">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{error}</span>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="login-identifier">
+                  <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1.5" htmlFor="login-identifier">
                     {t('login.identifier')}
                   </label>
                   <input
@@ -255,21 +255,21 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 py-2.5 text-sm text-text-heading transition-colors placeholder:text-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                     placeholder={t('login.placeholderIdentifier')}
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider" htmlFor="login-password">
+                    <label className="block text-xs font-bold text-text-body uppercase tracking-wider" htmlFor="login-password">
                       {t('login.password')}
                     </label>
                     {onForgotPassword && (
                       <button
                         type="button"
                         onClick={onForgotPassword}
-                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                        className="text-xs font-semibold text-link-primary hover:text-link-hover transition-colors"
                       >
                         {t('login.forgotPassword')}
                       </button>
@@ -281,7 +281,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-input-border bg-card-bg px-3.5 py-2.5 text-sm text-text-heading transition-colors placeholder:text-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                     placeholder={t('login.placeholderPass')}
                   />
                 </div>
@@ -289,7 +289,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover focus:outline-none focus:ring-2 focus:ring-btn-primary-bg focus:ring-offset-2 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -304,32 +304,32 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
 
           {mode === 'mfa' && (
             <>
-              <div className="mb-4 flex items-center space-x-2 border-b border-slate-100 pb-3">
+              <div className="mb-4 flex items-center space-x-2 border-b border-card-border pb-3">
                 <button
                   type="button"
                   onClick={handleResetMode}
-                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                  className="text-text-muted hover:text-text-body transition-colors"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex items-center space-x-2">
-                  <QrCode className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{t('login.mfaTitle')}</span>
+                  <QrCode className="h-5 w-5 text-link-primary" />
+                  <span className="text-sm font-bold text-text-heading uppercase tracking-wider">{t('login.mfaTitle')}</span>
                 </div>
               </div>
 
-              <p className="text-sm text-slate-500 mb-6">{t('login.mfaSubtitle')}</p>
+              <p className="text-sm text-text-muted mb-6">{t('login.mfaSubtitle')}</p>
 
               {error && (
-                <div className="mb-4 flex items-start space-x-2 rounded-lg bg-rose-50 p-3.5 text-sm text-rose-800 border border-rose-100">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="mb-4 flex items-start space-x-2 rounded-lg bg-status-error-bg p-3.5 text-sm text-status-error-text border border-status-error-text/20">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{error}</span>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="mfa-code">
+                  <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1.5" htmlFor="mfa-code">
                     {t('login.mfaCode')}
                   </label>
                   <input
@@ -339,7 +339,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                     maxLength={10}
                     value={mfaCode}
                     onChange={(e) => setMfaCode(e.target.value)}
-                    className="w-full text-center tracking-widest text-lg font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full text-center tracking-widest text-lg font-bold rounded-xl border border-input-border bg-card-bg px-3.5 py-2.5 text-text-heading transition-colors placeholder:text-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                     placeholder={t('login.placeholderMfa')}
                   />
                 </div>
@@ -347,7 +347,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover focus:outline-none focus:ring-2 focus:ring-btn-primary-bg focus:ring-offset-2 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -360,7 +360,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                 <button
                   type="button"
                   onClick={handleResetMode}
-                  className="w-full text-center text-xs text-slate-500 hover:text-slate-800 font-semibold transition-colors mt-2"
+                  className="w-full text-center text-xs text-text-muted hover:text-text-heading font-semibold transition-colors mt-2"
                 >
                   {t('login.backToLogin')}
                 </button>
@@ -370,46 +370,46 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
 
           {mode === 'mfa-setup' && (
             <>
-              <div className="mb-4 flex items-center space-x-2 border-b border-slate-100 pb-3">
+              <div className="mb-4 flex items-center space-x-2 border-b border-card-border pb-3">
                 <button
                   type="button"
                   onClick={handleResetMode}
-                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                  className="text-text-muted hover:text-text-body transition-colors"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex items-center space-x-2">
-                  <QrCode className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{t('login.mfaSetupTitle')}</span>
+                  <QrCode className="h-5 w-5 text-link-primary" />
+                  <span className="text-sm font-bold text-text-heading uppercase tracking-wider">{t('login.mfaSetupTitle')}</span>
                 </div>
               </div>
 
-              <p className="text-sm text-slate-500 mb-4 leading-relaxed">{t('login.mfaSetupSubtitle')}</p>
+              <p className="text-sm text-text-muted mb-4 leading-relaxed">{t('login.mfaSetupSubtitle')}</p>
 
               {qrCodeUrl ? (
-                <div className="flex flex-col items-center justify-center bg-slate-50 rounded-xl p-4 border border-slate-100 mb-4">
-                  <img src={qrCodeUrl} alt="MFA QR Code" className="h-44 w-44 object-contain shadow-sm rounded-lg bg-white p-2" />
+                <div className="flex flex-col items-center justify-center bg-bg-subtle rounded-xl p-4 border border-card-border mb-4">
+                  <img src={qrCodeUrl} alt="MFA QR Code" className="h-44 w-44 object-contain shadow-sm rounded-lg bg-card-bg p-2" />
                   <div className="mt-3 text-center w-full">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('login.mfaSetupSecret')}</span>
-                    <code className="text-xs font-mono font-bold text-slate-700 bg-slate-200/60 px-2 py-1 rounded select-all break-all">{manualSecret}</code>
+                    <span className="block text-[10px] font-bold text-text-muted uppercase tracking-wider">{t('login.mfaSetupSecret')}</span>
+                    <code className="text-xs font-mono font-bold text-text-body bg-bg-app px-2 py-1 rounded select-all break-all">{manualSecret}</code>
                   </div>
                 </div>
               ) : (
-                <div className="flex h-44 items-center justify-center bg-slate-50 rounded-xl mb-4 border border-slate-100">
-                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                <div className="flex h-44 items-center justify-center bg-bg-subtle rounded-xl mb-4 border border-card-border">
+                  <Loader2 className="h-6 w-6 animate-spin text-link-primary" />
                 </div>
               )}
 
               {error && (
-                <div className="mb-4 flex items-start space-x-2 rounded-lg bg-rose-50 p-3.5 text-sm text-rose-800 border border-rose-100">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="mb-4 flex items-start space-x-2 rounded-lg bg-status-error-bg p-3.5 text-sm text-status-error-text border border-status-error-text/20">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{error}</span>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="mfa-setup-code">
+                  <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1.5" htmlFor="mfa-setup-code">
                     {t('login.mfaCode')}
                   </label>
                   <input
@@ -419,7 +419,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                     maxLength={6}
                     value={mfaCode}
                     onChange={(e) => setMfaCode(e.target.value)}
-                    className="w-full text-center tracking-widest text-lg font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full text-center tracking-widest text-lg font-bold rounded-xl border border-input-border bg-card-bg px-3.5 py-2.5 text-text-heading transition-colors placeholder:text-text-muted focus:border-input-border-focus focus:outline-none focus:ring-1 focus:ring-input-border-focus"
                     placeholder={t('login.placeholderMfa')}
                   />
                 </div>
@@ -427,7 +427,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover focus:outline-none focus:ring-2 focus:ring-btn-primary-bg focus:ring-offset-2 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -440,7 +440,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                 <button
                   type="button"
                   onClick={handleResetMode}
-                  className="w-full text-center text-xs text-slate-500 hover:text-slate-800 font-semibold transition-colors mt-2"
+                  className="w-full text-center text-xs text-text-muted hover:text-text-heading font-semibold transition-colors mt-2"
                 >
                   {t('login.backToLogin')}
                 </button>
@@ -450,17 +450,17 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
 
           {mode === 'mfa-recovery-codes' && (
             <>
-              <div className="mb-4 flex items-center space-x-2 border-b border-slate-100 pb-3">
-                <ShieldAlert className="h-5 w-5 text-amber-500 animate-pulse" />
-                <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{t('login.mfaRecoveryTitle')}</span>
+              <div className="mb-4 flex items-center space-x-2 border-b border-card-border pb-3">
+                <ShieldAlert className="h-5 w-5 text-status-warning-text animate-pulse" />
+                <span className="text-sm font-bold text-text-heading uppercase tracking-wider">{t('login.mfaRecoveryTitle')}</span>
               </div>
 
-              <p className="text-sm text-slate-500 mb-4 leading-relaxed">{t('login.mfaRecoverySubtitle')}</p>
+              <p className="text-sm text-text-muted mb-4 leading-relaxed">{t('login.mfaRecoverySubtitle')}</p>
 
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4 font-mono text-sm font-semibold text-slate-800">
+              <div className="bg-bg-subtle border border-card-border rounded-xl p-4 mb-4 font-mono text-sm font-semibold text-text-body">
                 <div className="grid grid-cols-2 gap-2 text-center">
                   {recoveryCodes.map((code, index) => (
-                    <div key={index} className="bg-white border border-slate-100 rounded p-1 shadow-sm select-all">
+                    <div key={index} className="bg-card-bg border border-card-border rounded p-1 shadow-sm select-all">
                       {code}
                     </div>
                   ))}
@@ -469,16 +469,16 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                 <button
                   type="button"
                   onClick={handleCopyCodes}
-                  className="mt-4 flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
+                  className="mt-4 flex w-full items-center justify-center rounded-lg border border-btn-secondary-border bg-btn-secondary-bg px-3 py-2 text-xs font-semibold text-btn-secondary-text hover:bg-btn-secondary-hover transition-colors shadow-xs"
                 >
                   {copiedCodes ? (
                     <>
-                      <Check className="h-4 w-4 text-green-600 mr-1.5" />
+                      <Check className="h-4 w-4 text-status-success-text mr-1.5" />
                       Copied!
                     </>
                   ) : (
                     <>
-                      <Copy className="h-4 w-4 mr-1.5 text-slate-500" />
+                      <Copy className="h-4 w-4 mr-1.5 text-text-muted" />
                       Copy All Codes
                     </>
                   )}
@@ -490,7 +490,7 @@ export function Login({ onLoginSuccess, onForgotPassword }: LoginProps) {
                 onClick={async () => {
                   await onLoginSuccess();
                 }}
-                className="w-full flex h-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+                className="w-full flex h-11 items-center justify-center rounded-xl bg-btn-primary-bg text-sm font-semibold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-hover focus:outline-none focus:ring-2 focus:ring-btn-primary-bg focus:ring-offset-2 cursor-pointer"
               >
                 {t('login.mfaRecoveryButton')}
               </button>

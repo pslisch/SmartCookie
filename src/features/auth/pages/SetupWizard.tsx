@@ -372,54 +372,54 @@ export function SetupWizard({
   const maxCardWidth = step === 'identity-provider' ? 'max-w-2xl' : 'max-w-md';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 sm:p-6 md:p-8" id="setup-wizard-container">
+    <div className="flex min-h-screen items-center justify-center bg-bg-app p-4 sm:p-6 md:p-8" id="setup-wizard-container">
       <div className={`w-full ${maxCardWidth} transition-all duration-300`}>
         {/* Logo/Header */}
         <div className="mb-6 text-center" id="setup-wizard-header">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white font-extrabold text-xl shadow-sm mb-2">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-btn-primary-bg text-text-inverse font-extrabold text-xl shadow-sm mb-2">
             S
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">{t('setup.title')}</h1>
-          <p className="text-xs text-slate-500 mt-0.5">{t('setup.subtitle')}</p>
+          <h1 className="text-xl font-bold tracking-tight text-text-heading">{t('setup.title')}</h1>
+          <p className="text-xs text-text-muted mt-0.5">{t('setup.subtitle')}</p>
         </div>
 
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+          className="rounded-2xl border border-card-border bg-card-bg p-5 shadow-sm sm:p-6"
           id="setup-wizard-card"
         >
           {/* STEP 1: SUPERUSER CREATION */}
           {step === 'superuser' && (
             <div id="setup-step-superuser" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center justify-between border-b border-card-border pb-3">
                 <div className="flex items-center space-x-2">
-                  <UserPlus className="h-4.5 w-4.5 text-blue-600" />
-                  <span className="text-xs font-bold text-slate-950 uppercase tracking-wider">Step 1 of 7</span>
+                  <UserPlus className="h-4.5 w-4.5 text-link-primary" />
+                  <span className="text-xs font-bold text-text-heading uppercase tracking-wider">Step 1 of 7</span>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                <span className="inline-flex items-center rounded-full bg-status-info-bg px-2 py-0.5 text-[10px] font-bold text-status-info-text">
                   {t('setup.superuserRequired')}
                 </span>
               </div>
 
               <div>
-                <h2 className="text-base font-bold text-slate-900">{t('setup.createPrimaryAdmin')}</h2>
-                <p className="text-xs text-slate-500 mt-1">
+                <h2 className="text-base font-bold text-text-heading">{t('setup.createPrimaryAdmin')}</h2>
+                <p className="text-xs text-text-muted mt-1">
                   {t('setup.adminDesc')}
                 </p>
               </div>
 
               {suError && (
-                <div className="flex items-start space-x-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-100">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="flex items-start space-x-2 rounded-xl bg-status-error-bg p-3 text-xs text-status-error-text border border-status-error-text/20">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{suError}</span>
                 </div>
               )}
 
               <form onSubmit={handleSuSubmit} className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" htmlFor="su-username">
+                  <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1" htmlFor="su-username">
                     {t('setup.username')}
                   </label>
                   <input
@@ -428,13 +428,13 @@ export function SetupWizard({
                     required
                     value={suUsername}
                     onChange={(e) => setSuUsername(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                     placeholder={t('setup.placeholders.admin')}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" htmlFor="su-email">
+                  <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1" htmlFor="su-email">
                     {t('setup.recoveryEmail')}
                   </label>
                   <input
@@ -443,14 +443,14 @@ export function SetupWizard({
                     required
                     value={suRecoveryEmail}
                     onChange={(e) => setSuRecoveryEmail(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                     placeholder={t('setup.placeholders.email')}
                   />
-                  <p className="text-[10px] text-slate-400 mt-0.5">{t('setup.recoveryEmailDesc')}</p>
+                  <p className="text-[10px] text-text-muted mt-0.5">{t('setup.recoveryEmailDesc')}</p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" htmlFor="su-password">
+                  <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1" htmlFor="su-password">
                     {t('setup.password')}
                   </label>
                   <input
@@ -459,11 +459,11 @@ export function SetupWizard({
                     required
                     value={suPassword}
                     onChange={(e) => setSuPassword(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                     placeholder="••••••••"
                   />
-                  <div className="mt-1.5 rounded-lg bg-slate-50 p-2 text-[10px] text-slate-500 space-y-0.5">
-                    <span className="font-bold block text-slate-600 uppercase tracking-wider text-[9px]">{t('setup.complexity')}</span>
+                  <div className="mt-1.5 rounded-lg bg-bg-subtle p-2 text-[10px] text-text-muted space-y-0.5">
+                    <span className="font-bold block text-text-body uppercase tracking-wider text-[9px]">{t('setup.complexity')}</span>
                     <ul className="list-disc pl-3 space-y-0.5">
                       <li>{t('setup.complexityMin')}</li>
                       <li>{t('setup.complexityCase')}</li>
@@ -475,7 +475,7 @@ export function SetupWizard({
                 <button
                   type="submit"
                   disabled={suLoading}
-                  className="w-full flex h-10 items-center justify-center rounded-xl bg-blue-600 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="w-full flex h-10 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
                 >
                   {suLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -491,33 +491,33 @@ export function SetupWizard({
           {/* STEP 2: SUPERUSER MFA SETTING */}
           {step === 'superuser-mfa' && (
             <div id="setup-step-superuser-mfa" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center justify-between border-b border-card-border pb-3">
                 <div className="flex items-center space-x-2">
-                  <Key className="h-4.5 w-4.5 text-blue-600" />
-                  <span className="text-xs font-bold text-slate-950 uppercase tracking-wider">{t('setupWizard.mfa.stepHeader')}</span>
+                  <Key className="h-4.5 w-4.5 text-link-primary" />
+                  <span className="text-xs font-bold text-text-heading uppercase tracking-wider">{t('setupWizard.mfa.stepHeader')}</span>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                <span className="inline-flex items-center rounded-full bg-status-error-bg px-2 py-0.5 text-[10px] font-bold text-status-error-text">
                   {t('setupWizard.mfa.mandatoryBadge')}
                 </span>
               </div>
 
               {mfaLoading && !mfaSecret && (
                 <div className="flex flex-col items-center justify-center py-8 space-y-2">
-                  <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
-                  <p className="text-xs text-slate-500">{t('setupWizard.mfa.generatingKeys')}</p>
+                  <Loader2 className="h-6 w-6 text-link-primary animate-spin" />
+                  <p className="text-xs text-text-muted">{t('setupWizard.mfa.generatingKeys')}</p>
                 </div>
               )}
 
               {mfaError && (
-                <div className="flex items-start space-x-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-100">
-                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="flex items-start space-x-2 rounded-xl bg-status-error-bg p-3 text-xs text-status-error-text border border-status-error-text/20">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{mfaError}</span>
                 </div>
               )}
 
               {mfaSuccessMsg && (
-                <div className="flex items-start space-x-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-800 border border-emerald-100">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <div className="flex items-start space-x-2 rounded-xl bg-status-success-bg p-3 text-xs text-status-success-text border border-status-success-text/20">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-status-success-text" />
                   <span className="font-medium">{mfaSuccessMsg}</span>
                 </div>
               )}
@@ -525,21 +525,21 @@ export function SetupWizard({
               {/* Verified screen with recovery codes */}
               {recoveryCodes.length > 0 ? (
                 <div className="space-y-4" id="mfa-recovery-screen">
-                  <div className="rounded-xl border border-amber-100 bg-amber-50/25 p-3.5 space-y-1 text-xs">
-                    <div className="flex items-center space-x-1.5 text-amber-900 font-bold">
-                      <ShieldAlert className="h-4.5 w-4.5 text-amber-600" />
+                  <div className="rounded-xl border border-status-warning-text/20 bg-status-warning-bg/25 p-3.5 space-y-1 text-xs">
+                    <div className="flex items-center space-x-1.5 text-status-warning-text font-bold">
+                      <ShieldAlert className="h-4.5 w-4.5 text-status-warning-text" />
                       <span>{t('setupWizard.mfa.recoveryWarningTitle')}</span>
                     </div>
-                    <p className="text-amber-700 font-medium leading-relaxed mt-1">
+                    <p className="text-status-warning-text font-medium leading-relaxed mt-1">
                       {t('setupWizard.mfa.recoveryWarningDesc')}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 border border-slate-100 p-3 font-mono text-xs text-slate-700">
+                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-bg-subtle border border-card-border p-3 font-mono text-xs text-text-body">
                     {recoveryCodes.map((code, idx) => (
-                      <div key={idx} className="flex justify-between items-center px-2 py-1 bg-white rounded border border-slate-150">
-                        <span className="text-[10px] text-slate-400 font-sans">{idx + 1}.</span>
-                        <span className="font-bold text-slate-800 select-all">{code}</span>
+                      <div key={idx} className="flex justify-between items-center px-2 py-1 bg-card-bg rounded border border-card-border">
+                        <span className="text-[10px] text-text-muted font-sans">{idx + 1}.</span>
+                        <span className="font-bold text-text-heading select-all">{code}</span>
                       </div>
                     ))}
                   </div>
@@ -548,21 +548,21 @@ export function SetupWizard({
                     <button
                       type="button"
                       onClick={copyRecoveryCodes}
-                      className="inline-flex items-center space-x-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                      className="inline-flex items-center space-x-1.5 text-xs font-bold text-link-primary hover:text-link-hover transition-colors"
                     >
-                      {copiedCodes ? <Check className="h-4 w-4 text-emerald-600" /> : <Clipboard className="h-4 w-4" />}
+                      {copiedCodes ? <Check className="h-4 w-4 text-status-success-text" /> : <Clipboard className="h-4 w-4" />}
                       <span>{copiedCodes ? t('setupWizard.mfa.copied') : t('setupWizard.mfa.copyToClipboard')}</span>
                     </button>
                   </div>
 
-                  <label className="flex items-start space-x-2.5 rounded-xl border border-slate-200 p-3 hover:bg-slate-50 cursor-pointer transition-colors">
+                  <label className="flex items-start space-x-2.5 rounded-xl border border-card-border p-3 hover:bg-bg-subtle cursor-pointer transition-colors">
                     <input
                       type="checkbox"
                       checked={recoverySavedConfirmed}
                       onChange={(e) => setRecoverySavedConfirmed(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 h-4 w-4 rounded border-input-border text-link-primary focus:ring-input-border-focus"
                     />
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-text-body">
                       {t('setupWizard.mfa.checkboxLabel')}
                     </span>
                   </label>
@@ -571,7 +571,7 @@ export function SetupWizard({
                     type="button"
                     onClick={handleMfaComplete}
                     disabled={!recoverySavedConfirmed || mfaLoading}
-                    className="w-full h-10 flex items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 transition-all"
+                    className="w-full h-10 flex items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover disabled:opacity-50 transition-all"
                   >
                     {mfaLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
                     {t('setupWizard.mfa.confirmBtn')}
@@ -582,32 +582,32 @@ export function SetupWizard({
                 mfaSecret && (
                   <div className="space-y-4" id="mfa-verify-form">
                     <div>
-                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t('setupWizard.mfa.scanQrTitle')}</h3>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      <h3 className="text-xs font-bold text-text-heading uppercase tracking-wide">{t('setupWizard.mfa.scanQrTitle')}</h3>
+                      <p className="text-xs text-text-muted mt-0.5 leading-relaxed">
                         {t('setupWizard.mfa.scanQrDesc')}
                       </p>
                     </div>
 
                     <div className="flex justify-center py-2">
                       {mfaQrCodeUrl ? (
-                        <div className="p-2 border border-slate-150 rounded-2xl bg-white shadow-sm">
+                        <div className="p-2 border border-card-border rounded-2xl bg-card-bg shadow-sm">
                           <img src={mfaQrCodeUrl} alt="MFA QR Code" className="h-36 w-36" />
                         </div>
                       ) : (
-                        <div className="h-36 w-36 flex items-center justify-center border rounded-2xl bg-slate-50">
-                          <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                        <div className="h-36 w-36 flex items-center justify-center border border-card-border rounded-2xl bg-bg-subtle">
+                          <Loader2 className="h-5 w-5 animate-spin text-link-primary" />
                         </div>
                       )}
                     </div>
 
-                    <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 text-center">
-                      <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{t('setupWizard.mfa.manualSetupKey')}</span>
-                      <code className="text-xs font-bold text-slate-700 select-all font-mono tracking-wider">{mfaSecret}</code>
+                    <div className="rounded-xl bg-bg-subtle p-2.5 border border-card-border text-center">
+                      <span className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">{t('setupWizard.mfa.manualSetupKey')}</span>
+                      <code className="text-xs font-bold text-text-body select-all font-mono tracking-wider">{mfaSecret}</code>
                     </div>
 
-                    <form onSubmit={handleMfaVerify} className="space-y-3 pt-1 border-t border-slate-100">
+                    <form onSubmit={handleMfaVerify} className="space-y-3 pt-1 border-t border-card-border">
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" htmlFor="mfa-code">
+                        <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1" htmlFor="mfa-code">
                           {t('setupWizard.mfa.enterCodeTitle')}
                         </label>
                         <input
@@ -616,7 +616,7 @@ export function SetupWizard({
                           required
                           value={mfaCode}
                           onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').substring(0, 6))}
-                          className="w-full text-center tracking-[0.25em] font-mono rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base font-bold text-slate-900 focus:border-blue-500 focus:outline-none"
+                          className="w-full text-center tracking-[0.25em] font-mono rounded-xl border border-input-border bg-card-bg px-3 py-2.5 text-base font-bold text-text-heading focus:border-input-border-focus focus:outline-none"
                           placeholder="000000"
                         />
                       </div>
@@ -624,7 +624,7 @@ export function SetupWizard({
                       <button
                         type="submit"
                         disabled={mfaLoading || mfaCode.length < 6}
-                        className="w-full flex h-10 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        className="w-full flex h-10 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-bold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
                       >
                         {mfaLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <ShieldCheck className="h-4 w-4 mr-1.5" />}
                         {t('setupWizard.mfa.verifyAndEnableBtn')}
@@ -639,33 +639,33 @@ export function SetupWizard({
           {/* STEP 3: COMPANY SETUP */}
           {step === 'company' && (
             <div id="setup-step-company" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center justify-between border-b border-card-border pb-3">
                 <div className="flex items-center space-x-2">
-                  <Building2 className="h-4.5 w-4.5 text-blue-600" />
-                  <span className="text-xs font-bold text-slate-950 uppercase tracking-wider">{t('setupWizard.company.stepHeader')}</span>
+                  <Building2 className="h-4.5 w-4.5 text-link-primary" />
+                  <span className="text-xs font-bold text-text-heading uppercase tracking-wider">{t('setupWizard.company.stepHeader')}</span>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                <span className="inline-flex items-center rounded-full bg-status-info-bg px-2 py-0.5 text-[10px] font-bold text-status-info-text">
                   {t('setup.companyConfig')}
                 </span>
               </div>
 
               <div>
-                <h2 className="text-base font-bold text-slate-900">{t('setup.setupPrimaryCompany')}</h2>
-                <p className="text-xs text-slate-500 mt-1">
+                <h2 className="text-base font-bold text-text-heading">{t('setup.setupPrimaryCompany')}</h2>
+                <p className="text-xs text-text-muted mt-1">
                   {t('setup.companyDesc')}
                 </p>
               </div>
 
               {coError && (
-                <div className="flex items-start space-x-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-100">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="flex items-start space-x-2 rounded-xl bg-status-error-bg p-3 text-xs text-status-error-text border border-status-error-text/20">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{coError}</span>
                 </div>
               )}
 
               <form onSubmit={handleCoSubmit} className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" htmlFor="co-name">
+                  <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1" htmlFor="co-name">
                     {t('setup.companyName')}
                   </label>
                   <input
@@ -674,13 +674,13 @@ export function SetupWizard({
                     required
                     value={coName}
                     onChange={(e) => setCoName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                     placeholder={t('setup.placeholders.companyName')}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" htmlFor="co-contact">
+                  <label className="block text-xs font-bold text-text-body uppercase tracking-wider mb-1" htmlFor="co-contact">
                     {t('setup.contactInfo')}
                   </label>
                   <input
@@ -689,16 +689,16 @@ export function SetupWizard({
                     required
                     value={coContactInfo}
                     onChange={(e) => setCoContactInfo(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                     placeholder={t('setup.placeholders.contact')}
                   />
-                  <p className="text-[10px] text-slate-400 mt-0.5">{t('setup.contactInfoDesc')}</p>
+                  <p className="text-[10px] text-text-muted mt-0.5">{t('setup.contactInfoDesc')}</p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={coLoading}
-                  className="w-full flex h-10 items-center justify-center rounded-xl bg-blue-600 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="w-full flex h-10 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
                 >
                   {coLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -714,65 +714,65 @@ export function SetupWizard({
           {/* STEP 4: SMTP MAIL CONFIGURATION */}
           {step === 'mail-config' && (
             <div id="setup-step-mail-config" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center justify-between border-b border-card-border pb-2">
                 <div className="flex items-center space-x-2">
-                  <Mail className="h-4.5 w-4.5 text-blue-600" />
-                  <span className="text-xs font-bold text-slate-950 uppercase tracking-wider">{t('setupWizard.mail.stepHeader')}</span>
+                  <Mail className="h-4.5 w-4.5 text-link-primary" />
+                  <span className="text-xs font-bold text-text-heading uppercase tracking-wider">{t('setupWizard.mail.stepHeader')}</span>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                <span className="inline-flex items-center rounded-full bg-bg-subtle px-2 py-0.5 text-[10px] font-bold text-text-body">
                   {t('setupWizard.mail.skippableBadge')}
                 </span>
               </div>
 
               <div>
-                <h2 className="text-base font-bold text-slate-900">{t('setupWizard.mail.title')}</h2>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                <h2 className="text-base font-bold text-text-heading">{t('setupWizard.mail.title')}</h2>
+                <p className="text-xs text-text-muted mt-1 leading-relaxed">
                   {t('setupWizard.mail.subtitle')}
                 </p>
               </div>
 
               {mailConfigError && (
-                <div className="flex items-start space-x-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-100" id="mail-config-error">
-                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="flex items-start space-x-2 rounded-xl bg-status-error-bg p-3 text-xs text-status-error-text border border-status-error-text/20" id="mail-config-error">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{mailConfigError}</span>
                 </div>
               )}
 
               {mailConfigTestSuccess && (
-                <div className="flex items-start space-x-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-800 border border-emerald-100" id="mail-config-success">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <div className="flex items-start space-x-2 rounded-xl bg-status-success-bg p-3 text-xs text-status-success-text border border-status-success-text/20" id="mail-config-success">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-status-success-text" />
                   <span className="font-medium">{t('setupWizard.mail.testSuccess')}</span>
                 </div>
               )}
 
               {/* PROGRESS BAR FOR GUIDED ENTRY */}
               <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+                <div className="flex justify-between text-[10px] font-bold text-text-muted uppercase">
                   <span>{t('setupWizard.mail.progressTitle')}</span>
                   <span>{getSmtpStepProgressPercent()}%</span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-bg-subtle rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-blue-600 transition-all duration-300" 
+                    className="h-full bg-btn-primary-bg transition-all duration-300" 
                     style={{ width: `${getSmtpStepProgressPercent()}%` }}
                   />
                 </div>
               </div>
 
               {/* STEPPED FIELDS */}
-              <div className="p-4 border border-slate-150 rounded-xl bg-slate-50/50 space-y-4">
+              <div className="p-4 border border-card-border rounded-xl bg-bg-subtle space-y-4">
                 {mailConfigFieldIdx === 0 && (
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-800 uppercase tracking-wide">
-                      <Server className="h-4 w-4 text-blue-500" />
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-text-heading uppercase tracking-wide">
+                      <Server className="h-4 w-4 text-link-primary" />
                       <span>{t('setupWizard.mail.fieldHostTitle')}</span>
                     </div>
-                    <p className="text-xs text-slate-500 leading-normal">
+                    <p className="text-xs text-text-muted leading-normal">
                       {t('setupWizard.mail.fieldHostDesc')}
                     </p>
                     <input
                       type="text"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                       placeholder="e.g. smtp.mailu.io"
                       value={smtpHost}
                       onChange={(e) => setSmtpHost(e.target.value)}
@@ -782,16 +782,16 @@ export function SetupWizard({
 
                 {mailConfigFieldIdx === 1 && (
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-800 uppercase tracking-wide">
-                      <HelpCircle className="h-4 w-4 text-blue-500" />
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-text-heading uppercase tracking-wide">
+                      <HelpCircle className="h-4 w-4 text-link-primary" />
                       <span>{t('setupWizard.mail.fieldPortTitle')}</span>
                     </div>
-                    <p className="text-xs text-slate-500 leading-normal">
+                    <p className="text-xs text-text-muted leading-normal">
                       {t('setupWizard.mail.fieldPortDesc')}
                     </p>
                     <input
                       type="text"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                       placeholder="e.g. 465"
                       value={smtpPort}
                       onChange={(e) => setSmtpPort(e.target.value.replace(/\D/g, ''))}
@@ -801,16 +801,16 @@ export function SetupWizard({
 
                 {mailConfigFieldIdx === 2 && (
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-800 uppercase tracking-wide">
-                      <UserPlus className="h-4 w-4 text-blue-500" />
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-text-heading uppercase tracking-wide">
+                      <UserPlus className="h-4 w-4 text-link-primary" />
                       <span>{t('setupWizard.mail.fieldUserTitle')}</span>
                     </div>
-                    <p className="text-xs text-slate-500 leading-normal">
+                    <p className="text-xs text-text-muted leading-normal">
                       {t('setupWizard.mail.fieldUserDesc')}
                     </p>
                     <input
                       type="text"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                       placeholder="e.g. mailer@yourcompany.com"
                       value={smtpUsername}
                       onChange={(e) => setSmtpUsername(e.target.value)}
@@ -820,16 +820,16 @@ export function SetupWizard({
 
                 {mailConfigFieldIdx === 3 && (
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-800 uppercase tracking-wide">
-                      <Key className="h-4 w-4 text-blue-500" />
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-text-heading uppercase tracking-wide">
+                      <Key className="h-4 w-4 text-link-primary" />
                       <span>{t('setupWizard.mail.fieldPassTitle')}</span>
                     </div>
-                    <p className="text-xs text-slate-500 leading-normal">
+                    <p className="text-xs text-text-muted leading-normal">
                       {t('setupWizard.mail.fieldPassDesc')}
                     </p>
                     <input
                       type="password"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                       placeholder="••••••••••••••••"
                       value={smtpPassword}
                       onChange={(e) => setSmtpPassword(e.target.value)}
@@ -839,16 +839,16 @@ export function SetupWizard({
 
                 {mailConfigFieldIdx === 4 && (
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-800 uppercase tracking-wide">
-                      <Mail className="h-4 w-4 text-blue-500" />
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-text-heading uppercase tracking-wide">
+                      <Mail className="h-4 w-4 text-link-primary" />
                       <span>{t('setupWizard.mail.fieldFromTitle')}</span>
                     </div>
-                    <p className="text-xs text-slate-500 leading-normal">
+                    <p className="text-xs text-text-muted leading-normal">
                       {t('setupWizard.mail.fieldFromDesc')}
                     </p>
                     <input
                       type="email"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                       placeholder="e.g. training@yourcompany.com"
                       value={smtpFromAddress}
                       onChange={(e) => setSmtpFromAddress(e.target.value)}
@@ -857,7 +857,7 @@ export function SetupWizard({
                 )}
 
                 {/* STEERING CONTROLS */}
-                <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                <div className="flex justify-between items-center pt-2 border-t border-card-border">
                   <button
                     type="button"
                     disabled={mailConfigFieldIdx === 0}
@@ -865,13 +865,13 @@ export function SetupWizard({
                       setMailConfigFieldIdx(prev => prev - 1);
                       setMailConfigTestSuccess(null);
                     }}
-                    className="inline-flex items-center space-x-1 text-xs font-bold text-slate-500 hover:text-slate-800 disabled:opacity-30"
+                    className="inline-flex items-center space-x-1 text-xs font-bold text-text-muted hover:text-text-heading disabled:opacity-30"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     <span>{t('setupWizard.mail.backBtn')}</span>
                   </button>
 
-                  <span className="text-[10px] text-slate-400 font-bold font-mono">
+                  <span className="text-[10px] text-text-muted font-bold font-mono">
                     {t('setupWizard.mail.progressTitle')} {mailConfigFieldIdx + 1} of 5
                   </span>
 
@@ -879,13 +879,13 @@ export function SetupWizard({
                     <button
                       type="button"
                       onClick={() => setMailConfigFieldIdx(prev => prev + 1)}
-                      className="inline-flex items-center space-x-1 text-xs font-bold text-blue-600 hover:text-blue-800"
+                      className="inline-flex items-center space-x-1 text-xs font-bold text-link-primary hover:text-link-hover"
                     >
                       <span>{t('setupWizard.mail.nextBtn')}</span>
                       <ChevronRight className="h-4 w-4" />
                     </button>
                   ) : (
-                    <span className="text-xs font-bold text-emerald-600">{t('setupWizard.mail.guidedDone')}</span>
+                    <span className="text-xs font-bold text-status-success-text">{t('setupWizard.mail.guidedDone')}</span>
                   )}
                 </div>
               </div>
@@ -893,22 +893,22 @@ export function SetupWizard({
               {/* OVERALL SMTP SUMMARY & TEST CONTROLS */}
               {mailConfigFieldIdx === 4 && (
                 <div className="space-y-4 pt-2">
-                  <div className="rounded-xl border border-blue-100 bg-blue-50/20 p-3.5 space-y-2">
-                    <div className="flex items-center space-x-1 text-xs font-bold text-blue-900 uppercase">
-                      <Info className="h-4 w-4 text-blue-600" />
+                  <div className="rounded-xl border border-status-info-text/20 bg-status-info-bg/20 p-3.5 space-y-2">
+                    <div className="flex items-center space-x-1 text-xs font-bold text-status-info-text uppercase">
+                      <Info className="h-4 w-4 text-link-primary" />
                       <span>{t('setupWizard.mail.summaryTitle')}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-y-1.5 gap-x-4 text-xs">
-                      <div><span className="text-slate-400 font-semibold">{t('setupWizard.mail.summaryHost')}:</span> <span className="font-semibold text-slate-700 font-mono">{smtpHost || '(Empty)'}</span></div>
-                      <div><span className="text-slate-400 font-semibold">{t('setupWizard.mail.summaryPort')}:</span> <span className="font-semibold text-slate-700 font-mono">{smtpPort}</span></div>
-                      <div><span className="text-slate-400 font-semibold">{t('setupWizard.mail.summaryUser')}:</span> <span className="font-semibold text-slate-700 font-mono text-[11px] select-all">{smtpUsername || '(Empty)'}</span></div>
-                      <div><span className="text-slate-400 font-semibold">{t('setupWizard.mail.summaryFrom')}:</span> <span className="font-semibold text-slate-700 font-mono text-[11px] select-all">{smtpFromAddress || '(Empty)'}</span></div>
+                      <div><span className="text-text-muted font-semibold">{t('setupWizard.mail.summaryHost')}:</span> <span className="font-semibold text-text-body font-mono">{smtpHost || '(Empty)'}</span></div>
+                      <div><span className="text-text-muted font-semibold">{t('setupWizard.mail.summaryPort')}:</span> <span className="font-semibold text-text-body font-mono">{smtpPort}</span></div>
+                      <div><span className="text-text-muted font-semibold">{t('setupWizard.mail.summaryUser')}:</span> <span className="font-semibold text-text-body font-mono text-[11px] select-all">{smtpUsername || '(Empty)'}</span></div>
+                      <div><span className="text-text-muted font-semibold">{t('setupWizard.mail.summaryFrom')}:</span> <span className="font-semibold text-text-body font-mono text-[11px] select-all">{smtpFromAddress || '(Empty)'}</span></div>
                     </div>
                   </div>
 
                   {/* Mailu recommendation note */}
-                  <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 text-[11px] text-slate-500 leading-relaxed">
-                    <span className="font-bold text-slate-700 block">{t('setupWizard.mail.prodNoteTitle')}</span>
+                  <div className="rounded-xl border border-card-border bg-card-bg p-3 space-y-1.5 text-[11px] text-text-muted leading-relaxed">
+                    <span className="font-bold text-text-heading block">{t('setupWizard.mail.prodNoteTitle')}</span>
                     <p>
                       {t('setupWizard.mail.prodNoteDesc')}
                     </p>
@@ -919,7 +919,7 @@ export function SetupWizard({
                       type="button"
                       onClick={handleTestMailConfig}
                       disabled={mailConfigTesting || !smtpHost.trim() || !smtpUsername.trim() || !smtpFromAddress.trim()}
-                      className="flex-1 inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                      className="flex-1 inline-flex h-10 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-bold text-btn-primary-text hover:bg-btn-primary-hover disabled:opacity-50 transition-colors"
                     >
                       {mailConfigTesting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Server className="h-4 w-4 mr-1.5" />}
                       {t('setupWizard.mail.testBtn')}
@@ -929,7 +929,7 @@ export function SetupWizard({
                       type="button"
                       onClick={handleSaveMailConfig}
                       disabled={mailConfigSaving || !mailConfigTestSuccess}
-                      className="flex-1 inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                      className="flex-1 inline-flex h-10 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-bold text-btn-primary-text hover:bg-btn-primary-hover disabled:opacity-50 transition-colors"
                     >
                       {mailConfigSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
                       {t('setupWizard.mail.saveBtn')}
@@ -939,15 +939,15 @@ export function SetupWizard({
               )}
 
               {/* SKIP OPTIONS ROW */}
-              <div className="pt-2 border-t border-slate-100 flex flex-col space-y-2">
-                <div className="rounded-lg bg-rose-50/50 border border-rose-100 p-2.5 text-[10px] text-rose-800 leading-normal">
+              <div className="pt-2 border-t border-card-border flex flex-col space-y-2">
+                <div className="rounded-lg bg-status-error-bg/50 border border-status-error-text/20 p-2.5 text-[10px] text-status-error-text leading-normal">
                   {t('setupWizard.mail.skipNotice')}
                 </div>
                 <button
                   type="button"
                   onClick={handleSkipMailConfig}
                   disabled={mailConfigSaving}
-                  className="w-full py-2 border border-slate-200 text-slate-500 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors"
+                  className="w-full py-2 border border-card-border text-text-muted rounded-xl text-xs font-semibold hover:bg-bg-subtle transition-colors"
                 >
                   {t('setupWizard.mail.skipBtn')}
                 </button>
@@ -958,19 +958,19 @@ export function SetupWizard({
           {/* STEP 5: IDENTITY PROVIDER (ENTRA ID) CONFIGURATION */}
           {step === 'identity-provider' && (
             <div id="setup-step-identity-provider" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center justify-between border-b border-card-border pb-2">
                 <div className="flex items-center space-x-2">
-                  <Globe className="h-4.5 w-4.5 text-blue-600" />
-                  <span className="text-xs font-bold text-slate-950 uppercase tracking-wider">{t('setupWizard.entra.stepHeader')}</span>
+                  <Globe className="h-4.5 w-4.5 text-link-primary" />
+                  <span className="text-xs font-bold text-text-heading uppercase tracking-wider">{t('setupWizard.entra.stepHeader')}</span>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                <span className="inline-flex items-center rounded-full bg-bg-subtle px-2 py-0.5 text-[10px] font-bold text-text-body">
                   {t('setupWizard.entra.skippableBadge')}
                 </span>
               </div>
 
               <div>
-                <h2 className="text-base font-bold text-slate-900">{t('setupWizard.entra.title')}</h2>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                <h2 className="text-base font-bold text-text-heading">{t('setupWizard.entra.title')}</h2>
+                <p className="text-xs text-text-muted mt-1 leading-relaxed">
                   {t('setupWizard.entra.subtitle')}
                 </p>
               </div>
@@ -986,26 +986,26 @@ export function SetupWizard({
           {/* STEP 6: ORG STRUCTURE SETUP */}
           {step === 'org-structure' && (
             <div id="setup-step-org-structure" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center justify-between border-b border-card-border pb-3">
                 <div className="flex items-center space-x-2">
-                  <Layers className="h-4.5 w-4.5 text-blue-600" />
-                  <span className="text-xs font-bold text-slate-950 uppercase tracking-wider">{t('setupWizard.org.stepHeader')}</span>
+                  <Layers className="h-4.5 w-4.5 text-link-primary" />
+                  <span className="text-xs font-bold text-text-heading uppercase tracking-wider">{t('setupWizard.org.stepHeader')}</span>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                <span className="inline-flex items-center rounded-full bg-status-info-bg px-2 py-0.5 text-[10px] font-bold text-status-info-text">
                   {t('setupWizard.org.badge')}
                 </span>
               </div>
 
               <div>
-                <h2 className="text-base font-bold text-slate-900">{t('setupWizard.org.title')}</h2>
-                <p className="text-xs text-slate-500 mt-1">
+                <h2 className="text-base font-bold text-text-heading">{t('setupWizard.org.title')}</h2>
+                <p className="text-xs text-text-muted mt-1">
                   {t('setupWizard.org.subtitle')}
                 </p>
               </div>
 
               {orgError && (
-                <div className="flex items-start space-x-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-100">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="flex items-start space-x-2 rounded-xl bg-status-error-bg p-3 text-xs text-status-error-text border border-status-error-text/20">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{orgError}</span>
                 </div>
               )}
@@ -1023,13 +1023,13 @@ export function SetupWizard({
                         addOuToList();
                       }
                     }}
-                    className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                    className="flex-1 rounded-xl border border-input-border bg-card-bg px-3 py-2 text-xs text-text-heading focus:border-input-border-focus focus:outline-none"
                     placeholder={t('setupWizard.org.inputPlaceholder')}
                   />
                   <button
                     type="button"
                     onClick={addOuToList}
-                    className="inline-flex items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 px-3 text-white text-[11px] font-bold transition-colors"
+                    className="inline-flex items-center justify-center rounded-xl bg-btn-primary-bg hover:bg-btn-primary-hover px-3 text-btn-primary-text text-[11px] font-bold transition-colors"
                   >
                     <Plus className="h-3.5 w-3.5 mr-1" />
                     {t('setupWizard.org.addBtn')}
@@ -1039,18 +1039,18 @@ export function SetupWizard({
                 {/* List of currently added OUs */}
                 <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                   {ouList.length === 0 ? (
-                    <p className="text-[11px] text-slate-400 italic py-3 text-center">{t('setupWizard.org.emptyMsg')}</p>
+                    <p className="text-[11px] text-text-muted italic py-3 text-center">{t('setupWizard.org.emptyMsg')}</p>
                   ) : (
                     ouList.map((name, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2"
+                        className="flex items-center justify-between rounded-xl border border-card-border bg-bg-subtle px-3 py-2"
                       >
-                        <span className="text-xs font-semibold text-slate-700">{name}</span>
+                        <span className="text-xs font-semibold text-text-body">{name}</span>
                         <button
                           type="button"
                           onClick={() => removeOuFromList(idx)}
-                          className="text-slate-400 hover:text-rose-600 transition-colors"
+                          className="text-text-muted hover:text-status-error-text transition-colors"
                           title={t('setupWizard.org.removeTooltip')}
                         >
                           <X className="h-3.5 w-3.5" />
@@ -1064,7 +1064,7 @@ export function SetupWizard({
                   type="button"
                   onClick={handleOrgSubmit}
                   disabled={orgLoading || ouList.length === 0}
-                  className="w-full flex h-10 items-center justify-center rounded-xl bg-blue-600 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50 mt-3"
+                  className="w-full flex h-10 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50 mt-3"
                 >
                   {orgLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -1080,26 +1080,26 @@ export function SetupWizard({
           {/* STEP 7: ROLE TEMPLATES SELECTION */}
           {step === 'role-templates' && (
             <div id="setup-step-role-templates" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center justify-between border-b border-card-border pb-3">
                 <div className="flex items-center space-x-2">
-                  <ShieldCheck className="h-4.5 w-4.5 text-blue-600" />
-                  <span className="text-xs font-bold text-slate-950 uppercase tracking-wider">{t('setupWizard.roleTemplates.stepHeader')}</span>
+                  <ShieldCheck className="h-4.5 w-4.5 text-link-primary" />
+                  <span className="text-xs font-bold text-text-heading uppercase tracking-wider">{t('setupWizard.roleTemplates.stepHeader')}</span>
                 </div>
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                <span className="inline-flex items-center rounded-full bg-status-info-bg px-2 py-0.5 text-[10px] font-bold text-status-info-text">
                   {t('setup.roleTemplates')}
                 </span>
               </div>
 
               <div>
-                <h2 className="text-base font-bold text-slate-900">{t('setup.selectTemplates')}</h2>
-                <p className="text-xs text-slate-500 mt-1">
+                <h2 className="text-base font-bold text-text-heading">{t('setup.selectTemplates')}</h2>
+                <p className="text-xs text-text-muted mt-1">
                   {t('setup.templatesDesc')}
                 </p>
               </div>
 
               {rtError && (
-                <div className="flex items-start space-x-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-100">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div className="flex items-start space-x-2 rounded-xl bg-status-error-bg p-3 text-xs text-status-error-text border border-status-error-text/20">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-error-text" />
                   <span className="font-medium">{rtError}</span>
                 </div>
               )}
@@ -1109,15 +1109,15 @@ export function SetupWizard({
                   {defaultTemplates.map((name) => (
                     <label
                       key={name}
-                      className="flex items-center space-x-3 rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 hover:bg-slate-100 cursor-pointer transition-colors"
+                      className="flex items-center space-x-3 rounded-xl border border-card-border bg-bg-subtle p-2.5 hover:bg-bg-subtle/80 cursor-pointer transition-colors"
                     >
                       <input
                         type="checkbox"
                         checked={!!checkedTemplates[name]}
                         onChange={() => toggleTemplate(name)}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-input-border text-btn-primary-bg focus:ring-input-border-focus"
                       />
-                      <span className="text-xs font-semibold text-slate-800">{name}</span>
+                      <span className="text-xs font-semibold text-text-heading">{name}</span>
                     </label>
                   ))}
                 </div>
@@ -1126,7 +1126,7 @@ export function SetupWizard({
                   <button
                     type="submit"
                     disabled={rtLoading}
-                    className="w-full flex h-10 items-center justify-center rounded-xl bg-blue-600 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="w-full flex h-10 items-center justify-center rounded-xl bg-btn-primary-bg text-xs font-semibold text-btn-primary-text shadow-sm hover:bg-btn-primary-hover transition-colors disabled:opacity-50"
                   >
                     {rtLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -1140,7 +1140,7 @@ export function SetupWizard({
                     type="button"
                     onClick={() => handleRtSubmit(null, true)}
                     disabled={rtLoading}
-                    className="w-full flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                    className="w-full flex h-10 items-center justify-center rounded-xl border border-card-border bg-card-bg text-xs font-semibold text-text-muted hover:bg-bg-subtle transition-colors disabled:opacity-50"
                   >
                     {t('setup.skipBtn')}
                   </button>
