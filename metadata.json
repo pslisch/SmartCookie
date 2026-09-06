@@ -1,6 +1,6 @@
 {
   "name": "SmartCookie",
-  "description": "Learning Management System foundation shell with navigation, My Lessons dashboard, and comprehensive documentation system.",
+  "description": "Full-stack enterprise Learning Management System with authentication, hierarchical RBAC, organization management, SCORM content engine, MFA, Microsoft Entra ID sync, and dynamic theming.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

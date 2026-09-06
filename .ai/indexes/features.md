@@ -20,7 +20,7 @@ Every logged feature should eventually document:
 
 ---
 
-## 🟢 Baseline Release Features (v1.0.0)
+## 🟢 v1.0.0 Foundation
 
 ### 1. Viewport-Filling Shell Layout
 - **Description**: Sets up the full-screen container holding standard application structures without double-scrollbars, centering footer content neatly.
@@ -82,6 +82,10 @@ Every logged feature should eventually document:
 - **Events**: `i18n.changeLanguage` language switches
 - **Dependencies**: `i18next`, `react-i18next`, `i18next-browser-languagedetector`
 
+---
+
+## 🟢 v1.2.0 Auth & RBAC
+
 ### 6. Authentication & System Setup Wizard
 - **Description**: Ensures secure enterprise initialization via a multi-step wizard, creates root superuser credentials, establishes a primary company partition, governs user access via cookie-bound session profiles, and provides a rate-limited secure login gate.
 - **Components**: `src/shared/components/AppGate.tsx`, `src/features/auth/pages/SetupWizard.tsx`, `src/features/auth/pages/Login.tsx`
@@ -118,6 +122,10 @@ Every logged feature should eventually document:
 - **Events**: Updates to role hierarchies and configurations immediately invalidate existing permission states across active user session endpoints.
 - **Dependencies**: React, i18next, motion/react, lucide-react, Express, Prisma, bcrypt, cookie-parser
 
+---
+
+## 🟢 v1.5.0 Organization & Assignments
+
 ### 9. Hierarchical Organization Model MVP & Visual Management Suite
 - **Description**: Implements a highly scalable and resilient company hierarchical organization structure. This includes hierarchical Organization Units (OU) for formal company division with soft-delete/restore lifecycles, child reassignments, and manager roles, and nested Learning Groups for temporary/permanent student cohort grouping. Features a fully-interactive visual tree manager, child node nesting controls, dynamic user assignment dialogs, expiring temporary cohort alerts, and a dedicated Step in the Setup Wizard for top-level division configuration.
 - **Components**: `src/features/organization/components/OrganizationStructureTab.tsx`, `src/features/organization/components/LearningGroupsTab.tsx`, `src/features/organization/components/ExpiringGroupsTab.tsx`
@@ -141,6 +149,10 @@ Every logged feature should eventually document:
 - **Routes**: `server/src/features/assignments/routes/assignments.routes.ts`, `server/src/features/auth/routes/users.routes.ts`
 - **Events**: Background scheduler tasks run periodically to purge soft-deleted items and send overdue email alerts via `EmailService`.
 - **Dependencies**: Express, Prisma ORM, Node.js, Nodemailer
+
+---
+
+## 🟢 v1.8.0 SCORM & Profiles
 
 ### 11. SCORM Content Engine & Runtime Player (SCORM 1.2 MVP)
 - **Description**: Introduces robust SCORM 1.2 learning package execution. Supports importing, validating, and extracting zip packages securely with zip-slip protections, automatically creating and linking a `Lesson` record (status `DRAFT`) upon import so imported content appears immediately in the Lessons list. SCORM package metadata, tag/category filters, publish/archive/restore actions, version history views, and download original ZIP functionality are unified directly into expandable lesson detail rows in the Curriculum management view (`ContentManagement.tsx`). Includes an untracked, side-effect-free full-screen preview player (`ScormPreviewPlayer.tsx`) opening in a new browser tab with an in-memory SCORM 1.2 stub API, as well as the interactive learner-side SCORM 1.2 runtime player (`ScormPlayer.tsx` / `window.API`) supporting periodic commits, attempt tracking limits, and automated progress/completion/score rollup calculation onto parent assignment instance records.
@@ -201,6 +213,10 @@ Every logged feature should eventually document:
 - **Events**: Automated notification triggers check user preferences or company-mandatory lists before mailing.
 - **Dependencies**: Prisma ORM, Node.js, Express, Multer, CSV-parse, bcrypt, Nodemailer
 
+---
+
+## 🟢 v1.10.0 MFA & Entra ID
+
 ### 14. Multi-Factor Authentication (MFA) Core Security System
 - **Description**: Implements a comprehensive, robust local Multi-Factor Authentication (MFA) system utilizing Time-based One-time Passwords (TOTP). Supports encrypted TOTP secrets-at-rest (using AES-256-GCM), a secure two-stage session token flow using `MFA_CHALLENGE` and `MFA_SETUP` tokens, secure SHA-256 hashed one-time recovery codes, flexible tenant-wide MFA policies (including custom role-based mapping rules), and administrative de-enrollment overrides. Includes a complete web-based wizard integration step for initial superuser MFA configuration.
 - **Components**: `QRCode` (rendering QR codes on frontend via qrcode package)
@@ -250,6 +266,11 @@ Every logged feature should eventually document:
 - **Routes**: `server/src/features/identity/routes/identityProvider.routes.ts`
 - **Events**: Critical sync failures automatically resolve managers holding `identity-providers:view-logs` and trigger automated HTML alerts via `EmailService`.
 - **Dependencies**: Prisma ORM, Node.js, Express, `node-fetch`, `@prisma/client`, `jsonwebtoken`
+
+---
+
+## 🟢 v1.12.0 Theme & Branding
+
 ### 16. Theme & Branding System (Complete Full-Stack Architecture)
 - **Description**: Comprehensive tenant visual customizer and runtime theming system. Features server-side cascading resolution (`Test Override` > `Company Active Theme` > `Smart Cookie Default Theme`), real-time split-screen visual editor for 28 semantic color tokens across Light and Dark palettes, 8 typography slot bindings, concurrent editing/testing lock heartbeat engine (30s TTL), custom font file uploads with `fontkit` binary inspection and cascading font replacement, ephemeral session test mode, immediate or scheduled theme activation with automated failure recovery, and dynamic CSS custom property injection without page re-renders.
 - **Components**:

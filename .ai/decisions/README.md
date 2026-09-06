@@ -273,6 +273,33 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0006] Authentication Strategy & Credential Architecture
+- **Status**: Resolved / Absorbed
+- **Date**: 2026-07-03
+- **Authors**: AI Coding Agent
+- **Context**: Detailing the root Superuser, onboarding Setup Wizard, session cookie management, and email/password authentication provider (MVP scope).
+- **Resolution**: Fully absorbed and codified by [ADR-0018](#adr-0018-database-stored-smtp-configuration-and-setup-wizard-sequence), Feature 6 (Authentication & System Setup Wizard), and Feature 7 (Invitation-Based User Creation & Password Reset). Fully implemented in `server/src/features/auth/` and `src/features/auth/`.
+
+---
+
+### [ADR-0007] Client-Side Routing & View State Architecture
+- **Status**: Resolved / Absorbed
+- **Date**: 2026-07-03
+- **Authors**: AI Coding Agent
+- **Context**: Evaluate React Router library integration versus a dedicated lightweight client-side state/hash router.
+- **Resolution**: Resolved in favor of a cohesive client-side state, hash, and action token routing architecture coordinated by `AppGate` and `src/App.tsx`. Gated views (`#my-lessons`, `#catalog`, `#settings`, `#management`, `#profile`), deep-links (`?tab=...`, `?previewContentId=...`), action tokens (`/activate`, `/reset-password`, `/confirm-email`), and standalone SCORM previews (`/preview/content/:contentId`) are fully documented in `.ai/indexes/routes.md` and implemented without third-party router dependencies.
+
+---
+
+### [ADR-0008] Deployment Automation & Self-Hosted Topology
+- **Status**: Resolved / Absorbed
+- **Date**: 2026-07-03
+- **Authors**: AI Coding Agent
+- **Context**: Apache reverse-proxy topology for self-hosted deployment, single-command installer design, and formalizing the "wizard-only configuration" constraint referenced in `docs/architecture.md`.
+- **Resolution**: Fully absorbed and formalized by [ADR-0018](#adr-0018-database-stored-smtp-configuration-and-setup-wizard-sequence) and the production deployment automation suite in `/deploy` (`bootstrap.sh`, `install.sh`, `00-preflight.sh` through `06-generate-dns-guide.sh`, `smartcookie.service`, and `deploy/README.md`).
+
+---
+
 ### [AUDIT-2026-09-06] Repository State Audit & Documentation Sync
 - **Status**: Completed / Ground Truth Reconciled
 - **Date**: 2026-09-06
@@ -283,16 +310,6 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
-## 🔮 Planned ADRs (updated)
+## 🔮 Planned ADRs
 
-- **ADR-0006: Authentication Strategy**: Detailing the Superuser,
-  Setup Wizard, and Email/Password provider implementation (MVP scope).
-- **ADR-0007: Client Routing**: React Router integration and active
-  state triggers.
-- **ADR-0008: Deployment & Installation Strategy**: Apache reverse-proxy
-  topology for self-hosted deployment, single-command installer design,
-  and formalizing the "wizard-only configuration" constraint referenced
-  in docs/architecture.md.
-
-(Previously "ADR-0006: Relational Databases vs Document Stores" removed —
-resolved by ADR-0004.)
+_None currently pending. All foundational architecture decision records through v1.12.0 have been ratified, approved, or absorbed into implemented features._
