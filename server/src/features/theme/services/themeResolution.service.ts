@@ -276,6 +276,12 @@ export class ThemeResolutionService {
       status: resolveFontForSlot('status', testTheme, activeTheme, defaultTheme, systemInter),
     };
 
+    // 9. Resolve theme logo URL: null if the resolved theme has no logoStoragePath, otherwise /api/themes/{themeId}/logo
+    const logoUrl =
+      effectiveTheme?.id && effectiveTheme.logoStoragePath
+        ? `/api/themes/${effectiveTheme.id}/logo`
+        : null;
+
     return {
       themeId,
       name,
@@ -286,6 +292,7 @@ export class ThemeResolutionService {
       darkTokens: resolvedDarkTokens,
       darkColorValues: resolvedDarkTokens,
       fonts,
+      logoUrl,
     };
   }
 }

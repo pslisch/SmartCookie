@@ -9,13 +9,13 @@ This directory contains the client-side user interface and logic for the **Theme
   - Provides actions: Create from template, Edit, Test theme in session, Activate immediately, Schedule activation, Cancel schedule, Dismiss failure alerts, and Delete theme.
   - Integrates with `ThemeRuntimeContext` to reflect test mode and active theme state.
 - **`pages/ThemeEditor.tsx`**: Visual theme customizer with full concurrency lock protection.
-  - Multi-tab navigation: **General** (name, base font size), **Colors** (28 semantic color tokens), and **Fonts** (8 typography slot bindings).
+  - Multi-tab navigation: **General** (name, branding logo upload/preview/removal, base font size), **Colors** (28 semantic color tokens), and **Fonts** (8 typography slot bindings).
   - Concurrency Lock: Periodically heartbeats `POST /api/themes/:id/lock` every 15 seconds; presents collision warning if held by another user.
   - Dual Display Sub-mode: Switch between Light and Dark mode editing with separate draft states and autosaving.
   - Reset Actions: Per-token and per-font reset to Smart Cookie Default values.
 - **`components/LivePreviewPane.tsx`**: Interactive real-time split-screen simulator.
   - Mirrors the complete LMS shell (header, navigation tabs, cards, typography, forms, primary/secondary buttons, status indicators).
-  - Updates dynamically as the administrator tweaks color tokens, typography slots, base font size, or light/dark mode.
+  - Updates dynamically as the administrator tweaks branding logo, color tokens, typography slots, base font size, or light/dark mode.
 - **`components/ColorEditorTab.tsx`**: Full 28-token semantic color palette manager.
   - Grouped into 8 categories (Navigation, Text, Buttons, Forms, Cards, Links, Status, Backgrounds).
   - Features quick token search/filtering, inline color picker with hex and alpha inputs, and reset to canonical defaults.

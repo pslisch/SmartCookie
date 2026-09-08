@@ -810,6 +810,7 @@ model Theme {
   statusFontId                    String?        @map("status_font_id")
   statusFont                      Font?          @relation("ThemeStatusFont", fields: [statusFontId], references: [id], onDelete: SetNull)
   baseFontSize                    Int            @default(16) @map("base_font_size")
+  logoStoragePath                 String?        @map("logo_storage_path")
   scheduledActivationAt           DateTime?      @map("scheduled_activation_at")
   scheduledActivationFailedAt     DateTime?      @map("scheduled_activation_failed_at")
   scheduledActivationFailedReason String?        @db.Text @map("scheduled_activation_failed_reason")

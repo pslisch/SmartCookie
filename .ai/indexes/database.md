@@ -567,6 +567,7 @@ This index describes the data models, entity relationships, and schemas supporti
   - `linksFontId` (String, Nullable, Foreign Key to `fonts.id`)
   - `statusFontId` (String, Nullable, Foreign Key to `fonts.id`)
   - `baseFontSize` (Int, Default: 16, maps to `base_font_size`)
+  - `logoStoragePath` (String, Nullable, maps to `logo_storage_path`)
   - `scheduledActivationAt` (DateTime, Nullable, maps to `scheduled_activation_at`)
   - `scheduledActivationFailedAt` (DateTime, Nullable, maps to `scheduled_activation_failed_at`)
   - `scheduledActivationFailedReason` (String, Text, Nullable, maps to `scheduled_activation_failed_reason`)

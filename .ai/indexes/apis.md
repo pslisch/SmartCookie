@@ -702,7 +702,7 @@ Every documented endpoint logs:
 - **Endpoint**: `/api/themes/resolved`
 - **Method**: `GET`
 - **Request**: Optional query parameter `test` (`?test=:themeId`)
-- **Response**: `{ themeId: string, name: string, isTest: boolean, baseFontSize: number, tokens: Record<string, string>, colorValues: Record<string, string>, darkTokens: Record<string, string> | null, darkColorValues: Record<string, string> | null, fonts: Record<FontGroup, ResolvedFontDetails> }` (200 OK)
+- **Response**: `{ themeId: string, name: string, isTest: boolean, baseFontSize: number, tokens: Record<string, string>, colorValues: Record<string, string>, darkTokens: Record<string, string> | null, darkColorValues: Record<string, string> | null, fonts: Record<FontGroup, ResolvedFontDetails>, logoUrl: string | null }` (200 OK)
 - **Used By**: Theme runtime provider, preview frame, and theme editor
 - **Permissions**: Authenticated user session (`requireAuth` — no `theme:*` administrative permissions required)
 
@@ -870,6 +870,33 @@ Every documented endpoint logs:
 - **Used By**: FontReplacementModal confirmation
 - **Permissions**: `theme:edit`
 - **Rules**: In a single database transaction, migrates all theme slot references from font `:id` to `replacementFontId`, then hard-deletes the original font row and removes its stored file from disk. Rejects system fonts (403 Forbidden).
+
+### 106. Upload Theme Logo
+- **Endpoint**: `/api/themes/:id/logo`
+- **Method**: `POST`
+- **Request**: Multipart form data with single file field `logo` (JPEG, PNG, GIF, WebP up to 2MB)
+- **Response**: `{ success: true, logoStoragePath: string, theme: Theme }` (200 OK)
+- **Used By**: Theme Editor logo upload dropzone
+- **Permissions**: `theme:edit`
+- **Rules**: Validates magic-byte image signatures and 2MB limit. Replaces and unlinks any existing logo file for this theme on disk. Rejects active themes (409 Conflict) and Smart Cookie Default theme (403 Forbidden).
+
+### 107. Stream Theme Logo
+- **Endpoint**: `/api/themes/:id/logo`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: Binary image file stream with `Content-Type` (`image/jpeg`, `image/png`, `image/gif`, `image/webp`) and `Cache-Control: public, max-age=86400` (200 OK)
+- **Used By**: Global branded headers, themed login/setup pages via `<img>` tags
+- **Permissions**: Public access (pre-auth friendly)
+- **Rules**: Returns 404 if no logo is set for the theme or if the file is missing from storage.
+
+### 108. Delete Theme Logo
+- **Endpoint**: `/api/themes/:id/logo`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true, message: string, theme: Theme }` (200 OK)
+- **Used By**: Theme Editor logo removal action
+- **Permissions**: `theme:edit`
+- **Rules**: Removes the logo file from disk and clears `Theme.logoStoragePath` to `null`. Returns 404 if no logo is currently set. Rejects active themes (409 Conflict) and Smart Cookie Default theme (403 Forbidden).
 
 
 

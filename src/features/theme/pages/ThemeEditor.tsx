@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
@@ -17,6 +18,9 @@ import {
   Eye,
   EyeOff,
   CalendarClock,
+  Upload,
+  Trash2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Theme, FontLibraryItem, FontGroupSlot } from '../types';
 import { usePermission } from '../../../shared/hooks/usePermission';
@@ -93,6 +97,7 @@ export interface ThemeEditorProps {
 }
 
 export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => {
+  const { t } = useTranslation();
   const canEdit = usePermission('theme', 'edit');
   const themeRuntime = useThemeRuntime();
 
@@ -110,6 +115,14 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
   // Form states for General tab
   const [name, setName] = useState<string>('');
   const [baseFontSize, setBaseFontSize] = useState<number>(16);
+
+  // Logo upload state for General tab Branding section
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logoStoragePath, setLogoStoragePath] = useState<string | null>(null);
+  const [logoTimestamp, setLogoTimestamp] = useState<number>(Date.now());
+  const [logoUploading, setLogoUploading] = useState<boolean>(false);
+  const [logoDeleting, setLogoDeleting] = useState<boolean>(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   // Draft colors state for Colors tab (immediate updates for live preview readiness)
   const [draftColors, setDraftColors] = useState<Record<string, string>>({});
@@ -359,6 +372,8 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
       setTheme(data);
       setName(data.name);
       setBaseFontSize(data.baseFontSize || 16);
+      setLogoStoragePath(data.logoStoragePath || null);
+      setLogoTimestamp(Date.now());
 
       let parsedColors: Record<string, string> = {};
       try {
@@ -708,6 +723,123 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
     saveField({ darkColorValues: { [tokenKey]: newValue } });
   };
 
+  // Logo file selection and validation handler
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input value so selecting the same file again triggers onChange
+    e.target.value = '';
+
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+    const hasValidExtension = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
+    if (!allowedTypes.includes(file.type.toLowerCase()) && !hasValidExtension) {
+      setLogoError(t('theme.editor.branding.errorInvalidType'));
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoError(t('theme.editor.branding.errorFileSize'));
+      return;
+    }
+
+    uploadLogo(file);
+  };
+
+  // Upload logo via POST /api/themes/:id/logo
+  const uploadLogo = async (file: File) => {
+    if (isReadOnly || !theme) return;
+
+    setLogoUploading(true);
+    setLogoError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      const csrfToken = getCsrfToken();
+      const res = await fetch(`/api/themes/${theme.id}/logo`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+        },
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (res.status === 409 && errData.holderName) {
+          setLockHolderInfo({
+            holderName: errData.holderName || 'Another user',
+            lockType: errData.lockType || 'EDIT',
+            lockedAt: errData.lockedAt || new Date().toISOString(),
+          });
+          setIsLockHeldByMe(false);
+          isLockHeldByMeRef.current = false;
+        }
+        throw new Error(errData.error || t('theme.editor.branding.errorUploadFailed'));
+      }
+
+      const resData = await res.json();
+      const newStoragePath = resData.logoStoragePath || resData.theme?.logoStoragePath || null;
+      setLogoStoragePath(newStoragePath);
+      setTheme((prev) => (prev ? { ...prev, logoStoragePath: newStoragePath } : null));
+      setLogoTimestamp(Date.now());
+      setLogoError(null);
+      themeRuntime.refetch().catch(() => {});
+    } catch (err: any) {
+      console.error('[ThemeEditor] Logo upload failed:', err);
+      setLogoError(err.message || t('theme.editor.branding.errorUploadFailed'));
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  // Remove logo via DELETE /api/themes/:id/logo
+  const handleRemoveLogo = async () => {
+    if (isReadOnly || !theme || !logoStoragePath) return;
+
+    setLogoDeleting(true);
+    setLogoError(null);
+
+    try {
+      const csrfToken = getCsrfToken();
+      const res = await fetch(`/api/themes/${theme.id}/logo`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+        },
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (res.status === 409 && errData.holderName) {
+          setLockHolderInfo({
+            holderName: errData.holderName || 'Another user',
+            lockType: errData.lockType || 'EDIT',
+            lockedAt: errData.lockedAt || new Date().toISOString(),
+          });
+          setIsLockHeldByMe(false);
+          isLockHeldByMeRef.current = false;
+        }
+        throw new Error(errData.error || t('theme.editor.branding.errorDeleteFailed'));
+      }
+
+      setLogoStoragePath(null);
+      setTheme((prev) => (prev ? { ...prev, logoStoragePath: null } : null));
+      setLogoTimestamp(Date.now());
+      setLogoError(null);
+      themeRuntime.refetch().catch(() => {});
+    } catch (err: any) {
+      console.error('[ThemeEditor] Logo remove failed:', err);
+      setLogoError(err.message || t('theme.editor.branding.errorDeleteFailed'));
+    } finally {
+      setLogoDeleting(false);
+    }
+  };
+
   // Search match calculations across tabs
   const searchStats = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -730,6 +862,9 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
       general++;
     }
     if ('base font size typography scaling pixels presets 16px rem'.includes(q)) {
+      general++;
+    }
+    if ('branding logo upload image icon asset'.includes(q)) {
       general++;
     }
 
@@ -803,6 +938,7 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
       const isMatchInGeneral =
         'theme name information'.includes(q) ||
         'base font size typography scaling 16px'.includes(q) ||
+        'branding logo upload image icon asset'.includes(q) ||
         (theme?.name || '').toLowerCase().includes(q);
       const isMatchInFonts =
         [
@@ -882,6 +1018,7 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
   const cleanQuery = searchQuery.trim().toLowerCase();
   const isGeneralNameMatched = cleanQuery && ('theme name'.includes(cleanQuery) || (theme.name || '').toLowerCase().includes(cleanQuery));
   const isGeneralFontSizeMatched = cleanQuery && ('base font size typography scaling 16px rem'.includes(cleanQuery));
+  const isGeneralBrandingMatched = cleanQuery && ('branding logo upload image icon asset'.includes(cleanQuery));
 
   return (
     <div className="space-y-6" id="theme-editor-root">
@@ -1242,6 +1379,174 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
           </CollapsibleSection>
 
           <CollapsibleSection
+            id="section-theme-branding"
+            title={t('theme.editor.branding.title')}
+            description={t('theme.editor.branding.description')}
+            defaultOpen={true}
+          >
+            <div className="space-y-4 max-w-xl">
+              <div
+                className={`p-3 rounded-xl transition-all ${
+                  isGeneralBrandingMatched
+                    ? 'border border-link-primary bg-link-primary/5 ring-1 ring-link-primary/40'
+                    : ''
+                }`}
+              >
+                {/* Upload or Delete Error Banner */}
+                {logoError && (
+                  <div
+                    className="mb-4 flex items-start space-x-2 rounded-xl border border-status-error-border bg-status-error-bg/20 p-3 text-xs text-status-error-text"
+                    id="theme-logo-error-banner"
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span className="flex-1 font-sans">{logoError}</span>
+                    <button
+                      type="button"
+                      onClick={() => setLogoError(null)}
+                      className="text-status-error-text hover:opacity-75"
+                      aria-label="Dismiss error"
+                      id="theme-logo-dismiss-error-btn"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Hidden File Input */}
+                <input
+                  id="theme-logo-file-input"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  onChange={handleLogoFileChange}
+                  disabled={isReadOnly || logoUploading || logoDeleting}
+                  className="hidden"
+                />
+
+                {/* Logo Display or Empty State */}
+                {logoStoragePath ? (
+                  <div className="space-y-3" id="theme-logo-display-container">
+                    <label className="block text-sm font-semibold text-text-heading font-sans">
+                      {t('theme.editor.branding.currentLogo')}
+                    </label>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      {/* Logo Preview Box */}
+                      <div
+                        className="flex h-24 w-48 shrink-0 items-center justify-center rounded-xl border border-card-border bg-card-header-bg/40 p-2 overflow-hidden shadow-inner"
+                        id="theme-logo-preview-box"
+                      >
+                        <img
+                          id="theme-logo-preview-image"
+                          src={`/api/themes/${theme.id}/logo?t=${logoTimestamp}`}
+                          alt={name || 'Theme Logo'}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          id="theme-logo-change-btn"
+                          disabled={isReadOnly || logoUploading || logoDeleting}
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`inline-flex items-center space-x-2 rounded-xl border border-card-border bg-card-bg px-3.5 py-2 text-xs font-semibold text-text-heading shadow-sm transition-colors hover:bg-card-header-bg ${
+                            isReadOnly || logoUploading || logoDeleting
+                              ? 'cursor-not-allowed opacity-60'
+                              : ''
+                          }`}
+                        >
+                          {logoUploading ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-link-primary" />
+                              <span>{t('theme.editor.branding.uploading')}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-3.5 w-3.5 text-text-muted" />
+                              <span>{t('theme.editor.branding.changeBtn')}</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          id="theme-logo-remove-btn"
+                          disabled={isReadOnly || logoUploading || logoDeleting}
+                          onClick={handleRemoveLogo}
+                          className={`inline-flex items-center space-x-2 rounded-xl border border-status-error-border/60 bg-card-bg px-3.5 py-2 text-xs font-semibold text-status-error-text shadow-sm transition-colors hover:bg-status-error-bg/20 ${
+                            isReadOnly || logoUploading || logoDeleting
+                              ? 'cursor-not-allowed opacity-60'
+                              : ''
+                          }`}
+                        >
+                          {logoDeleting ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-status-error-text" />
+                              <span>{t('theme.editor.branding.removing')}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span>{t('theme.editor.branding.removeBtn')}</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-card-border bg-card-header-bg/20 p-6 text-center transition-colors"
+                    id="theme-logo-empty-state"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-card-header-bg text-text-muted mb-3">
+                      <ImageIcon className="h-6 w-6" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-text-heading font-sans mb-1">
+                      {t('theme.editor.branding.noLogo')}
+                    </h4>
+                    <p className="text-xs text-text-muted max-w-xs font-sans mb-4">
+                      {t('theme.editor.branding.noLogoDescription')}
+                    </p>
+                    <button
+                      type="button"
+                      id="theme-logo-upload-btn"
+                      disabled={isReadOnly || logoUploading}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`inline-flex items-center space-x-2 rounded-xl bg-btn-primary-bg px-4 py-2 text-xs font-semibold text-btn-primary-text shadow-sm transition-colors hover:bg-btn-primary-bg-hover ${
+                        isReadOnly || logoUploading ? 'cursor-not-allowed opacity-60' : ''
+                      }`}
+                    >
+                      {logoUploading ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-btn-primary-text" />
+                          <span>{t('theme.editor.branding.uploading')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-3.5 w-3.5" />
+                          <span>{t('theme.editor.branding.uploadBtn')}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                <p className="mt-3 text-xs text-text-muted font-sans">
+                  {t('theme.editor.branding.dimensionsHint')}
+                </p>
+                {isReadOnly && (
+                  <p className="mt-1 text-xs text-text-muted/80 italic font-sans" id="theme-logo-readonly-notice">
+                    {t('theme.editor.branding.readOnlyNotice')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection
             id="section-typography-scaling"
             title="Typography Base Scaling"
             description="Adjust the root font size that drives CSS REM calculations across all interface elements."
@@ -1357,13 +1662,21 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
 
         {/* Right / Live Preview Column */}
         {showPreview && (
-          <div className="xl:col-span-5 w-full" id="theme-editor-preview-column">
+          <div
+            className="xl:col-span-5 w-full xl:sticky xl:top-16 xl:max-h-[calc(100vh-4.5rem)] xl:overflow-y-auto"
+            id="theme-editor-preview-column"
+          >
             <LivePreviewPane
               themeName={name}
               baseFontSize={baseFontSize}
               draftColors={colorSubMode === 'dark' ? draftDarkColors : draftColors}
               mode={colorSubMode}
               fonts={previewFonts}
+              logoPreviewSrc={
+                logoStoragePath && theme?.id
+                  ? `/api/themes/${theme.id}/logo?t=${logoTimestamp}`
+                  : null
+              }
             />
           </div>
         )}

@@ -26,15 +26,19 @@ The **Theme & Branding** module manages tenant-scoped visual appearance, semanti
 - **`themeLock.service.ts`**: Manages exclusive editing locks and test-mode locks on themes with 30-second heartbeats, stale lock stealing, and collision prevention.
 - **`font.service.ts`**: Validates uploaded font files using `fontkit`, extracts metadata (family, weight, style, format), enforces duplicate name checks, lists fonts, manages font deletions with usage audits, and coordinates cascading font replacements across theme slots.
 - **`fontStorage.service.ts`**: Handles physical file system operations for font files under the `/uploads/fonts/` storage directory.
+- **`logoStorage.service.ts`**: Handles physical file system operations for theme logo files under the configurable logo storage directory (`LOGO_STORAGE_PATH` or default `./logo-storage/logos/`), including path traversal validation, secure file writing, and cleanup.
 
 ## Endpoints
 
 ### Theme Routes (`/api/themes`)
-- `GET /api/themes/resolved` — Public / optionalAuth. Resolves active or preview token/font mappings for the company. Supports `?test=:themeId` query parameter or `themeTestOverrideId` cookie/session.
+- `GET /api/themes/resolved` — Public / optionalAuth. Resolves active or preview token/font mappings and `logoUrl` (`/api/themes/:id/logo` or `null`) for the company. Supports `?test=:themeId` query parameter or `themeTestOverrideId` cookie/session.
 - `GET /api/themes` — Requires `theme:view`. Lists non-deleted themes for the tenant.
 - `POST /api/themes` — Requires `theme:edit`. Creates a new theme as a deep snapshot copy of an existing template (starts in `DRAFT`).
 - `GET /api/themes/:id` — Requires `theme:view`. Retrieves single theme detail with font relations.
 - `PATCH /api/themes/:id` — Requires `theme:edit`. Partially updates a theme; merges `colorValues` and `darkColorValues` key-by-key. Rejects active themes (409) and the Smart Cookie Default theme (403).
+- `POST /api/themes/:id/logo` — Requires `theme:edit`. Uploads a custom theme logo (JPEG, PNG, GIF, WebP; max 2MB) with magic-byte validation. Replaces any existing logo for the theme on disk. Rejects the Smart Cookie Default theme (403) and active themes (409).
+- `GET /api/themes/:id/logo` — Public / unauthenticated. Streams raw logo image with `Cache-Control: public, max-age=86400` and proper image `Content-Type`. Returns 404 if no logo set or file missing on disk.
+- `DELETE /api/themes/:id/logo` — Requires `theme:edit`. Removes the logo file from disk and clears `Theme.logoStoragePath`. Returns 404 if no logo currently set. Rejects the Smart Cookie Default theme (403) and active themes (409).
 - `POST /api/themes/:id/set-ready` — Requires `theme:set-ready`. Transitions a theme from `DRAFT` to `READY` after validating font references.
 - `POST /api/themes/:id/set-draft` — Requires `theme:set-ready`. Transitions a theme back to `DRAFT` and cancels pending schedules.
 - `POST /api/themes/:id/activate` — Requires `theme:activate`. Supports immediate activation (`{ mode: 'immediate' }`) or scheduled activation (`{ mode: 'scheduled', scheduledActivationAt: ISOString }`).

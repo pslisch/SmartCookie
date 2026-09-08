@@ -21,6 +21,7 @@ export interface ResolvedThemeResponse {
   darkTokens: Record<string, string> | null;
   darkColorValues: Record<string, string> | null;
   fonts?: Record<string, ResolvedFontDetails>;
+  logoUrl?: string | null;
 }
 
 export interface ThemeRuntimeContextType {
@@ -31,6 +32,7 @@ export interface ThemeRuntimeContextType {
   isTestMode: boolean;
   testThemeName: string | null;
   testThemeId: string | null;
+  logoUrl: string | null;
   refetch: () => Promise<void>;
   exitTestMode: () => Promise<void>;
 }
@@ -67,6 +69,7 @@ export function ThemeRuntimeProvider({ children }: ThemeRuntimeProviderProps) {
   const [isTestMode, setIsTestMode] = useState<boolean>(false);
   const [testThemeName, setTestThemeName] = useState<string | null>(null);
   const [testThemeId, setTestThemeId] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Sync data-theme attribute on <html> element immediately
@@ -160,6 +163,7 @@ export function ThemeRuntimeProvider({ children }: ThemeRuntimeProviderProps) {
           setIsTestMode(false);
           setTestThemeName(null);
           setTestThemeId(null);
+          setLogoUrl(fallbackData.logoUrl || null);
           return;
         }
       }
@@ -168,6 +172,7 @@ export function ThemeRuntimeProvider({ children }: ThemeRuntimeProviderProps) {
       setIsTestMode(Boolean(data.isTest));
       setTestThemeName(data.isTest ? data.name : null);
       setTestThemeId(data.isTest ? data.themeId : null);
+      setLogoUrl(data.logoUrl || null);
     } catch (error) {
       console.warn('[ThemeRuntime] Error fetching resolved theme:', error);
     } finally {
@@ -256,6 +261,7 @@ export function ThemeRuntimeProvider({ children }: ThemeRuntimeProviderProps) {
         isTestMode,
         testThemeName,
         testThemeId,
+        logoUrl,
         refetch: fetchTheme,
         exitTestMode,
       }}

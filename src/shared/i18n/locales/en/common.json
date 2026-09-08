@@ -177,14 +177,14 @@
     "userGroupManagement": "User & Group Management",
     "userGroupManagementDesc": "Manage organization units, hierarchy, learning groups, and memberships for corporate structural organization.",
     "userGroupManagementSubtitle": "Manage your company department structure, organization units, and learning group cohorts.",
-    "assignments": "Assignment Management",
-    "assignmentsDesc": "Create and track learning assignments, assign courses to groups or individuals, and view compliance reports.",
-    "assignmentsSubtitle": "Manage lesson and course assignments, set completion targets, and track user progress.",
+    "assignments": "Content Management",
+    "assignmentsDesc": "Manage course and lesson content, create and track learning assignments, and view compliance reports.",
+    "assignmentsSubtitle": "Manage curriculum content, lessons, courses, and learning assignments.",
     "activeSession": "Active Session",
     "backBtn": "Back to Management Hub",
     "managePermissionsBtn": "Manage Permissions",
     "manageDirectoryBtn": "Manage Directory",
-    "manageAssignmentsBtn": "Manage Assignments",
+    "manageAssignmentsBtn": "Manage Content",
     "subtabDispatcher": "Assignments & Distribution",
     "subtabCatalog": "Course & Lesson Catalog",
     "placeholder": "Assignment Management feature is coming in Task 5."
@@ -1079,6 +1079,45 @@
     },
     "roleTemplates": {
       "stepHeader": "Step 7 of 7"
+    }
+  },
+  "theme": {
+    "management": {
+      "deleteTooltip": "Delete theme",
+      "deleteAria": "Delete {{name}}",
+      "deleteDefaultDisabledTooltip": "The Smart Cookie Default theme cannot be deleted.",
+      "deleteActiveDisabledTooltip": "Cannot delete an active theme. Another theme must be activated first.",
+      "deleteConfirmTitle": "Delete Theme",
+      "deleteConfirmMessage": "Are you sure you want to delete theme \"{{name}}\"? It will be moved to the 14-day soft-delete retention window before permanent removal.",
+      "deleteScheduledWarning": "This theme has a pending scheduled activation which will be cancelled upon deletion.",
+      "cancelScheduleConfirmTitle": "Scheduled Activation Conflict",
+      "cancelScheduleConfirmMessage": "This theme has a scheduled activation which will be cancelled. Are you sure you want to cancel the schedule and delete \"{{name}}\"?",
+      "confirmDeleteBtn": "Delete Theme",
+      "confirmCancelScheduleAndDeleteBtn": "Cancel Schedule & Delete",
+      "cancelBtn": "Cancel",
+      "deleting": "Deleting...",
+      "deleteSuccess": "Theme \"{{name}}\" deleted successfully.",
+      "deleteErrorGeneric": "Failed to delete theme."
+    },
+    "editor": {
+      "branding": {
+        "title": "Branding",
+        "description": "Upload and manage a custom brand logo for this theme.",
+        "currentLogo": "Current Logo",
+        "noLogo": "No logo uploaded",
+        "noLogoDescription": "Upload a PNG, JPEG, GIF, or WebP logo image (up to 2MB).",
+        "uploadBtn": "Upload Logo",
+        "changeBtn": "Change Logo",
+        "uploading": "Uploading...",
+        "removeBtn": "Remove Logo",
+        "removing": "Removing...",
+        "dimensionsHint": "Max file size: 2MB. Supported formats: PNG, JPEG, GIF, WebP.",
+        "readOnlyNotice": "Logo customization is disabled in read-only mode.",
+        "errorInvalidType": "Invalid image format. Please select a PNG, JPEG, GIF, or WebP image.",
+        "errorFileSize": "File size exceeds the 2MB limit.",
+        "errorUploadFailed": "Failed to upload logo.",
+        "errorDeleteFailed": "Failed to remove logo."
+      }
     }
   }
 }

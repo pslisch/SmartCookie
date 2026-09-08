@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showQuickProfile, setShowQuickProfile] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { isDarkMode, toggleDisplayMode } = useThemeRuntime();
+  const { isDarkMode, toggleDisplayMode, logoUrl } = useThemeRuntime();
   
   const hasManagementAccess = 
     usePermission('roles', 'manage') || 
@@ -88,7 +88,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="navbar-logo-btn"
             >
               <img
-                src="/SC_logo.png"
+                src={logoUrl || '/SC_logo.png'}
                 alt="Logo"
                 referrerPolicy="no-referrer"
                 className="h-8 w-8 object-contain"

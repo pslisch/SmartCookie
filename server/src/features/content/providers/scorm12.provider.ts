@@ -89,7 +89,7 @@ function getDefaultLaunchItemRef(manifestObj: any): { refId: string; title: stri
   
   let targetOrg = orgList[0];
   if (defaultOrgId) {
-    const matched = orgList.find(org => getAttributeIgnoreCaseAndNamespace(org, 'id') === defaultOrgId);
+    const matched = orgList.find(org => getAttributeIgnoreCaseAndNamespace(org, 'identifier') === defaultOrgId);
     if (matched) {
       targetOrg = matched;
     }

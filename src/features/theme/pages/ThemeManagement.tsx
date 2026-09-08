@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 import {
   Palette,
   Plus,
@@ -15,6 +16,8 @@ import {
   FlaskConical,
   Zap,
   CalendarClock,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import { Theme } from '../types';
 import { ThemeEditor } from './ThemeEditor';
@@ -29,8 +32,10 @@ function getCsrfToken(): string {
 }
 
 export const ThemeManagement: React.FC = () => {
+  const { t } = useTranslation();
   const canEdit = usePermission('theme', 'edit');
   const canActivate = usePermission('theme', 'activate');
+  const canDelete = usePermission('theme', 'delete');
 
   const [themes, setThemes] = useState<Theme[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -51,6 +56,15 @@ export const ThemeManagement: React.FC = () => {
   const [sourceThemeId, setSourceThemeId] = useState<string>('');
   const [creating, setCreating] = useState<boolean>(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  // Delete theme state
+  const [themeToDelete, setThemeToDelete] = useState<Theme | null>(null);
+  const [scheduleCancelTheme, setScheduleCancelTheme] = useState<Theme | null>(null);
+  const [deleting, setDeleting] = useState<boolean>(false);
+  const [deletingThemeId, setDeletingThemeId] = useState<string | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   // Runtime test mode integration
   const { isTestMode, testThemeId, refetch: refetchRuntimeTheme, exitTestMode } = useThemeRuntime();
@@ -242,6 +256,73 @@ export const ThemeManagement: React.FC = () => {
     }
   };
 
+  const handlePromptDelete = (theme: Theme) => {
+    setDeleteError(null);
+    setDeleteSuccess(null);
+    setModalError(null);
+    setThemeToDelete(theme);
+  };
+
+  const handleExecuteDelete = async (theme: Theme, confirmCancelSchedule = false) => {
+    try {
+      setDeleting(true);
+      setDeletingThemeId(theme.id);
+      setModalError(null);
+      setDeleteError(null);
+
+      const csrfToken = getCsrfToken();
+      const res = await fetch(`/api/themes/${theme.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+        credentials: 'include',
+        body: confirmCancelSchedule ? JSON.stringify({ confirmCancelSchedule: true }) : undefined,
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (res.status === 409 && data.requiresScheduleConfirmation) {
+          // Switch to explicit schedule cancellation confirmation modal
+          setThemeToDelete(null);
+          setScheduleCancelTheme(theme);
+          return;
+        }
+        const errorMsg = data.error || t('theme.management.deleteErrorGeneric');
+        setModalError(errorMsg);
+        setDeleteError(errorMsg);
+        setThemeToDelete(null);
+        setScheduleCancelTheme(null);
+        return;
+      }
+
+      // Exit test mode if the deleted theme was being tested
+      if (isTestMode && testThemeId === theme.id) {
+        await exitTestMode();
+      }
+
+      // Success
+      setThemeToDelete(null);
+      setScheduleCancelTheme(null);
+      setDeleteSuccess(data.message || t('theme.management.deleteSuccess', { name: theme.name }));
+      setThemes((prev) => prev.filter((t) => t.id !== theme.id));
+      await fetchThemes();
+      await refetchRuntimeTheme();
+    } catch (err: any) {
+      console.error('[ThemeManagement] Error deleting theme:', err);
+      const errorMsg = err.message || t('theme.management.deleteErrorGeneric');
+      setModalError(errorMsg);
+      setDeleteError(errorMsg);
+      setThemeToDelete(null);
+      setScheduleCancelTheme(null);
+    } finally {
+      setDeleting(false);
+      setDeletingThemeId(null);
+    }
+  };
+
   // If a theme is selected, mount the ThemeEditor
   if (selectedThemeId) {
     return (
@@ -318,13 +399,52 @@ export const ThemeManagement: React.FC = () => {
         <FontLibrary />
       ) : (
         <>
+          {/* Delete Feedback / Error banners */}
+          {deleteSuccess && (
+            <div
+              className="flex items-center justify-between p-4 rounded-xl bg-status-success-bg border border-status-success-text/20 text-status-success-text mb-4"
+              id="theme-delete-success"
+            >
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="h-5 w-5 shrink-0" />
+                <p className="text-sm font-sans">{deleteSuccess}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteSuccess(null)}
+                className="text-current/70 hover:text-current ml-2 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {deleteError && (
+            <div
+              className="flex items-center justify-between p-4 rounded-xl bg-status-error-bg/50 border border-status-error-text/20 text-status-error-text mb-4"
+              id="theme-delete-error"
+            >
+              <div className="flex items-center space-x-3">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <p className="text-sm font-sans">{deleteError}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteError(null)}
+                className="text-current/70 hover:text-current ml-2 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
           {/* Error state */}
-      {error && (
-        <div className="flex items-center space-x-3 p-4 rounded-xl bg-status-error-bg/50 border border-status-error-text/20 text-status-error-text" id="theme-list-error">
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <p className="text-sm font-sans">{error}</p>
-        </div>
-      )}
+          {error && (
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-status-error-bg/50 border border-status-error-text/20 text-status-error-text" id="theme-list-error">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <p className="text-sm font-sans">{error}</p>
+            </div>
+          )}
 
       {/* Loading state */}
       {loading ? (
@@ -564,6 +684,38 @@ export const ThemeManagement: React.FC = () => {
                         )}
                       </button>
                     )}
+
+                    {/* Delete Theme action */}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePromptDelete(theme);
+                        }}
+                        disabled={isDefault || isActive || deletingThemeId === theme.id}
+                        id={`theme-delete-btn-${theme.id}`}
+                        title={
+                          isDefault
+                            ? t('theme.management.deleteDefaultDisabledTooltip')
+                            : isActive
+                            ? t('theme.management.deleteActiveDisabledTooltip')
+                            : t('theme.management.deleteTooltip')
+                        }
+                        className={`inline-flex items-center justify-center rounded-lg p-1.5 text-xs transition-all ${
+                          isDefault || isActive
+                            ? 'text-text-muted/30 cursor-not-allowed border border-transparent'
+                            : 'text-text-muted hover:text-status-error-text hover:bg-status-error-bg/60 border border-card-border hover:border-status-error-text/30 cursor-pointer'
+                        }`}
+                        aria-label={t('theme.management.deleteAria', { name: theme.name })}
+                      >
+                        {deletingThemeId === theme.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-status-error-text" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex items-center space-x-1 text-xs font-semibold text-link-primary hover:underline">
@@ -762,6 +914,195 @@ export const ThemeManagement: React.FC = () => {
               await refetchRuntimeTheme();
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Delete Theme Confirmation Modal */}
+      <AnimatePresence>
+        {themeToDelete && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-overlay backdrop-blur-xs"
+            id="delete-theme-modal-backdrop"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md rounded-2xl border border-card-border bg-card-bg shadow-xl overflow-hidden"
+              id="delete-theme-modal"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-card-border">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-status-error-bg text-status-error-text">
+                    <Trash2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-text-heading font-sans">
+                      {t('theme.management.deleteConfirmTitle')}
+                    </h3>
+                    <p className="text-xs text-text-muted font-sans line-clamp-1">
+                      {themeToDelete.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => setThemeToDelete(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-card-header-bg transition-colors cursor-pointer"
+                  id="close-delete-theme-modal-btn"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
+                {modalError && (
+                  <div className="flex items-center space-x-2 p-3 rounded-xl bg-status-error-bg text-status-error-text text-xs border border-status-error-text/20">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{modalError}</span>
+                  </div>
+                )}
+
+                <p className="text-sm text-text-body font-sans leading-relaxed">
+                  {t('theme.management.deleteConfirmMessage', { name: themeToDelete.name })}
+                </p>
+
+                {themeToDelete.scheduledActivationAt && (
+                  <div className="flex items-start space-x-2 p-3 rounded-xl bg-status-warning-bg/50 border border-status-warning-text/25 text-xs text-status-warning-text">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>{t('theme.management.deleteScheduledWarning')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end space-x-3 p-6 pt-4 border-t border-card-border">
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => setThemeToDelete(null)}
+                  className="rounded-xl border border-card-border bg-card-bg px-4 py-2 text-sm font-semibold text-text-heading shadow-sm hover:bg-card-header-bg transition-colors cursor-pointer disabled:opacity-60"
+                  id="cancel-delete-theme-btn"
+                >
+                  {t('theme.management.cancelBtn')}
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => handleExecuteDelete(themeToDelete, false)}
+                  className="inline-flex items-center space-x-2 rounded-xl bg-status-error-text px-4 py-2 text-sm font-semibold text-btn-primary-text shadow-sm hover:bg-status-error-text/90 transition-colors cursor-pointer disabled:opacity-60"
+                  id="confirm-delete-theme-btn"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{t('theme.management.deleting')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      <span>{t('theme.management.confirmDeleteBtn')}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Schedule Cancellation Confirmation Modal */}
+      <AnimatePresence>
+        {scheduleCancelTheme && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-overlay backdrop-blur-xs"
+            id="cancel-schedule-delete-modal-backdrop"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md rounded-2xl border border-card-border bg-card-bg shadow-xl overflow-hidden"
+              id="cancel-schedule-delete-modal"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-card-border">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-status-warning-bg text-status-warning-text">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-text-heading font-sans">
+                      {t('theme.management.cancelScheduleConfirmTitle')}
+                    </h3>
+                    <p className="text-xs text-text-muted font-sans line-clamp-1">
+                      {scheduleCancelTheme.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => setScheduleCancelTheme(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-card-header-bg transition-colors cursor-pointer"
+                  id="close-cancel-schedule-modal-btn"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
+                {modalError && (
+                  <div className="flex items-center space-x-2 p-3 rounded-xl bg-status-error-bg text-status-error-text text-xs border border-status-error-text/20">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{modalError}</span>
+                  </div>
+                )}
+
+                <p className="text-sm text-text-body font-sans leading-relaxed">
+                  {t('theme.management.cancelScheduleConfirmMessage', { name: scheduleCancelTheme.name })}
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end space-x-3 p-6 pt-4 border-t border-card-border">
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => setScheduleCancelTheme(null)}
+                  className="rounded-xl border border-card-border bg-card-bg px-4 py-2 text-sm font-semibold text-text-heading shadow-sm hover:bg-card-header-bg transition-colors cursor-pointer disabled:opacity-60"
+                  id="cancel-schedule-cancel-btn"
+                >
+                  {t('theme.management.cancelBtn')}
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => handleExecuteDelete(scheduleCancelTheme, true)}
+                  className="inline-flex items-center space-x-2 rounded-xl bg-status-error-text px-4 py-2 text-sm font-semibold text-btn-primary-text shadow-sm hover:bg-status-error-text/90 transition-colors cursor-pointer disabled:opacity-60"
+                  id="confirm-cancel-schedule-delete-btn"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{t('theme.management.deleting')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      <span>{t('theme.management.confirmCancelScheduleAndDeleteBtn')}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

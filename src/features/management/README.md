@@ -7,4 +7,4 @@ This module consolidates system administration, organizational unit management, 
 - `pages/Management.tsx`: The primary dashboard page of the Management Hub, listing navigation cards for allowed sub-modules depending on user roles/permissions:
   - **Role Management**: Control fine-grained role capabilities (RBAC).
   - **User & Group Management**: Organize structural corporate units and learning group cohorts.
-  - **Assignment Management**: Assign courses/lessons and monitor completion compliance.
+  - **Content Management**: Manage curriculum content, assign courses/lessons, and monitor completion compliance.

@@ -29,4 +29,5 @@ export interface ResolvedTheme {
   darkTokens: Record<string, string> | null;
   darkColorValues: Record<string, string> | null;
   fonts: Record<FontGroup, ResolvedFontDetails>;
+  logoUrl: string | null;
 }

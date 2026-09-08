@@ -213,14 +213,14 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
       setValidationResult(data);
 
       // If a lesson selection was made, let's link the newly imported package contentId with the Lesson!
-      if (selectedLessonId && data.contentId) {
+      if (selectedLessonId && data.content?.id) {
         await fetch(`/api/lessons/${selectedLessonId}/content`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'X-CSRF-Token': getCookie('csrfToken'),
           },
-          body: JSON.stringify({ contentId: data.contentId }),
+          body: JSON.stringify({ contentId: data.content.id }),
         });
       }
 
@@ -235,11 +235,11 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
 
   // Immediate Publish option on Step 8
   const handlePublishContent = async () => {
-    if (!validationResult?.contentId) return;
+    if (!validationResult?.content?.id) return;
 
     setIsPublishing(true);
     try {
-      const res = await fetch(`/api/content/${validationResult.contentId}/publish`, {
+      const res = await fetch(`/api/content/${validationResult.content.id}/publish`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -876,11 +876,11 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
               <div className="bg-card-header-bg border border-card-border rounded-2xl p-4 max-w-md mx-auto text-left space-y-2.5 text-xs text-text-muted font-medium">
                 <div className="flex justify-between">
                   <span>Package ID:</span>
-                  <span className="font-mono text-text-heading">{validationResult?.contentId?.slice(0, 8)}...</span>
+                  <span className="font-mono text-text-heading">{validationResult?.content?.id}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Launch File:</span>
-                  <span className="font-mono text-text-heading">{validationResult?.launchFile}</span>
+                  <span className="font-mono text-text-heading">{validationResult?.content?.launchFile}</span>
                 </div>
                 {selectedLessonId && (
                   <div className="flex justify-between text-link-primary font-semibold border-t border-card-border pt-2.5 mt-2.5">

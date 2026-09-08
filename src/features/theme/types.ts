@@ -61,6 +61,7 @@ export interface Theme {
   linksFontId?: string | null;
   statusFontId?: string | null;
   baseFontSize: number;
+  logoStoragePath?: string | null;
   scheduledActivationAt?: string | null;
   scheduledActivationFailedAt?: string | null;
   scheduledActivationFailedReason?: string | null;

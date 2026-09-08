@@ -1,5 +1,8 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import fs from 'fs';
+import path from 'path';
 import crypto from 'crypto';
+import multer from 'multer';
 import { requireAuth, optionalAuth } from '../../../shared/middleware/session.middleware';
 import { requirePermission } from '../../../shared/middleware/permission.middleware';
 import { prisma } from '../../../shared/db/prisma';
@@ -8,8 +11,17 @@ import { themeResolutionService } from '../services/themeResolution.service';
 import { themeLockService } from '../services/themeLock.service';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 import { scheduledTasksService } from '../../../shared/scheduler/scheduledTasks.service';
+import { ImageUploadService, InvalidImageError } from '../../content/services/imageUpload.service';
+import { saveLogoFile, deleteLogoFile } from '../services/logoStorage.service';
 
 const router = Router();
+const imageUploadService = new ImageUploadService();
+const logoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB
+  },
+});
 
 const THEME_INCLUDE_FONTS = {
   generalFont: true,
@@ -827,6 +839,232 @@ router.delete('/:id', requirePermission('theme', 'delete'), async (req: Request,
   } catch (error: any) {
     console.error('[Theme Router] Error deleting theme:', error);
     return res.status(500).json({ error: error.message || 'Failed to delete theme.' });
+  }
+});
+
+/**
+ * POST /api/themes/:id/logo
+ * Upload a custom logo for a theme (JPEG, PNG, GIF, WebP up to 2MB).
+ * Gated by: theme:edit
+ */
+router.post(
+  '/:id/logo',
+  requireAuth,
+  requirePermission('theme', 'edit'),
+  (req: Request, res: Response, next: NextFunction) => {
+    logoUpload.single('logo')(req, res, (err: any) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: 'File size exceeds the maximum allowed limit of 2MB.' });
+        }
+        return res.status(400).json({ error: err.message || 'File upload error.' });
+      }
+      next();
+    });
+  },
+  async (req: Request, res: Response) => {
+    try {
+      const companyId = await getEffectiveCompanyId(req);
+      if (!companyId) {
+        return res.status(400).json({ error: 'No company associated with current user.' });
+      }
+
+      const { id } = req.params;
+      const theme = await prisma.theme.findFirst({
+        where: {
+          id,
+          companyId,
+          deletedAt: null,
+        },
+      });
+
+      if (!theme) {
+        return res.status(404).json({ error: 'Theme not found.' });
+      }
+
+      if (theme.isSmartCookieDefault) {
+        return res.status(403).json({ error: 'The Smart Cookie Default theme cannot be edited.' });
+      }
+
+      if (theme.status === ThemeStatus.ACTIVE) {
+        return res.status(409).json({
+          error: 'Active themes cannot be edited. Create a copy or edit in Draft/Ready status.',
+        });
+      }
+
+      const lockStatus = await themeLockService.getLockStatus(id);
+      if (lockStatus && req.user && lockStatus.userId !== req.user.id) {
+        const verb = lockStatus.lockType === ThemeLockType.TEST ? 'testing' : 'editing';
+        return res.status(409).json({
+          error: `${lockStatus.holderName} is currently ${verb} this theme.`,
+          holderName: lockStatus.holderName,
+          lockType: lockStatus.lockType,
+        });
+      }
+
+      const file = req.file;
+      if (!file || !file.buffer) {
+        return res.status(400).json({ error: 'No image file provided under the "logo" field.' });
+      }
+
+      const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+      if (file.buffer.length > MAX_SIZE) {
+        return res.status(400).json({ error: 'File size exceeds the maximum allowed limit of 2MB.' });
+      }
+
+      let ext: string;
+      try {
+        ext = imageUploadService.validateImageSignature(file.buffer);
+      } catch (validationErr: any) {
+        if (validationErr instanceof InvalidImageError || validationErr.name === 'InvalidImageError') {
+          return res.status(400).json({ error: validationErr.message });
+        }
+        return res.status(400).json({ error: 'Invalid image format: file does not match a supported image signature (JPEG, PNG, GIF, WebP).' });
+      }
+
+      // Delete previous logo file if one exists
+      if (theme.logoStoragePath) {
+        deleteLogoFile(theme.logoStoragePath);
+      }
+
+      // Save new logo file
+      const savedPath = saveLogoFile(theme.id, ext, file.buffer);
+
+      // Update theme record
+      const updatedTheme = await prisma.theme.update({
+        where: { id: theme.id },
+        data: { logoStoragePath: savedPath },
+        include: THEME_INCLUDE_FONTS,
+      });
+
+      return res.status(200).json({
+        success: true,
+        logoStoragePath: savedPath,
+        theme: updatedTheme,
+      });
+    } catch (error: any) {
+      console.error('[Theme Router] Error uploading theme logo:', error);
+      if (error instanceof InvalidImageError || error.name === 'InvalidImageError') {
+        return res.status(400).json({ error: error.message });
+      }
+      return res.status(500).json({ error: error.message || 'Failed to upload theme logo.' });
+    }
+  }
+);
+
+/**
+ * GET /api/themes/:id/logo
+ * Serves the theme logo file.
+ * Public / unauthenticated route (usable in <img> tags across login/setup pages).
+ * Cache-Control: public, max-age=86400
+ */
+router.get('/:id/logo', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const theme = await prisma.theme.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!theme || !theme.logoStoragePath) {
+      return res.status(404).json({ error: 'Logo not found.' });
+    }
+
+    const fullPath = path.isAbsolute(theme.logoStoragePath)
+      ? theme.logoStoragePath
+      : path.resolve(process.cwd(), theme.logoStoragePath);
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ error: 'Logo file not found on disk.' });
+    }
+
+    const mimeTypes: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
+    };
+
+    const ext = path.extname(fullPath).replace(/^\./, '').toLowerCase();
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.sendFile(fullPath);
+  } catch (error: any) {
+    console.error('[Theme Router] Error serving theme logo:', error);
+    return res.status(500).json({ error: 'Failed to serve theme logo.' });
+  }
+});
+
+/**
+ * DELETE /api/themes/:id/logo
+ * Removes the theme logo file from disk and clears Theme.logoStoragePath.
+ * Gated by: theme:edit
+ */
+router.delete('/:id/logo', requireAuth, requirePermission('theme', 'edit'), async (req: Request, res: Response) => {
+  try {
+    const companyId = await getEffectiveCompanyId(req);
+    if (!companyId) {
+      return res.status(400).json({ error: 'No company associated with current user.' });
+    }
+
+    const { id } = req.params;
+    const theme = await prisma.theme.findFirst({
+      where: {
+        id,
+        companyId,
+        deletedAt: null,
+      },
+    });
+
+    if (!theme) {
+      return res.status(404).json({ error: 'Theme not found.' });
+    }
+
+    if (theme.isSmartCookieDefault) {
+      return res.status(403).json({ error: 'The Smart Cookie Default theme cannot be edited.' });
+    }
+
+    if (theme.status === ThemeStatus.ACTIVE) {
+      return res.status(409).json({
+        error: 'Active themes cannot be edited. Create a copy or edit in Draft/Ready status.',
+      });
+    }
+
+    const lockStatus = await themeLockService.getLockStatus(id);
+    if (lockStatus && req.user && lockStatus.userId !== req.user.id) {
+      const verb = lockStatus.lockType === ThemeLockType.TEST ? 'testing' : 'editing';
+      return res.status(409).json({
+        error: `${lockStatus.holderName} is currently ${verb} this theme.`,
+        holderName: lockStatus.holderName,
+        lockType: lockStatus.lockType,
+      });
+    }
+
+    if (!theme.logoStoragePath) {
+      return res.status(404).json({ error: 'No logo currently set for this theme.' });
+    }
+
+    deleteLogoFile(theme.logoStoragePath);
+
+    const updatedTheme = await prisma.theme.update({
+      where: { id: theme.id },
+      data: { logoStoragePath: null },
+      include: THEME_INCLUDE_FONTS,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Logo deleted successfully.',
+      theme: updatedTheme,
+    });
+  } catch (error: any) {
+    console.error('[Theme Router] Error deleting theme logo:', error);
+    return res.status(500).json({ error: error.message || 'Failed to delete theme logo.' });
   }
 });
 

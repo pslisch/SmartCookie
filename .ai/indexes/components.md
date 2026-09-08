@@ -96,7 +96,7 @@ Every registered component should include:
 
 ### 10. `Management`
 - **Location**: `src/features/management/pages/Management.tsx`
-- **Purpose**: Centralized administration and oversight hub presenting gated cards for Role Management, User & Group Management, and Lesson Assignments. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-text-heading`, `text-text-muted`).
+- **Purpose**: Centralized administration and oversight hub presenting gated cards for Role Management, User & Group Management, and Content Management. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-text-heading`, `text-text-muted`).
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `usePermission`, `RoleManagement`, `UserGroupManagement`, `AssignmentManagement`, `ContentManagement`, Lucide Icons
@@ -244,7 +244,7 @@ Every registered component should include:
 
 ### 28. `ThemeEditor`
 - **Location**: `src/features/theme/pages/ThemeEditor.tsx`
-- **Purpose**: Visual theme customizer with tabbed interface (`general`, `colors`, `fonts`), real-time split-screen preview, concurrent lock heartbeat engine, light/dark submode editing, per-token reset, and auto-saving drafts.
+- **Purpose**: Visual theme customizer with tabbed interface (`general`, `colors`, `fonts`), branding logo management (upload, preview, delete), real-time split-screen preview, concurrent lock heartbeat engine, light/dark submode editing, per-token reset, and auto-saving drafts.
 - **Props**: `themeId: string`, `onClose: () => void`
 - **Used By**: `src/features/theme/pages/ThemeManagement.tsx`
 - **Dependencies**: React, `lucide-react`, `motion/react`, `useThemeRuntime`

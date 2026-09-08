@@ -230,6 +230,12 @@ Each reusable service should include:
 - **Consumers**: `src/App.tsx`, `src/features/theme/pages/*`, `src/features/theme/components/*`, all UI components consuming semantic tokens.
 - **Dependencies**: React, `lucide-react`
 
+### 44. LogoStorageService
+- **Purpose**: Manages file system persistence, directory creation, unique file naming, path traversal protection, disk retrieval, and file deletion for custom theme logo assets under `LOGO_STORAGE_PATH` (defaulting to `./logo-storage/logos/`).
+- **Consumers**: `server/src/features/theme/routes/theme.routes.ts`
+- **Dependencies**: Node `fs`, `path`
+
+
 
 
 

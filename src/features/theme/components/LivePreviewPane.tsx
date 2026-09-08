@@ -30,6 +30,7 @@ export interface LivePreviewPaneProps {
     links?: string;
     status?: string;
   };
+  logoPreviewSrc?: string | null;
 }
 
 export const LivePreviewPane: React.FC<LivePreviewPaneProps> = ({
@@ -38,6 +39,7 @@ export const LivePreviewPane: React.FC<LivePreviewPaneProps> = ({
   draftColors,
   mode = 'light',
   fonts,
+  logoPreviewSrc,
 }) => {
   // Merge draft colors with canonical defaults (light or dark) to ensure all 28 tokens are resolved
   const fallbackDefaults = mode === 'dark' ? CANONICAL_DEFAULT_DARK_TOKENS : CANONICAL_DEFAULT_TOKENS;
@@ -138,16 +140,26 @@ export const LivePreviewPane: React.FC<LivePreviewPaneProps> = ({
         >
           {/* Brand logo & title */}
           <div className="flex items-center space-x-2.5">
-            <div
-              className="h-7 w-7 rounded-lg flex items-center justify-center font-bold text-xs shadow-2xs"
-              style={{
-                backgroundColor: colors['btn-primary-bg'],
-                color: colors['btn-primary-text'],
-                fontFamily: fontButtons,
-              }}
-            >
-              SC
-            </div>
+            {logoPreviewSrc ? (
+              <img
+                src={logoPreviewSrc}
+                alt={themeName || 'Theme Logo'}
+                className="h-7 w-7 rounded-lg object-contain"
+                id="preview-nav-logo-img"
+              />
+            ) : (
+              <div
+                className="h-7 w-7 rounded-lg flex items-center justify-center font-bold text-xs shadow-2xs"
+                style={{
+                  backgroundColor: colors['btn-primary-bg'],
+                  color: colors['btn-primary-text'],
+                  fontFamily: fontButtons,
+                }}
+                id="preview-nav-logo-placeholder"
+              >
+                SC
+              </div>
+            )}
             <span
               className="font-bold text-sm tracking-tight truncate max-w-[120px] sm:max-w-[160px]"
               style={{
