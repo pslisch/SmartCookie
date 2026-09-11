@@ -19,7 +19,7 @@ router.get('/notification-preferences', requireAuth, async (req: Request, res: R
 
     const prefMap = new Map<NotificationType, boolean>();
     for (const p of userPrefs) {
-      prefMap.set(p.notificationType, p.enabled);
+      prefMap.set(p.notificationType, p.emailEnabled);
     }
 
     const allTypes = Object.values(NotificationType) as NotificationType[];
@@ -55,11 +55,11 @@ router.patch('/notification-preferences', requireAuth, async (req: Request, res:
               notificationType: pref.notificationType,
             },
           },
-          update: { enabled: pref.enabled },
+          update: { emailEnabled: pref.enabled },
           create: {
             userId: req.user!.id,
             notificationType: pref.notificationType,
-            enabled: pref.enabled,
+            emailEnabled: pref.enabled,
           },
         });
       }
@@ -74,11 +74,11 @@ router.patch('/notification-preferences', requireAuth, async (req: Request, res:
             notificationType,
           },
         },
-        update: { enabled },
+        update: { emailEnabled: enabled },
         create: {
           userId: req.user!.id,
           notificationType,
-          enabled,
+          emailEnabled: enabled,
         },
       });
     } else {

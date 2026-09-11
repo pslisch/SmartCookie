@@ -32,7 +32,7 @@ async function shouldSendNotification(
   });
 
   if (pref) {
-    return pref.enabled;
+    return pref.emailEnabled;
   }
 
   return true; // Defaults to enabled

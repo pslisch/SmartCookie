@@ -428,8 +428,15 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
     if (defaultThemeColors) return defaultThemeColors;
 
     try {
-      const res = await fetch('/api/themes', { credentials: 'include' });
+      const res = await fetch('/api/themes', {
+        headers: { Accept: 'application/json' },
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch themes');
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return CANONICAL_DEFAULT_TOKENS;
+      }
       const themes: Theme[] = await res.json();
       const defaultTheme = themes.find((t) => t.isSmartCookieDefault);
       if (defaultTheme && defaultTheme.colorValues) {
@@ -453,8 +460,15 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
     if (defaultThemeDarkColors) return defaultThemeDarkColors;
 
     try {
-      const res = await fetch('/api/themes', { credentials: 'include' });
+      const res = await fetch('/api/themes', {
+        headers: { Accept: 'application/json' },
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch themes');
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return CANONICAL_DEFAULT_DARK_TOKENS;
+      }
       const themes: Theme[] = await res.json();
       const defaultTheme = themes.find((t) => t.isSmartCookieDefault);
       if (defaultTheme && defaultTheme.darkColorValues) {

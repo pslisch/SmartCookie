@@ -1097,7 +1097,11 @@
       "cancelBtn": "Cancel",
       "deleting": "Deleting...",
       "deleteSuccess": "Theme \"{{name}}\" deleted successfully.",
-      "deleteErrorGeneric": "Failed to delete theme."
+      "deleteErrorGeneric": "Failed to delete theme.",
+      "loadFailed": "Failed to load themes.",
+      "serverStarting": "Server is starting up. Please try again.",
+      "loading": "Loading themes...",
+      "retry": "Retry"
     },
     "editor": {
       "branding": {

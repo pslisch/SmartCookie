@@ -87,14 +87,35 @@ export const ThemeManagement: React.FC = () => {
     [themes, activeModalTheme]
   );
 
-  const fetchThemes = useCallback(async () => {
+  const fetchThemes = useCallback(async (isRetry = false) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/themes', { credentials: 'include' });
+      const res = await fetch('/api/themes', {
+        headers: { Accept: 'application/json' },
+        credentials: 'include',
+      });
+
+      const contentType = res.headers.get('content-type') || '';
+
       if (!res.ok) {
+        if (contentType.includes('application/json')) {
+          const errJson = await res.json().catch(() => ({}));
+          throw new Error(errJson.error || `Failed to load themes (${res.status})`);
+        }
         throw new Error(`Failed to load themes (${res.status})`);
       }
+
+      if (!contentType.includes('application/json')) {
+        if (!isRetry) {
+          setTimeout(() => {
+            fetchThemes(true);
+          }, 1000);
+          return;
+        }
+        throw new Error(t('theme.management.serverStarting'));
+      }
+
       const data: Theme[] = await res.json();
       setThemes(data);
 
@@ -105,11 +126,11 @@ export const ThemeManagement: React.FC = () => {
       }
     } catch (err: any) {
       console.error('[ThemeManagement] Error fetching themes:', err);
-      setError(err.message || 'Failed to load themes.');
+      setError(err.message || t('theme.management.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const handleDismissFailure = async (e: React.MouseEvent, themeId: string) => {
     e.stopPropagation();
@@ -440,9 +461,19 @@ export const ThemeManagement: React.FC = () => {
 
           {/* Error state */}
           {error && (
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-status-error-bg/50 border border-status-error-text/20 text-status-error-text" id="theme-list-error">
-              <AlertCircle className="h-5 w-5 shrink-0" />
-              <p className="text-sm font-sans">{error}</p>
+            <div className="flex items-center justify-between p-4 rounded-xl bg-status-error-bg/50 border border-status-error-text/20 text-status-error-text" id="theme-list-error">
+              <div className="flex items-center space-x-3">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <p className="text-sm font-sans">{error}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => fetchThemes()}
+                className="ml-4 px-3 py-1.5 text-xs font-semibold rounded-lg bg-status-error-text text-white hover:opacity-90 transition-opacity cursor-pointer shrink-0"
+                id="theme-list-retry-btn"
+              >
+                {t('theme.management.retry')}
+              </button>
             </div>
           )}
 
@@ -450,7 +481,7 @@ export const ThemeManagement: React.FC = () => {
       {loading ? (
         <div className="flex min-h-[300px] flex-col items-center justify-center p-8" id="theme-list-loading">
           <Loader2 className="h-8 w-8 animate-spin text-link-primary mb-3" />
-          <p className="text-sm text-text-muted font-sans">Loading themes...</p>
+          <p className="text-sm text-text-muted font-sans">{t('theme.management.loading')}</p>
         </div>
       ) : themes.length === 0 ? (
         <div className="flex flex-col items-center justify-center border border-dashed border-card-border rounded-2xl bg-card-bg p-12 text-center" id="theme-list-empty">

@@ -124,7 +124,7 @@ router.get('/resolved', optionalAuth, async (req: Request, res: Response) => {
  * List non-deleted themes for the user's company.
  * Gated by: theme:view
  */
-router.get('/', requirePermission('theme', 'view'), async (req: Request, res: Response) => {
+router.get(['/', ''], requirePermission('theme', 'view'), async (req: Request, res: Response) => {
   try {
     const companyId = await getEffectiveCompanyId(req);
     if (!companyId) {
@@ -158,7 +158,7 @@ router.get('/', requirePermission('theme', 'view'), async (req: Request, res: Re
  * Body: { name, sourceThemeId }
  * Starts in status: DRAFT
  */
-router.post('/', requirePermission('theme', 'edit'), async (req: Request, res: Response) => {
+router.post(['/', ''], requirePermission('theme', 'edit'), async (req: Request, res: Response) => {
   try {
     const companyId = await getEffectiveCompanyId(req);
     if (!companyId) {

@@ -115,6 +115,25 @@ async function startServer() {
   app.use('/api/identity-providers', identityProviderRouter);
   app.use('/api/company/email-config', emailConfigRouter);
 
+  // 404 catch-all for unmatched /api routes to prevent falling through to Vite SPA HTML middleware
+  app.all('/api', (req, res) => {
+    res.status(404).json({ error: `API route ${req.method} ${req.originalUrl} not found` });
+  });
+  app.all('/api/*', (req, res) => {
+    res.status(404).json({ error: `API route ${req.method} ${req.originalUrl} not found` });
+  });
+
+  // Error handling middleware for API routes
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (req.path.startsWith('/api')) {
+      console.error('[API Error Handler]', req.method, req.path, err);
+      return res.status(err.status || err.statusCode || 500).json({
+        error: err.message || 'Internal Server Error',
+      });
+    }
+    next(err);
+  });
+
   // Serve frontend using Vite middleware in development, and static assets in production
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');

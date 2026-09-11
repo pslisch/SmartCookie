@@ -40,6 +40,8 @@ model User {
   userAssignmentInstances UserAssignmentInstance[] @relation("UserAssignmentInstances")
   auditLogs          AuditLog[] @relation("UserAuditLogs")
   createdContents    Content[]  @relation("ContentCreator")
+  createdNotificationRules NotificationRule[] @relation("NotificationRuleCreator")
+  notificationRecipients   NotificationRecipient[]
 
   firstName          String?    @map("first_name")
   lastName           String?    @map("last_name")
@@ -113,6 +115,8 @@ model Company {
   emailConfig                     EmailConfig?
   themes                          Theme[]
   fonts                           Font[]
+  notificationRules               NotificationRule[]
+  notificationInstances           NotificationInstance[]
 
   @@map("companies")
 }
@@ -644,6 +648,103 @@ enum NotificationType {
   COMPLETION_CONFIRMATION
   CERTIFICATES
   SYSTEM_ANNOUNCEMENTS
+  MANAGER_COMPLETION
+  MANAGER_OVERDUE
+}
+
+enum NotificationChannel {
+  IN_LMS
+  EMAIL
+}
+
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  RETRIED
+  PERMANENTLY_FAILED
+}
+
+model NotificationRule {
+  id              String               @id @default(uuid())
+  companyId       String               @map("company_id")
+  company         Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name            String
+  notificationType NotificationType    @map("notification_type")
+  enabled         Boolean              @default(true)
+  mandatory       Boolean              @default(false)
+  recipientConfig Json                 @map("recipient_config")
+  channels        Json
+  conditions      Json?
+  titleKey        String?              @map("title_key")
+  bodyKey         String?              @map("body_key")
+  actionType      String?              @map("action_type")
+  actionUrl       String?              @map("action_url")
+  isSystemDefault Boolean              @default(false) @map("is_system_default")
+  createdById     String?              @map("created_by_id")
+  createdBy       User?                @relation("NotificationRuleCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+  deletedAt       DateTime?            @map("deleted_at")
+
+  instances       NotificationInstance[]
+
+  @@map("notification_rules")
+}
+
+model NotificationInstance {
+  id               String                  @id @default(uuid())
+  companyId        String                  @map("company_id")
+  company          Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ruleId           String?                 @map("rule_id")
+  rule             NotificationRule?       @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  sourceEventType  String                  @map("source_event_type")
+  sourceEventId    String?                 @map("source_event_id")
+  titleKey         String?                 @map("title_key")
+  titleParams      Json?                   @map("title_params")
+  bodyKey          String?                 @map("body_key")
+  bodyParams       Json?                   @map("body_params")
+  actionType       String?                 @map("action_type")
+  actionEntityType String?                 @map("action_entity_type")
+  actionEntityId   String?                 @map("action_entity_id")
+  actionUrl        String?                 @map("action_url")
+  createdAt        DateTime                @default(now()) @map("created_at")
+
+  recipients       NotificationRecipient[]
+
+  @@unique([ruleId, sourceEventType, sourceEventId])
+  @@map("notification_instances")
+}
+
+model NotificationRecipient {
+  id                     String                 @id @default(uuid())
+  notificationInstanceId String                 @map("notification_instance_id")
+  notificationInstance   NotificationInstance   @relation(fields: [notificationInstanceId], references: [id], onDelete: Cascade)
+  userId                 String                 @map("user_id")
+  user                   User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime               @default(now()) @map("created_at")
+
+  deliveries             NotificationDelivery[]
+
+  @@unique([notificationInstanceId, userId])
+  @@map("notification_recipients")
+}
+
+model NotificationDelivery {
+  id                     String                     @id @default(uuid())
+  notificationRecipientId String                    @map("notification_recipient_id")
+  notificationRecipient  NotificationRecipient      @relation(fields: [notificationRecipientId], references: [id], onDelete: Cascade)
+  channel                NotificationChannel
+  status                 NotificationDeliveryStatus @default(PENDING)
+  attemptCount           Int                        @default(0) @map("attempt_count")
+  lastAttemptAt          DateTime?                  @map("last_attempt_at")
+  sentAt                 DateTime?                  @map("sent_at")
+  readAt                 DateTime?                  @map("read_at")
+  errorMessage           String?                    @db.Text @map("error_message")
+  createdAt              DateTime                   @default(now()) @map("created_at")
+  updatedAt              DateTime                   @updatedAt @map("updated_at")
+
+  @@map("notification_deliveries")
 }
 
 model NotificationPreference {
@@ -651,7 +752,8 @@ model NotificationPreference {
   userId           String           @map("user_id")
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   notificationType NotificationType @map("notification_type")
-  enabled          Boolean          @default(true)
+  emailEnabled     Boolean          @default(true) @map("email_enabled")
+  inLmsEnabled     Boolean          @default(true) @map("in_lms_enabled")
 
   @@unique([userId, notificationType])
   @@map("notification_preferences")

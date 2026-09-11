@@ -310,6 +310,73 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0019] Notification System Architecture (Phase 1)
+- **Status**: Approved
+- **Date**: 2026-09-11
+- **Authors**: AI Coding Agent
+- **Context**: SmartCookie is introducing a generic, cross-cutting Notification System to orchestrate automated communication across learners, managers, and administrators. The system follows a clean pipeline: `event → rule resolution → recipient resolution → dedup → instance → channel delivery`. To ensure phased and stable delivery, the implementation is divided into a two-phase MVP:
+  - **Phase 1 (Current Architecture Scope)**: Core notification engine pipeline, in-LMS Notification Hub (header bell trigger, flyout/drawer, unread badges, mark as read, link navigation), lesson-driven system events (lesson assigned, reminder, due soon, overdue, completion confirmation, certificates, system announcements), and user multi-channel notification preferences (email vs. in-LMS).
+  - **Phase 2 (Subsequent Scope - Non-Goals for Phase 1)**: Admin-authored notification rules and custom scheduling UI, visual email template editor, and administrative delivery-failure management/monitoring dashboard.
+- **Decision**:
+  - **The Core Pipeline**: All notifications follow a strictly decoupled 6-stage lifecycle:
+    1. *Event Emission*: Domain services emit strongly-typed system events containing event payload, metadata, actor, and affected entities.
+    2. *Rule Resolution*: Resolves applicable notification triggers and matching delivery configurations for the emitted event.
+    3. *Recipient Resolution*: Resolves target users (direct learners, role/permission holders, or direct managers using the deterministic resolution algorithm below).
+    4. *Deduplication (Dedup)*: Throttles or collapses duplicate notifications within configured time windows (e.g. overdue throttling) to prevent user fatigue.
+    5. *Notification Instance Creation*: Persists notification records in the database to maintain delivery status, audit history, and in-LMS read/unread states.
+    6. *Channel Delivery*: Dispatches notifications to enabled delivery channels (in-LMS Notification Hub and SMTP email) respecting company mandatory overrides and user channel preferences.
+  - **Decision 1 — Direct-Manager Resolution**:
+    > "An employee's manager is resolved by finding their single active `MEMBER`-type `Membership` on an `OrganizationUnit` (this is already enforced as exactly one active OU membership per user by the existing `moveUser()` function in `organizationUnit.service.ts`), then finding the `MANAGER`-type `Membership`(s) on that SAME OrganizationUnit (assigned via the existing `assignManager()` function). No parent-hierarchy walk. If the OU has no assigned manager, no manager notification is sent for that employee — do not walk up to a parent OU. If an OU somehow has more than one MANAGER-type member (schema allows it, but shouldn't occur in practice), use the first one found; do not fan out to all of them."
+    - *Implementation Specification*:
+      - Step 1: Query `prisma.membership.findFirst` for the employee's active OU membership:
+        `where: { userId: employeeUserId, membershipType: 'MEMBER', status: 'ACTIVE', deletedAt: null, organizationUnitId: { not: null } }`.
+      - Step 2: If no active membership or `organizationUnitId` is found, return `null` (no manager).
+      - Step 3: Query `prisma.membership.findFirst` on the same `organizationUnitId` for an active manager:
+        `where: { organizationUnitId, membershipType: 'MANAGER', status: 'ACTIVE', deletedAt: null }, orderBy: { createdAt: 'asc' }, include: { user: true }`.
+      - Step 4: If found, return the manager's `User` entity. If no record is found, return `null`. Do not recursively walk `OrganizationUnit.parentId`. If multiple managers exist on the OU, `findFirst` with `createdAt: 'asc'` deterministically selects the first one without fanning out.
+  - **Decision 2 — NotificationPreference Extension & Migration Strategy**:
+    > "NotificationPreference will be extended, not replaced: add `emailEnabled` and `inLmsEnabled` boolean columns (both default true), migrate existing `enabled` boolean values into `emailEnabled`, then remove the old `enabled` column in the same migration."
+    - *Prisma & SQL Migration Specification*:
+      - Step 1: In `schema.prisma`, update the `NotificationPreference` model:
+        ```prisma
+        model NotificationPreference {
+          id               String           @id @default(uuid())
+          userId           String           @map("user_id")
+          user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+          notificationType NotificationType @map("notification_type")
+          emailEnabled     Boolean          @default(true) @map("email_enabled")
+          inLmsEnabled     Boolean          @default(true) @map("in_lms_enabled")
+
+          @@unique([userId, notificationType])
+          @@map("notification_preferences")
+        }
+        ```
+      - Step 2: Generate and execute SQL migration sequence:
+        1. `ALTER TABLE notification_preferences ADD COLUMN email_enabled BOOLEAN NOT NULL DEFAULT true;`
+        2. `ALTER TABLE notification_preferences ADD COLUMN in_lms_enabled BOOLEAN NOT NULL DEFAULT true;`
+        3. `UPDATE notification_preferences SET email_enabled = enabled;`
+        4. `ALTER TABLE notification_preferences DROP COLUMN enabled;`
+      - This preserves all existing user preferences under `emailEnabled`, establishes default opt-in for `inLmsEnabled`, and cleanly eliminates the redundant `enabled` column in a single atomic migration.
+  - **Decision 3 — Existing Infrastructure Reused, Not Duplicated**:
+    > "Existing infrastructure is reused, not duplicated: the existing `setInterval`-based poller in `scheduledTasks.service.ts` is the background-job mechanism (no new queue library); `AuditLogService` is the audit mechanism; the existing dynamic DB-backed RBAC resolver is the permission mechanism; `EmailService` is extended, not replaced, for Phase 1 (Phase 2 adds the template editor on top of it)."
+    - *Architecture Reuse Map*:
+      - *Scheduler / Poller*: Continue using the established `setInterval` runner in `server/src/shared/scheduler/scheduledTasks.service.ts` for time-driven triggers (due soon, overdue checks, digest processing). Do not install external queuing systems (e.g., Redis, BullMQ, Celery).
+      - *Auditing*: Emit audit records via `auditLogService.log(...)` from `server/src/shared/audit/auditLog.service.ts` with polymorphic entity type `'NOTIFICATION'` or `'NOTIFICATION_RULE'`.
+      - *Permissions*: Use `permissionResolverService` (`server/src/features/rbac/services/permissionResolver.service.ts`) and `permission.middleware.ts` for all administrative and user-facing authorization checks.
+      - *Email Dispatch*: Extend `emailService` (`server/src/shared/email/email.service.ts`) with new notification template definitions; do not replace the existing Nodemailer transport or the database-backed `EmailConfig` configuration.
+- **Consequences**:
+  - **Positives**:
+    - Complete consistency with existing data models and services; zero external runtime dependencies added.
+    - Deterministic, unambiguous manager resolution eliminating organizational tree crawling or runaway notification fan-out.
+    - Lossless preference migration preserving existing user email opt-out choices while cleanly introducing per-channel preference toggles.
+    - Clear boundary separation ensuring Phase 1 delivers high-value core capabilities without getting blocked by Phase 2 administrative tooling.
+  - **Negatives**:
+    - Employees assigned to OUs with no explicit manager will not trigger manager escalations; organizations must assign a manager to the local OU if manager notifications are desired.
+    - Multi-manager OUs notify only the primary (earliest assigned) manager in Phase 1 rather than all co-managers.
+    - In-process timer polling scales with single-process LMS hosting, deferring distributed worker queues until post-MVP traffic necessitates it.
+
+---
+
 ## 🔮 Planned ADRs
 
 _None currently pending. All foundational architecture decision records through v1.12.0 have been ratified, approved, or absorbed into implemented features._

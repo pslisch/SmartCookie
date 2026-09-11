@@ -87,7 +87,8 @@ function AppContent({ appName }: { appName: string }) {
     usePermission('assignments', 'create-mandatory');
 
   const canManageFields = usePermission('profile-fields', 'manage-fields');
-  const hasSettingsAccess = !!user?.isSuperuser || canManageFields;
+  const canViewThemes = usePermission('theme', 'view');
+  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes;
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {
