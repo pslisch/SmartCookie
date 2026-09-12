@@ -1,19 +1,20 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../../shared/db/prisma';
 import { NotificationEvent, RecipientConfig } from '../types/notificationEvent.types';
+import { createDeliveriesForInstance } from './channelDelivery.service';
 import { resolveRecipients } from './recipientResolver.service';
 
 /**
  * Processes a domain notification event through the core notification pipeline:
  *
  * Stage 1: Rule Resolution - Queries enabled NotificationRules matching companyId and notificationType.
- * Stage 2: Recipient Resolution - Resolves distinct candidate user IDs (learner, userIds, etc.).
+ * Stage 2: Recipient Resolution - Resolves distinct candidate user IDs (learner, directManager, groupIds, entireCompany, userIds).
  * Stage 3: Deduplication & Idempotency - Upserts NotificationInstance keyed by (ruleId, sourceEventType, sourceEventId)
  *          and persists NotificationRecipient rows with skipDuplicates: true.
+ * Stage 4: Channel Delivery Creation - Dispatches createDeliveriesForInstance to create per-channel NotificationDelivery
+ *          records (IN_LMS created as SENT; EMAIL created as PENDING).
  *
- * NOTE: Channel delivery (creating NotificationDelivery records and dispatching via IN_LMS / EMAIL)
- * is out of scope for this function and is handled by a later pipeline stage (Task 5). This function
- * intentionally does NOT create any NotificationDelivery records.
+ * NOTE: Actual email transmission/retry over SMTP is decoupled and handled by the background email worker (Task 5b).
  *
  * @param event The domain notification event to process
  */
@@ -84,5 +85,8 @@ export async function processNotificationEvent(event: NotificationEvent): Promis
       })),
       skipDuplicates: true,
     });
+
+    // Step 6: Create per-channel NotificationDelivery records (IN_LMS as SENT, EMAIL as PENDING)
+    await createDeliveriesForInstance(instance, rule, resolvedUserIds);
   }
 }
