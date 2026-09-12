@@ -37,6 +37,7 @@ import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 import { seedProfileFields } from '../prisma/seed/profileFieldsSeed';
 import { seedThemes } from '../prisma/seed/themeSeed';
+import { seedNotificationRules } from '../prisma/seed/notificationRuleSeed';
 import { scheduledTasksService } from './shared/scheduler/scheduledTasks.service';
 
 async function startServer() {
@@ -56,6 +57,7 @@ async function startServer() {
     await seedSuperuserRoles();
     await seedProfileFields();
     await seedThemes();
+    await seedNotificationRules();
 
     // Run manual DB migrations on startup
     const { prisma } = await import('./shared/db/prisma');

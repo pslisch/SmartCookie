@@ -2,6 +2,7 @@ import { prisma } from '../../../shared/db/prisma';
 import { UserAssignmentInstanceStatus } from '@prisma/client';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
+import { triggerCompletionNotifications } from '../../notifications/services/lessonCompletionEvent.service';
 
 export class CompletionService {
   /**
@@ -15,7 +16,11 @@ export class CompletionService {
     const instance = await prisma.userAssignmentInstance.findUnique({
       where: { id: instanceId },
       include: {
-        assignment: true,
+        assignment: {
+          include: {
+            lesson: true,
+          },
+        },
       },
     });
 
@@ -53,6 +58,14 @@ export class CompletionService {
         learnerId: instance.userId,
       }
     );
+
+    // Trigger completion notifications (learner confirmation & manager completion notice)
+    await triggerCompletionNotifications({
+      instanceId,
+      userId: instance.userId,
+      companyId: instance.assignment.companyId,
+      lessonTitle: instance.assignment.lesson.title,
+    });
 
     return updatedInstance;
   }

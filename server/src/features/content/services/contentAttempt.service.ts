@@ -1,5 +1,6 @@
 import { prisma } from '../../../shared/db/prisma.js';
 import { ContentAttemptStatus, UserAssignmentInstanceStatus } from '@prisma/client';
+import { triggerCompletionNotifications } from '../../notifications/services/lessonCompletionEvent.service';
 
 export class ContentAttemptService {
   /**
@@ -172,6 +173,13 @@ export class ContentAttemptService {
           progressPercent: 100,
         },
       });
+
+      await triggerCompletionNotifications({
+        instanceId,
+        userId: instance.userId,
+        companyId: instance.assignment.companyId,
+        lessonTitle: instance.assignment.lesson.title,
+      });
     } else {
       if (lessonStatus === 'FAILED') {
         const limit = instance.assignment.attemptLimit;
@@ -192,6 +200,14 @@ export class ContentAttemptService {
               progressPercent: 100,
             },
           });
+
+          await triggerCompletionNotifications({
+            instanceId,
+            userId: instance.userId,
+            companyId: instance.assignment.companyId,
+            lessonTitle: instance.assignment.lesson.title,
+          });
+
           return;
         }
       }
