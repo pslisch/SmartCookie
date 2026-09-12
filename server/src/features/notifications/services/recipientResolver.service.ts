@@ -1,17 +1,15 @@
-import { UserStatus } from '@prisma/client';
+import { MembershipStatus, MembershipType, UserStatus } from '@prisma/client';
 import { prisma } from '../../../shared/db/prisma';
 import { NotificationEvent, RecipientConfig } from '../types/notificationEvent.types';
 
 /**
  * Resolves recipient user IDs for a given notification rule and domain event.
  *
- * Current scope (Task 3):
+ * Supported recipient types (Phase 1):
  * - `learner`: the event subject user
  * - `userIds`: explicit list of user IDs in rule configuration
- *
- * Extension points for Task 4:
- * - `directManager`: resolved via OU manager membership
- * - `groupIds`: resolved via learning group memberships
+ * - `directManager`: resolved via OU manager membership (single active OU, first active manager by createdAt asc)
+ * - `groupIds`: resolved via learning group memberships (direct members only, no cascading)
  * - `entireCompany`: resolved to all active users within the company
  */
 export async function resolveRecipients(
@@ -34,14 +32,82 @@ export async function resolveRecipients(
     }
   }
 
-  // 3. Direct manager resolution (Extension point - to be implemented in Task 4)
-  // if (recipientConfig.directManager) { ... }
+  // 3. Direct manager resolution
+  if (recipientConfig.directManager && event.subjectUserId) {
+    const memberMembership = await prisma.membership.findFirst({
+      where: {
+        userId: event.subjectUserId,
+        membershipType: MembershipType.MEMBER,
+        status: MembershipStatus.ACTIVE,
+        deletedAt: null,
+        organizationUnitId: { not: null },
+      },
+      select: {
+        organizationUnitId: true,
+      },
+    });
 
-  // 4. Learning group resolution (Extension point - to be implemented in Task 4)
-  // if (Array.isArray(recipientConfig.groupIds) && recipientConfig.groupIds.length > 0) { ... }
+    if (memberMembership?.organizationUnitId) {
+      const managerMembership = await prisma.membership.findFirst({
+        where: {
+          organizationUnitId: memberMembership.organizationUnitId,
+          membershipType: MembershipType.MANAGER,
+          status: MembershipStatus.ACTIVE,
+          deletedAt: null,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+        select: {
+          userId: true,
+        },
+      });
 
-  // 5. Entire company resolution (Extension point - to be implemented in Task 4)
-  // if (recipientConfig.entireCompany) { ... }
+      if (managerMembership?.userId) {
+        candidateUserIds.add(managerMembership.userId);
+      }
+    }
+  }
+
+  // 4. Learning group resolution (direct members only)
+  if (Array.isArray(recipientConfig.groupIds) && recipientConfig.groupIds.length > 0) {
+    const validGroupIds = recipientConfig.groupIds.filter(Boolean);
+    if (validGroupIds.length > 0) {
+      const groupMemberships = await prisma.membership.findMany({
+        where: {
+          learningGroupId: { in: validGroupIds },
+          status: MembershipStatus.ACTIVE,
+          deletedAt: null,
+        },
+        select: {
+          userId: true,
+        },
+      });
+
+      for (const membership of groupMemberships) {
+        if (membership.userId) {
+          candidateUserIds.add(membership.userId);
+        }
+      }
+    }
+  }
+
+  // 5. Entire company resolution
+  if (recipientConfig.entireCompany && event.companyId) {
+    const companyUsers = await prisma.user.findMany({
+      where: {
+        companyId: event.companyId,
+        status: UserStatus.ACTIVE,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    for (const user of companyUsers) {
+      candidateUserIds.add(user.id);
+    }
+  }
 
   if (candidateUserIds.size === 0) {
     return [];
