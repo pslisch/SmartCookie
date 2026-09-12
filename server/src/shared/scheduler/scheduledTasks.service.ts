@@ -4,6 +4,7 @@ import { permissionResolverService } from '../../features/rbac/services/permissi
 import crypto from 'crypto';
 import { NotificationType, ThemeStatus } from '@prisma/client';
 import { entraSyncService } from '../../features/identity/services/entraSync.service';
+import { processPendingEmailDeliveries } from '../../features/notifications/services/emailDelivery.service';
 
 async function shouldSendNotification(
   userId: string,
@@ -115,6 +116,7 @@ export class ScheduledTasksService {
     await this.sendBasicReminders();
     await this.runEntraSync();
     await this.activateScheduledThemes();
+    await processPendingEmailDeliveries();
     console.log('[Scheduler] All periodic tasks finished.');
   }
 

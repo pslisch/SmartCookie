@@ -6,12 +6,13 @@ import { groupExpirationTemplate, GroupExpirationData } from './templates/groupE
 import { assignmentReminderTemplate, AssignmentReminderData } from './templates/assignmentReminder';
 import { emailChangeVerificationTemplate, EmailChangeVerificationData } from './templates/emailChangeVerification';
 import { entraSyncFailureTemplate, EntraSyncFailureData } from './templates/entraSyncFailure';
+import { genericNotificationTemplate, GenericNotificationData } from './templates/genericNotification';
 import { prisma } from '../db/prisma';
 import { decrypt } from '../crypto/encryption';
 
-export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder' | 'email-change-verification' | 'entra-sync-failure';
+export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder' | 'email-change-verification' | 'entra-sync-failure' | 'generic-notification';
 
-export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData | EmailChangeVerificationData | EntraSyncFailureData;
+export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData | EmailChangeVerificationData | EntraSyncFailureData | GenericNotificationData;
 
 export interface EmailService {
   send(to: string, template: EmailTemplateName, data: EmailTemplateData, companyId?: string): Promise<void>;
@@ -98,6 +99,13 @@ class EmailServiceImpl implements EmailService {
       }
       case 'entra-sync-failure': {
         const rendered = entraSyncFailureTemplate(data as EntraSyncFailureData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
+      case 'generic-notification': {
+        const rendered = genericNotificationTemplate(data as GenericNotificationData);
         subject = rendered.subject;
         text = rendered.text;
         html = rendered.html;
