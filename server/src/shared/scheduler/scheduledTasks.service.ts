@@ -2,7 +2,7 @@ import { prisma } from '../db/prisma';
 import { emailService } from '../email/email.service';
 import { permissionResolverService } from '../../features/rbac/services/permissionResolver.service';
 import crypto from 'crypto';
-import { NotificationType, ThemeStatus } from '@prisma/client';
+import { NotificationType, ThemeStatus, AssignmentStatus, UserAssignmentInstanceStatus } from '@prisma/client';
 import { entraSyncService } from '../../features/identity/services/entraSync.service';
 import { processPendingEmailDeliveries } from '../../features/notifications/services/emailDelivery.service';
 
@@ -112,6 +112,7 @@ export class ScheduledTasksService {
     await this.expireTemporaryGroups();
     await this.sendExpirationReminders();
     await this.purgeExpiredSoftDeletes();
+    await this.activateScheduledAssignments();
     await this.purgeExpiredAssignments();
     await this.sendBasicReminders();
     await this.runEntraSync();
@@ -644,6 +645,53 @@ export class ScheduledTasksService {
         }
       }
     }
+  }
+
+  /**
+   * Activates SCHEDULED assignments whose scheduledFor timestamp has passed,
+   * transitioning both the Assignment and its SCHEDULED UserAssignmentInstance rows to ACTIVE.
+   */
+  async activateScheduledAssignments(): Promise<void> {
+    const now = new Date();
+
+    const scheduledAssignments = await prisma.assignment.findMany({
+      where: {
+        status: AssignmentStatus.SCHEDULED,
+        scheduledFor: { lte: now },
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+
+    if (scheduledAssignments.length === 0) {
+      return;
+    }
+
+    let activatedCount = 0;
+
+    for (const assignment of scheduledAssignments) {
+      try {
+        await prisma.$transaction([
+          prisma.assignment.update({
+            where: { id: assignment.id },
+            data: { status: AssignmentStatus.ACTIVE },
+          }),
+          prisma.userAssignmentInstance.updateMany({
+            where: {
+              assignmentId: assignment.id,
+              status: UserAssignmentInstanceStatus.SCHEDULED,
+            },
+            data: { status: UserAssignmentInstanceStatus.ACTIVE },
+          }),
+        ]);
+
+        activatedCount++;
+      } catch (err) {
+        console.error(`[Scheduler] Failed to activate scheduled assignment (ID: ${assignment.id}):`, err);
+      }
+    }
+
+    console.log(`[Scheduler] Activated ${activatedCount} scheduled assignment(s).`);
   }
 }
 
