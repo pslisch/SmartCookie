@@ -3,6 +3,7 @@ import { UserAssignmentInstanceStatus, AssignmentSourceType, MembershipStatus } 
 import { targetResolutionService } from './targetResolution.service';
 import { organizationUnitService } from '../../organization/services/organizationUnit.service';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
+import { triggerLessonAssignedNotification } from '../../notifications/services/lessonAssignedEvent.service';
 
 export class MaterializationService {
   /**
@@ -13,6 +14,7 @@ export class MaterializationService {
   async materializeAssignment(assignmentId: string): Promise<void> {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
+      include: { lesson: true },
     });
 
     if (!assignment || assignment.deletedAt !== null) {
@@ -165,6 +167,15 @@ export class MaterializationService {
             'CREATED',
             assignment.createdById
           );
+
+          if (instanceStatus === UserAssignmentInstanceStatus.ACTIVE) {
+            await triggerLessonAssignedNotification({
+              instanceId,
+              userId,
+              companyId: assignment.companyId,
+              lessonTitle: assignment.lesson.title,
+            });
+          }
         }
       } catch (err) {
         console.error(

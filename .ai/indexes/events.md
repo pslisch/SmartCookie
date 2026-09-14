@@ -68,11 +68,14 @@ Every documented event should eventually include:
 - **Consumer**: `LearningGroupService` (auto-expires groups where `expiresAt <= now()`)
 - **Payload**: `{ timestamp: Date }`
 
-### 6. `scheduler:overdue-assignment-reminders`
-- **Event Identifier**: `scheduler:overdue-assignment-reminders`
-- **Producer**: `ScheduledTasksService` (hourly cron timer)
-- **Consumer**: `EmailService` (sends transactional overdue notification emails to users with matching notification preferences)
-- **Payload**: `{ companyId: string, instanceId: string, userId: string, dueDate: Date }`
+### 6. `scheduler:deadline-and-overdue-assignment-reminders`
+- **Event Identifier**: `scheduler:deadline-and-overdue-assignment-reminders`
+- **Producer**: `ScheduledTasksService` (periodic scheduler running `processDeadlineReminders` and `processOverdueReminders`)
+- **Consumer**: Notification pipeline (`processNotificationEvent` -> `channelDelivery.service.ts` -> `emailDelivery.service.ts`)
+- **Payload**: Emits domain events:
+  - `ASSIGNMENT_DUE_SOON` (`NotificationType.DUE_SOON` matching rules at 7/3/1 days before due)
+  - `ASSIGNMENT_OVERDUE` (`NotificationType.OVERDUE` for learners past due date, 14-day cadence gated via `lastReminderSentAt`)
+  - `ASSIGNMENT_OVERDUE_MANAGER` (`NotificationType.MANAGER_OVERDUE` for direct managers past due date, 14-day cadence gated via `lastReminderSentAt`)
 
 ### 7. `identity:sync-failure-alert`
 - **Event Identifier**: `identity:sync-failure-alert`

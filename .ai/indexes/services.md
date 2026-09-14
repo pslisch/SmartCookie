@@ -191,9 +191,9 @@ Each reusable service should include:
 - **Dependencies**: Prisma
 
 ### 36. ScheduledTasksService
-- **Purpose**: Runs background periodic cron tasks for permanent purging of 14-day soft-deleted entities, expiring temporary learning groups, sending expiration reminders, and dispatching overdue assignment emails.
+- **Purpose**: Runs background periodic cron tasks for permanent purging of 14-day soft-deleted entities, expiring temporary learning groups, sending expiration reminders, activating scheduled assignments and themes, dispatching deadline and overdue assignment notifications via the notification pipeline, and processing pending email deliveries.
 - **Consumers**: Express entrypoint (`index.ts`)
-- **Dependencies**: Prisma, EmailService, EntraSyncService
+- **Dependencies**: Prisma, EmailService, EntraSyncService, DeadlineOverdueEventService, LessonAssignedEventService, EmailDeliveryService
 
 ### 37. TokenService
 - **Purpose**: Generates cryptographically secure random tokens, hashes them with SHA-256 for database storage, and validates expiration/single-use status.
@@ -234,6 +234,11 @@ Each reusable service should include:
 - **Purpose**: Manages file system persistence, directory creation, unique file naming, path traversal protection, disk retrieval, and file deletion for custom theme logo assets under `LOGO_STORAGE_PATH` (defaulting to `./logo-storage/logos/`).
 - **Consumers**: `server/src/features/theme/routes/theme.routes.ts`
 - **Dependencies**: Node `fs`, `path`
+
+### 45. DeadlineOverdueEventService
+- **Purpose**: Evaluates assignment due dates against configured `DUE_SOON` (e.g. 7, 3, 1 day) rules and `OVERDUE`/`MANAGER_OVERDUE` rules, emitting strongly-typed notification events (`ASSIGNMENT_DUE_SOON`, `ASSIGNMENT_OVERDUE`, `ASSIGNMENT_OVERDUE_MANAGER`) with a 14-day recurrence cooldown on overdue instances.
+- **Consumers**: `ScheduledTasksService` (`scheduledTasks.service.ts`)
+- **Dependencies**: Prisma, `NotificationEventService`
 
 
 

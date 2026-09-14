@@ -5,6 +5,11 @@ import crypto from 'crypto';
 import { NotificationType, ThemeStatus, AssignmentStatus, UserAssignmentInstanceStatus } from '@prisma/client';
 import { entraSyncService } from '../../features/identity/services/entraSync.service';
 import { processPendingEmailDeliveries } from '../../features/notifications/services/emailDelivery.service';
+import { triggerLessonAssignedNotification } from '../../features/notifications/services/lessonAssignedEvent.service';
+import {
+  processDeadlineReminders,
+  processOverdueReminders,
+} from '../../features/notifications/services/deadlineOverdueEvent.service';
 
 async function shouldSendNotification(
   userId: string,
@@ -114,7 +119,8 @@ export class ScheduledTasksService {
     await this.purgeExpiredSoftDeletes();
     await this.activateScheduledAssignments();
     await this.purgeExpiredAssignments();
-    await this.sendBasicReminders();
+    await processDeadlineReminders();
+    await processOverdueReminders();
     await this.runEntraSync();
     await this.activateScheduledThemes();
     await processPendingEmailDeliveries();
@@ -391,70 +397,6 @@ export class ScheduledTasksService {
     }
   }
 
-  /**
-   * For ACTIVE, non-completed instances past their dueDate (or a configurable interval before it),
-   * send ONE reminder email via EmailService if none sent in the last 14 days (track via lastReminderSentAt).
-   */
-  async sendBasicReminders() {
-    const now = new Date();
-    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-
-    const instancesToRemind = await prisma.userAssignmentInstance.findMany({
-      where: {
-        status: 'ACTIVE',
-        deletedAt: null,
-        dueDate: { lt: now },
-        OR: [
-          { lastReminderSentAt: null },
-          { lastReminderSentAt: { lte: fourteenDaysAgo } }
-        ]
-      },
-      include: {
-        user: true,
-        assignment: {
-          include: {
-            lesson: {
-              select: {
-                title: true
-              }
-            }
-          }
-        }
-      }
-    });
-
-    for (const instance of instancesToRemind) {
-      if (!instance.user || !instance.user.email) {
-        continue;
-      }
-
-      if (instance.user.companyId) {
-        const shouldSend = await shouldSendNotification(instance.user.id, instance.user.companyId, 'REMINDER');
-        if (!shouldSend) {
-          console.log(`[Scheduler] Skipping assignment reminder to ${instance.user.email} due to notification preference.`);
-          continue;
-        }
-      }
-
-      try {
-        await emailService.send(instance.user.email, 'assignment-reminder', {
-          lessonTitle: instance.assignment.lesson.title,
-          dueDate: instance.dueDate
-        });
-
-        // Update lastReminderSentAt
-        await prisma.userAssignmentInstance.update({
-          where: { id: instance.id },
-          data: { lastReminderSentAt: now }
-        });
-
-        console.log(`[Scheduler] Sent learning assignment reminder to ${instance.user.email} for "${instance.assignment.lesson.title}"`);
-      } catch (err) {
-        console.error(`[Scheduler] Failed to send assignment reminder for instance ${instance.id} to ${instance.user.email}:`, err);
-      }
-    }
-  }
-
   async runEntraSync() {
     console.log('[Scheduler] Checking if Entra Sync is due...');
     const now = new Date();
@@ -649,7 +591,8 @@ export class ScheduledTasksService {
 
   /**
    * Activates SCHEDULED assignments whose scheduledFor timestamp has passed,
-   * transitioning both the Assignment and its SCHEDULED UserAssignmentInstance rows to ACTIVE.
+   * transitioning both the Assignment and its SCHEDULED UserAssignmentInstance rows to ACTIVE,
+   * and triggers LESSON_ASSIGNED notifications for newly-activated instances.
    */
   async activateScheduledAssignments(): Promise<void> {
     const now = new Date();
@@ -660,7 +603,15 @@ export class ScheduledTasksService {
         scheduledFor: { lte: now },
         deletedAt: null,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        companyId: true,
+        lesson: {
+          select: {
+            title: true,
+          },
+        },
+      },
     });
 
     if (scheduledAssignments.length === 0) {
@@ -671,6 +622,17 @@ export class ScheduledTasksService {
 
     for (const assignment of scheduledAssignments) {
       try {
+        const instancesToActivate = await prisma.userAssignmentInstance.findMany({
+          where: {
+            assignmentId: assignment.id,
+            status: UserAssignmentInstanceStatus.SCHEDULED,
+          },
+          select: {
+            id: true,
+            userId: true,
+          },
+        });
+
         await prisma.$transaction([
           prisma.assignment.update({
             where: { id: assignment.id },
@@ -686,6 +648,15 @@ export class ScheduledTasksService {
         ]);
 
         activatedCount++;
+
+        for (const instance of instancesToActivate) {
+          await triggerLessonAssignedNotification({
+            instanceId: instance.id,
+            userId: instance.userId,
+            companyId: assignment.companyId,
+            lessonTitle: assignment.lesson.title,
+          });
+        }
       } catch (err) {
         console.error(`[Scheduler] Failed to activate scheduled assignment (ID: ${assignment.id}):`, err);
       }
