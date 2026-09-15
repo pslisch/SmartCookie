@@ -16,6 +16,7 @@ import contentManagementRouter, { fileRouter as contentFileRouter } from './feat
 import contentAttemptsRouter from './features/content/routes/contentAttempts.routes.js';
 import previewRouter from './features/preview/routes/preview.routes';
 import notificationPreferencesRouter from './features/profiles/routes/notificationPreferences.routes';
+import notificationsRouter from './features/notifications/routes/notifications.routes';
 import bulkImportRouter from './features/profiles/routes/bulkImport.routes';
 import profileRouter from './features/profiles/routes/profile.routes';
 import profileFieldRouter from './features/profiles/routes/profileField.routes';
@@ -112,6 +113,7 @@ async function startServer() {
   app.use('/api', contentRouter);
   app.use('/api', previewRouter);
   app.use('/api', notificationPreferencesRouter);
+  app.use('/api/notifications', notificationsRouter);
   app.use('/api/profile', profileRouter);
   app.use('/api/profile-fields', profileFieldRouter);
   app.use('/api/identity-providers', identityProviderRouter);

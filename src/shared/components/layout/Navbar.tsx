@@ -14,6 +14,7 @@ import { useAuth } from '../AppGate';
 import { usePreview } from '../../contexts/PreviewContext';
 import { useThemeRuntime } from '../../contexts/ThemeRuntimeContext';
 import { QuickProfile } from '../QuickProfile';
+import { NotificationBell } from '../NotificationBell';
 
 interface NavbarProps {
   currentTab: Tab;
@@ -236,6 +237,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Moon className="h-4 w-4 text-text-muted" />
               )}
             </button>
+            <NotificationBell
+              idPrefix="navbar-notif-desktop"
+              onNavigate={(path) => {
+                if (path === '/my-lessons' || path.startsWith('/my-lessons')) {
+                  handleTabSelect(Tab.MyLessons);
+                } else if (path === '/catalog' || path.startsWith('/catalog')) {
+                  handleTabSelect(Tab.Catalog);
+                } else if (path === '/management' || path.startsWith('/management')) {
+                  handleTabSelect(Tab.Management);
+                } else if (path === '/settings' || path.startsWith('/settings')) {
+                  handleTabSelect(Tab.Settings);
+                } else if (path === '/profile' || path.startsWith('/profile')) {
+                  handleTabSelect(Tab.Profile);
+                } else if (path.startsWith('/')) {
+                  window.location.href = path;
+                } else {
+                  window.open(path, '_blank', 'noopener,noreferrer');
+                }
+              }}
+            />
             <div className="relative">
               <button
                 onClick={() => setShowQuickProfile(!showQuickProfile)}
@@ -256,8 +277,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Hamburger Menu (Mobile) */}
-          <div className="flex md:hidden">
+          {/* Right Side: Bell + Hamburger Menu (Mobile) */}
+          <div className="flex md:hidden items-center space-x-2">
+            <NotificationBell
+              idPrefix="navbar-notif-mobile"
+              onNavigate={(path) => {
+                if (path === '/my-lessons' || path.startsWith('/my-lessons')) {
+                  handleTabSelect(Tab.MyLessons);
+                } else if (path === '/catalog' || path.startsWith('/catalog')) {
+                  handleTabSelect(Tab.Catalog);
+                } else if (path === '/management' || path.startsWith('/management')) {
+                  handleTabSelect(Tab.Management);
+                } else if (path === '/settings' || path.startsWith('/settings')) {
+                  handleTabSelect(Tab.Settings);
+                } else if (path === '/profile' || path.startsWith('/profile')) {
+                  handleTabSelect(Tab.Profile);
+                } else if (path.startsWith('/')) {
+                  window.location.href = path;
+                } else {
+                  window.open(path, '_blank', 'noopener,noreferrer');
+                }
+              }}
+            />
             <button
               onClick={toggleMenu}
               className="inline-flex items-center justify-center rounded-lg p-2 text-nav-text hover:bg-bg-subtle hover:text-text-heading transition-colors"
