@@ -3,30 +3,117 @@ import { prisma } from '../../../shared/db/prisma';
 import { requireAuth } from '../../../shared/middleware/session.middleware';
 import { requirePermission } from '../../../shared/middleware/permission.middleware';
 import { NotificationType } from '@prisma/client';
+import { NotificationChannels } from '../../notifications/types/notificationEvent.types';
 
 const router = Router();
 
 /**
  * GET /api/notification-preferences
  * Returns the current authenticated user's notification preferences,
- * defaulting to enabled: true for any not explicitly set.
+ * reporting channel availability, mandatory status, and per-channel enabled state
+ * unified across rule-based and legacy systems.
  */
 router.get('/notification-preferences', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userPrefs = await prisma.notificationPreference.findMany({
-      where: { userId: req.user!.id },
-    });
+    const userId = req.user!.id;
+    const companyId = req.user!.companyId;
 
-    const prefMap = new Map<NotificationType, boolean>();
+    const [userPrefs, rules, company] = await Promise.all([
+      prisma.notificationPreference.findMany({
+        where: { userId },
+      }),
+      companyId
+        ? prisma.notificationRule.findMany({
+            where: {
+              companyId,
+              enabled: true,
+              deletedAt: null,
+            },
+            select: {
+              notificationType: true,
+              mandatory: true,
+              channels: true,
+            },
+          })
+        : Promise.resolve([]),
+      companyId
+        ? prisma.company.findUnique({
+            where: { id: companyId },
+            select: { mandatoryNotificationTypes: true },
+          })
+        : Promise.resolve(null),
+    ]);
+
+    // Map user preferences by NotificationType
+    const prefMap = new Map<NotificationType, { emailEnabled: boolean; inLmsEnabled: boolean }>();
     for (const p of userPrefs) {
-      prefMap.set(p.notificationType, p.emailEnabled);
+      prefMap.set(p.notificationType, {
+        emailEnabled: p.emailEnabled,
+        inLmsEnabled: p.inLmsEnabled,
+      });
     }
 
+    // Group rules by NotificationType
+    const rulesByType = new Map<
+      NotificationType,
+      Array<{ mandatory: boolean; channels: unknown }>
+    >();
+    for (const rule of rules) {
+      const existing = rulesByType.get(rule.notificationType) || [];
+      existing.push(rule);
+      rulesByType.set(rule.notificationType, existing);
+    }
+
+    // Parse legacy mandatory notification types
+    const legacyMandatoryRaw = company?.mandatoryNotificationTypes;
+    const legacyMandatorySet = new Set<string>(
+      Array.isArray(legacyMandatoryRaw) ? (legacyMandatoryRaw as string[]) : []
+    );
+
     const allTypes = Object.values(NotificationType) as NotificationType[];
-    const preferences = allTypes.map((type) => ({
-      notificationType: type,
-      enabled: prefMap.has(type) ? prefMap.get(type)! : true,
-    }));
+
+    const preferences = allTypes.map((notificationType) => {
+      const matchingRules = rulesByType.get(notificationType);
+      const userPref = prefMap.get(notificationType);
+      const inLmsEnabled = userPref ? userPref.inLmsEnabled : true;
+      const emailEnabled = userPref ? userPref.emailEnabled : true;
+
+      if (matchingRules && matchingRules.length > 0) {
+        // Governed by rule
+        const hasInLmsChannel = matchingRules.some((r) => {
+          const ch = r.channels as unknown as NotificationChannels;
+          return Boolean(ch?.inLms);
+        });
+        const hasEmailChannel = matchingRules.some((r) => {
+          const ch = r.channels as unknown as NotificationChannels;
+          return Boolean(ch?.email);
+        });
+        const mandatory = matchingRules.some((r) => r.mandatory);
+
+        return {
+          notificationType,
+          governedBy: 'rule' as const,
+          hasInLmsChannel,
+          hasEmailChannel,
+          mandatory,
+          inLmsEnabled,
+          emailEnabled,
+        };
+      } else {
+        // Governed by legacy
+        const mandatory = legacyMandatorySet.has(notificationType);
+
+        return {
+          notificationType,
+          governedBy: 'legacy' as const,
+          hasInLmsChannel: false,
+          hasEmailChannel: true,
+          mandatory,
+          inLmsEnabled,
+          emailEnabled,
+        };
+      }
+    });
 
     return res.json({ preferences });
   } catch (err: any) {
