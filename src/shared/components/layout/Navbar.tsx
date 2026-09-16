@@ -15,6 +15,8 @@ import { usePreview } from '../../contexts/PreviewContext';
 import { useThemeRuntime } from '../../contexts/ThemeRuntimeContext';
 import { QuickProfile } from '../QuickProfile';
 import { NotificationBell } from '../NotificationBell';
+import { NotificationHistoryModal } from '../NotificationHistoryModal';
+import { NotificationListItem as NotificationItemType } from '../../types/notifications';
 
 interface NavbarProps {
   currentTab: Tab;
@@ -29,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showQuickProfile, setShowQuickProfile] = useState(false);
+  const [showNotificationHistory, setShowNotificationHistory] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
   const { isDarkMode, toggleDisplayMode, logoUrl } = useThemeRuntime();
@@ -74,6 +77,48 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleTabSelect = (tab: Tab) => {
     onTabChange(tab);
     setIsOpen(false);
+  };
+
+  const handleNotificationNavigate = (path: string) => {
+    if (path === '/my-lessons' || path.startsWith('/my-lessons')) {
+      handleTabSelect(Tab.MyLessons);
+    } else if (path === '/catalog' || path.startsWith('/catalog')) {
+      handleTabSelect(Tab.Catalog);
+    } else if (path === '/management' || path.startsWith('/management')) {
+      handleTabSelect(Tab.Management);
+    } else if (path === '/settings' || path.startsWith('/settings')) {
+      handleTabSelect(Tab.Settings);
+    } else if (path === '/profile' || path.startsWith('/profile')) {
+      handleTabSelect(Tab.Profile);
+    } else if (path.startsWith('/')) {
+      window.location.href = path;
+    } else {
+      window.open(path, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleHistoryNotificationClick = async (item: NotificationItemType) => {
+    if (!item.readAt) {
+      try {
+        const value = `; ${document.cookie}`;
+        const parts = value.split('; csrfToken=');
+        const csrfToken = parts.length === 2 ? parts.pop()?.split(';').shift() || '' : '';
+        await fetch(`/api/notifications/${item.deliveryId}/read`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken,
+          },
+        });
+      } catch (err) {
+        console.error('Failed to mark notification as read from history modal:', err);
+      }
+    }
+
+    if (item.targetAvailable && item.actionUrl) {
+      setShowNotificationHistory(false);
+      handleNotificationNavigate(item.actionUrl);
+    }
   };
 
   return (
@@ -239,23 +284,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <NotificationBell
               idPrefix="navbar-notif-desktop"
-              onNavigate={(path) => {
-                if (path === '/my-lessons' || path.startsWith('/my-lessons')) {
-                  handleTabSelect(Tab.MyLessons);
-                } else if (path === '/catalog' || path.startsWith('/catalog')) {
-                  handleTabSelect(Tab.Catalog);
-                } else if (path === '/management' || path.startsWith('/management')) {
-                  handleTabSelect(Tab.Management);
-                } else if (path === '/settings' || path.startsWith('/settings')) {
-                  handleTabSelect(Tab.Settings);
-                } else if (path === '/profile' || path.startsWith('/profile')) {
-                  handleTabSelect(Tab.Profile);
-                } else if (path.startsWith('/')) {
-                  window.location.href = path;
-                } else {
-                  window.open(path, '_blank', 'noopener,noreferrer');
-                }
-              }}
+              onNavigate={handleNotificationNavigate}
+              onOpenHistory={() => setShowNotificationHistory(true)}
             />
             <div className="relative">
               <button
@@ -281,23 +311,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex md:hidden items-center space-x-2">
             <NotificationBell
               idPrefix="navbar-notif-mobile"
-              onNavigate={(path) => {
-                if (path === '/my-lessons' || path.startsWith('/my-lessons')) {
-                  handleTabSelect(Tab.MyLessons);
-                } else if (path === '/catalog' || path.startsWith('/catalog')) {
-                  handleTabSelect(Tab.Catalog);
-                } else if (path === '/management' || path.startsWith('/management')) {
-                  handleTabSelect(Tab.Management);
-                } else if (path === '/settings' || path.startsWith('/settings')) {
-                  handleTabSelect(Tab.Settings);
-                } else if (path === '/profile' || path.startsWith('/profile')) {
-                  handleTabSelect(Tab.Profile);
-                } else if (path.startsWith('/')) {
-                  window.location.href = path;
-                } else {
-                  window.open(path, '_blank', 'noopener,noreferrer');
-                }
-              }}
+              onNavigate={handleNotificationNavigate}
+              onOpenHistory={() => setShowNotificationHistory(true)}
             />
             <button
               onClick={toggleMenu}
@@ -433,6 +448,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Paginated History Modal */}
+      <NotificationHistoryModal
+        isOpen={showNotificationHistory}
+        onClose={() => setShowNotificationHistory(false)}
+        onNotificationClick={handleHistoryNotificationClick}
+      />
     </nav>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, History, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -60,7 +61,9 @@ export const NotificationHistoryModal: React.FC<NotificationHistoryModalProps> =
     onNotificationClick(item);
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div
@@ -154,6 +157,7 @@ export const NotificationHistoryModal: React.FC<NotificationHistoryModalProps> =
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
