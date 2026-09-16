@@ -778,6 +778,10 @@
     "notifications": {
       "title": "Notification Preferences",
       "description": "Manage how and when you receive notifications from the platform.",
+      "loading": "Loading preferences...",
+      "loadError": "Failed to fetch notification preferences.",
+      "channelInLms": "In-LMS",
+      "channelEmail": "Email",
       "mandatoryBadge": "Mandatory",
       "mandatoryExplanatory": "This notification type is set as mandatory by your company administration.",
       "saveSuccess": "Notification preferences updated successfully.",
@@ -810,6 +814,14 @@
         "SYSTEM_ANNOUNCEMENTS": {
           "title": "System Announcements",
           "desc": "Important system maintenance or feature announcements."
+        },
+        "MANAGER_COMPLETION": {
+          "title": "Manager: Lesson Completed",
+          "desc": "Alerts when a team member completes a lesson."
+        },
+        "MANAGER_OVERDUE": {
+          "title": "Manager: Lesson Overdue",
+          "desc": "Critical alerts when a team member's assignment deadline has passed."
         }
       }
     },

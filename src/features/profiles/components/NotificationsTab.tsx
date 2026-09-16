@@ -3,29 +3,20 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Bell,
-  BookOpen,
-  Calendar,
-  Clock,
-  AlertTriangle,
-  Award,
   CheckCircle,
   AlertCircle,
-  Megaphone,
   Loader2,
-  Info,
 } from 'lucide-react';
-
-interface Preference {
-  notificationType: string;
-  enabled: boolean;
-}
+import {
+  NotificationPreferenceRow,
+  Preference,
+} from './NotificationPreferenceRow';
 
 export function NotificationsTab() {
   const { t } = useTranslation();
   const [preferences, setPreferences] = useState<Preference[]>([]);
-  const [mandatoryTypes, setMandatoryTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -35,40 +26,36 @@ export function NotificationsTab() {
         setLoading(true);
         setError(null);
 
-        const [prefsRes, mandatoryRes] = await Promise.all([
-          fetch('/api/notification-preferences'),
-          fetch('/api/company/mandatory-notification-types'),
-        ]);
+        const res = await fetch('/api/notification-preferences');
 
-        if (!prefsRes.ok) {
-          throw new Error('Failed to fetch notification preferences.');
-        }
-        if (!mandatoryRes.ok) {
-          throw new Error('Failed to fetch mandatory notification settings.');
+        if (!res.ok) {
+          throw new Error(t('profile.notifications.loadError'));
         }
 
-        const prefsData = await prefsRes.json();
-        const mandatoryData = await mandatoryRes.json();
-
-        setPreferences(prefsData.preferences || []);
-        setMandatoryTypes(mandatoryData.mandatoryNotificationTypes || []);
+        const data = await res.json();
+        setPreferences(data.preferences || []);
       } catch (err: any) {
-        setError(err.message || 'An error occurred while loading settings.');
+        setError(err.message || t('profile.notifications.loadError'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [t]);
 
-  const handleToggle = async (type: string, currentVal: boolean) => {
-    // If it's mandatory, it cannot be changed
-    if (mandatoryTypes.includes(type)) {
+  const handleToggle = async (
+    type: string,
+    channel: 'inLms' | 'email',
+    currentVal: boolean
+  ) => {
+    const pref = preferences.find((p) => p.notificationType === type);
+    if (!pref || pref.mandatory) {
       return;
     }
 
-    setSavingId(type);
+    const key = `${type}:${channel}`;
+    setSavingKey(key);
     setError(null);
     setSuccess(null);
 
@@ -82,49 +69,32 @@ export function NotificationsTab() {
         },
         body: JSON.stringify({
           notificationType: type,
+          channel,
           enabled: newVal,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to update preference.');
+        throw new Error(data.error || t('profile.notifications.saveError'));
       }
 
       setPreferences((prev) =>
-        prev.map((pref) =>
-          pref.notificationType === type ? { ...pref, enabled: newVal } : pref
-        )
+        prev.map((p) => {
+          if (p.notificationType !== type) return p;
+          return {
+            ...p,
+            [channel === 'inLms' ? 'inLmsEnabled' : 'emailEnabled']: newVal,
+          };
+        })
       );
 
       setSuccess(t('profile.notifications.saveSuccess'));
-      // Clear success notification after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
       setError(err.message || t('profile.notifications.saveError'));
     } finally {
-      setSavingId(null);
-    }
-  };
-
-  const getIconForType = (type: string) => {
-    switch (type) {
-      case 'LESSON_ASSIGNED':
-        return <BookOpen className="h-5 w-5 text-link-primary" />;
-      case 'REMINDER':
-        return <Bell className="h-5 w-5 text-link-primary" />;
-      case 'DUE_SOON':
-        return <Calendar className="h-5 w-5 text-status-warning-text" />;
-      case 'OVERDUE':
-        return <AlertTriangle className="h-5 w-5 text-status-error-text" />;
-      case 'COMPLETION_CONFIRMATION':
-        return <CheckCircle className="h-5 w-5 text-status-success-text" />;
-      case 'CERTIFICATES':
-        return <Award className="h-5 w-5 text-status-info-text" />;
-      case 'SYSTEM_ANNOUNCEMENTS':
-        return <Megaphone className="h-5 w-5 text-status-info-text" />;
-      default:
-        return <Bell className="h-5 w-5 text-text-muted" />;
+      setSavingKey(null);
     }
   };
 
@@ -132,7 +102,7 @@ export function NotificationsTab() {
     return (
       <div className="flex h-64 flex-col items-center justify-center space-y-3" id="notifications-tab-loading">
         <Loader2 className="h-8 w-8 animate-spin text-link-primary" />
-        <span className="text-sm font-medium text-text-muted">Loading preferences...</span>
+        <span className="text-sm font-medium text-text-muted">{t('profile.notifications.loading')}</span>
       </div>
     );
   }
@@ -181,68 +151,20 @@ export function NotificationsTab() {
 
       <div className="divide-y divide-card-border" id="notification-types-list">
         {preferences.map((pref) => {
-          const isMandatory = mandatoryTypes.includes(pref.notificationType);
-          const isSaving = savingId === pref.notificationType;
-          const isEnabled = isMandatory || pref.enabled;
+          let savingChannel: 'inLms' | 'email' | null = null;
+          if (savingKey === `${pref.notificationType}:inLms`) {
+            savingChannel = 'inLms';
+          } else if (savingKey === `${pref.notificationType}:email`) {
+            savingChannel = 'email';
+          }
 
           return (
-            <div
+            <NotificationPreferenceRow
               key={pref.notificationType}
-              className="flex items-start justify-between py-5 first:pt-0 last:pb-0"
-              id={`notification-row-${pref.notificationType.toLowerCase()}`}
-            >
-              <div className="flex items-start space-x-4 max-w-2xl">
-                <div className="rounded-xl bg-card-header-bg p-2 shrink-0 mt-0.5">
-                  {getIconForType(pref.notificationType)}
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-text-heading">
-                      {t(`profile.notifications.types.${pref.notificationType}.title`)}
-                    </span>
-                    {isMandatory && (
-                      <span className="inline-flex items-center rounded-full bg-bg-subtle px-2 py-0.5 text-2xs font-semibold text-text-muted border border-card-border/50">
-                        {t('profile.notifications.mandatoryBadge')}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-text-muted leading-relaxed">
-                    {t(`profile.notifications.types.${pref.notificationType}.desc`)}
-                  </p>
-                  {isMandatory && (
-                    <div className="flex items-center space-x-1.5 pt-1.5 text-2xs text-text-muted">
-                      <Info className="h-3 w-3 shrink-0" />
-                      <span>{t('profile.notifications.mandatoryExplanatory')}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3 shrink-0 self-center">
-                {isSaving && (
-                  <Loader2 className="h-4 w-4 animate-spin text-link-primary" />
-                )}
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={isEnabled}
-                  disabled={isMandatory || isSaving}
-                  onClick={() => handleToggle(pref.notificationType, pref.enabled)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-link-primary/20 ${
-                    isEnabled ? 'bg-btn-primary-bg' : 'bg-input-border'
-                  } ${isMandatory ? 'opacity-50 cursor-not-allowed' : ''} ${
-                    isSaving ? 'opacity-50 cursor-wait' : ''
-                  }`}
-                  id={`notification-switch-${pref.notificationType.toLowerCase()}`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card-bg shadow-sm ring-0 transition duration-200 ease-in-out ${
-                      isEnabled ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
+              pref={pref}
+              savingChannel={savingChannel}
+              onToggle={handleToggle}
+            />
           );
         })}
       </div>

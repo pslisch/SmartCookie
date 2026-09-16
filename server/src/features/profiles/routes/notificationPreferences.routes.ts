@@ -123,56 +123,115 @@ router.get('/notification-preferences', requireAuth, async (req: Request, res: R
 
 /**
  * PATCH /api/notification-preferences
- * Updates the current authenticated user's notification preferences.
- * Supports updating a single preference or an array of preferences.
+ * Updates the current authenticated user's notification preference for a specific channel.
+ * Enforces mandatory constraints server-side.
  */
 router.patch('/notification-preferences', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { preferences, notificationType, enabled } = req.body;
+    const { notificationType, channel, enabled } = req.body;
 
-    if (Array.isArray(preferences)) {
-      for (const pref of preferences) {
-        if (!pref.notificationType || typeof pref.enabled !== 'boolean') {
-          return res.status(400).json({ error: 'Invalid preference data format.' });
-        }
-        await prisma.notificationPreference.upsert({
-          where: {
-            userId_notificationType: {
-              userId: req.user!.id,
-              notificationType: pref.notificationType,
-            },
-          },
-          update: { emailEnabled: pref.enabled },
-          create: {
-            userId: req.user!.id,
-            notificationType: pref.notificationType,
-            emailEnabled: pref.enabled,
-          },
-        });
-      }
-    } else if (notificationType && typeof enabled === 'boolean') {
-      if (!Object.values(NotificationType).includes(notificationType as any)) {
-        return res.status(400).json({ error: `Invalid notification type: ${notificationType}` });
-      }
-      await prisma.notificationPreference.upsert({
-        where: {
-          userId_notificationType: {
-            userId: req.user!.id,
-            notificationType,
-          },
-        },
-        update: { emailEnabled: enabled },
-        create: {
-          userId: req.user!.id,
-          notificationType,
-          emailEnabled: enabled,
-        },
-      });
-    } else {
-      return res.status(400).json({ error: 'Invalid update body. Provide preferences array or notificationType and enabled.' });
+    if (!notificationType || !Object.values(NotificationType).includes(notificationType as NotificationType)) {
+      return res.status(400).json({ error: `Invalid or missing notification type: ${notificationType}` });
     }
 
-    return res.json({ success: true });
+    if (channel !== 'inLms' && channel !== 'email') {
+      return res.status(400).json({ error: "Invalid channel. Must be 'inLms' or 'email'." });
+    }
+
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'enabled must be a boolean.' });
+    }
+
+    const userId = req.user!.id;
+    const companyId = req.user!.companyId;
+
+    const [rules, company] = await Promise.all([
+      companyId
+        ? prisma.notificationRule.findMany({
+            where: {
+              companyId,
+              notificationType: notificationType as NotificationType,
+              enabled: true,
+              deletedAt: null,
+            },
+            select: {
+              mandatory: true,
+              channels: true,
+            },
+          })
+        : Promise.resolve([]),
+      companyId
+        ? prisma.company.findUnique({
+            where: { id: companyId },
+            select: { mandatoryNotificationTypes: true },
+          })
+        : Promise.resolve(null),
+    ]);
+
+    if (rules.length > 0) {
+      // Governed by rule
+      const hasInLmsChannel = rules.some((r) => {
+        const ch = r.channels as unknown as NotificationChannels;
+        return Boolean(ch?.inLms);
+      });
+      const hasEmailChannel = rules.some((r) => {
+        const ch = r.channels as unknown as NotificationChannels;
+        return Boolean(ch?.email);
+      });
+
+      const channelSupported = channel === 'inLms' ? hasInLmsChannel : hasEmailChannel;
+      if (!channelSupported) {
+        return res.status(400).json({
+          error: `Channel '${channel}' is not supported for notification type ${notificationType}.`,
+        });
+      }
+
+      const isMandatory = rules.some((r) => r.mandatory);
+      if (isMandatory && !enabled) {
+        return res.status(403).json({
+          error: `This notification's ${channel} delivery is mandatory and cannot be disabled.`,
+        });
+      }
+    } else {
+      // Governed by legacy
+      if (channel === 'inLms') {
+        return res.status(400).json({
+          error: `Channel 'inLms' is not supported for notification type ${notificationType}.`,
+        });
+      }
+
+      const legacyMandatoryRaw = company?.mandatoryNotificationTypes;
+      const legacyMandatorySet = new Set<string>(
+        Array.isArray(legacyMandatoryRaw) ? (legacyMandatoryRaw as string[]) : []
+      );
+      const isMandatory = legacyMandatorySet.has(notificationType);
+
+      if (isMandatory && !enabled) {
+        return res.status(403).json({
+          error: `This notification's ${channel} delivery is mandatory and cannot be disabled.`,
+        });
+      }
+    }
+
+    const updateData = channel === 'inLms' ? { inLmsEnabled: enabled } : { emailEnabled: enabled };
+
+    await prisma.notificationPreference.upsert({
+      where: {
+        userId_notificationType: {
+          userId,
+          notificationType: notificationType as NotificationType,
+        },
+      },
+      update: updateData,
+      create: {
+        userId,
+        notificationType: notificationType as NotificationType,
+        inLmsEnabled: channel === 'inLms' ? enabled : true,
+        emailEnabled: channel === 'email' ? enabled : true,
+      },
+    });
+
+    return res.json({ success: true, notificationType, channel, enabled });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Failed to update preferences.' });
   }
