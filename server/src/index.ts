@@ -34,6 +34,7 @@ import './features/preview/preview.permissions';
 import './features/profiles/profileFields.permissions';
 import './features/identity/identity.permissions';
 import './features/theme/theme.permissions';
+import './features/notifications/notifications.permissions';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 import { seedProfileFields } from '../prisma/seed/profileFieldsSeed';

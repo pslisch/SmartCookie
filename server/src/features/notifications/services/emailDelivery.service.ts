@@ -4,6 +4,7 @@ import {
 } from '@prisma/client';
 import { prisma } from '../../../shared/db/prisma';
 import { emailService } from '../../../shared/email/email.service';
+import { notifyDeliveryFailure } from './deliveryFailureNotification.service';
 
 /**
  * Interpolates parameter values into placeholder expressions (e.g. {{paramName}}).
@@ -114,6 +115,19 @@ export async function processPendingEmailDeliveries(): Promise<void> {
       } catch (updateErr) {
         console.error(`[EmailDelivery] Failed to update delivery ${delivery.id} with missing email:`, updateErr);
       }
+
+      try {
+        await notifyDeliveryFailure({
+          id: delivery.id,
+          notificationRecipientId: delivery.notificationRecipientId,
+        });
+      } catch (notifyErr) {
+        console.error(
+          `[EmailDelivery] Failed to trigger delivery failure notification for delivery ${delivery.id}:`,
+          notifyErr
+        );
+      }
+
       continue;
     }
 
@@ -181,6 +195,20 @@ export async function processPendingEmailDeliveries(): Promise<void> {
         });
       } catch (updateErr) {
         console.error(`[EmailDelivery] Failed to record error state for delivery ${delivery.id}:`, updateErr);
+      }
+
+      if (newStatus === NotificationDeliveryStatus.PERMANENTLY_FAILED) {
+        try {
+          await notifyDeliveryFailure({
+            id: delivery.id,
+            notificationRecipientId: delivery.notificationRecipientId,
+          });
+        } catch (notifyErr) {
+          console.error(
+            `[EmailDelivery] Failed to trigger delivery failure notification for delivery ${delivery.id}:`,
+            notifyErr
+          );
+        }
       }
     }
   }
