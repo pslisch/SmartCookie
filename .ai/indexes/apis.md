@@ -898,6 +898,52 @@ Every documented endpoint logs:
 - **Permissions**: `theme:edit`
 - **Rules**: Removes the logo file from disk and clears `Theme.logoStoragePath` to `null`. Returns 404 if no logo is currently set. Rejects active themes (409 Conflict) and Smart Cookie Default theme (403 Forbidden).
 
+### 109. List Unread & Recent Read Notifications
+- **Endpoint**: `/api/notifications`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ unread: NotificationListItem[], recentRead: NotificationListItem[] }` (200 OK)
+- **Used By**: `NotificationBell.tsx` (Navbar dropdown & unread badge)
+- **Permissions**: `requireAuth`
+- **Rules**: Fetches unread in-LMS deliveries (`readAt: null`) and deliveries marked read within the last 7 days for the authenticated user. Resolves target availability for each item (verifying active, non-soft-deleted assignment instance targets). Interpolates localized placeholders for title and body.
+
+### 110. Mark Notification as Read
+- **Endpoint**: `/api/notifications/:deliveryId/read`
+- **Method**: `PATCH`
+- **Request**: None
+- **Response**: `{ success: true, deliveryId: string, readAt: Date }` (200 OK)
+- **Used By**: `NotificationBell.tsx`, `NotificationItemRow.tsx`
+- **Permissions**: `requireAuth`
+- **Rules**: Enforces delivery ownership (`delivery.notificationRecipient.userId === req.user.id`). Sets `readAt` to current timestamp. Idempotent: re-marking an already-read notification returns the existing `readAt` without error.
+
+### 111. Paginated Notification History
+- **Endpoint**: `/api/notifications/history`
+- **Method**: `GET`
+- **Request**: Query parameters `?page=1&pageSize=20` (pageSize capped between 1 and 50)
+- **Response**: `{ items: NotificationListItem[], totalCount: number, page: number, pageSize: number, totalPages: number }` (200 OK)
+- **Used By**: `NotificationHistoryModal.tsx`
+- **Permissions**: `requireAuth`
+- **Rules**: Returns paginated 365-day history of in-LMS deliveries for the authenticated user. Resolves target availability for linked assignment instances.
+
+### 112. Fetch Notification Preferences
+- **Endpoint**: `/api/notification-preferences`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ preferences: Array<{ notificationType: string, governedBy: 'rule' | 'legacy', hasInLmsChannel: boolean, hasEmailChannel: boolean, mandatory: boolean, inLmsEnabled: boolean, emailEnabled: boolean }> }` (200 OK)
+- **Used By**: `NotificationsTab.tsx`
+- **Permissions**: `requireAuth`
+- **Rules**: Unifies user preferences across active company notification rules and legacy settings. Reports whether each type is governed by `rule` or `legacy`, channel availability (`hasInLmsChannel`, `hasEmailChannel`), mandatory status, and per-channel toggle states (`inLmsEnabled`, `emailEnabled`).
+
+### 113. Update Notification Preference Per-Channel
+- **Endpoint**: `/api/notification-preferences`
+- **Method**: `PATCH`
+- **Request**: `{ notificationType: NotificationType, channel: 'inLms' | 'email', enabled: boolean }`
+- **Response**: `{ success: true, notificationType: string, channel: 'inLms' | 'email', enabled: boolean }` (200 OK)
+- **Used By**: `NotificationsTab.tsx`, `NotificationPreferenceRow.tsx`
+- **Permissions**: `requireAuth`
+- **Rules**: Validates `notificationType`, `channel` (`inLms` or `email`), and boolean `enabled`. Enforces server-side channel support check and mandatory lock enforcement (returns 403 Forbidden if attempting to disable a mandatory notification). Upserts the user's `NotificationPreference` row per channel.
+
+
 
 
 

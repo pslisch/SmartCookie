@@ -298,5 +298,27 @@ Every registered component should include:
 - **Used By**: `src/features/theme/pages/ThemeManagement.tsx`
 - **Dependencies**: React, `lucide-react`
 
+### 36. `NotificationBell`
+- **Location**: `src/shared/components/NotificationBell.tsx`
+- **Purpose**: Global navbar notification trigger displaying an unread count badge, an interactive popover dropdown listing unread and recent read notifications with relative timestamps, mark-as-read triggers, action deep links with automatic read marking, and a trigger to open the paginated Notification History modal.
+- **Props**: `onNavigate?: (path: string) => void`, `onOpenHistory?: () => void`, `className?: string`, `idPrefix?: string`
+- **Used By**: `src/shared/components/layout/Navbar.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `NotificationItemRow.tsx`
+
+### 37. `NotificationHistoryModal`
+- **Location**: `src/shared/components/NotificationHistoryModal.tsx`
+- **Purpose**: Portal-mounted (`document.body`) modal dialog displaying a complete 365-day paginated notification history with server-side pagination controls, empty states, and notification action deep linking.
+- **Props**: `isOpen: boolean`, `onClose: () => void`, `onNotificationClick: (item: NotificationItemType) => void`
+- **Used By**: `src/shared/components/layout/Navbar.tsx`
+- **Dependencies**: React, `react-dom` (`createPortal`), `react-i18next`, `motion/react`, `lucide-react`, `NotificationItemRow.tsx`
+
+### 38. `NotificationPreferenceRow`
+- **Location**: `src/features/profiles/components/NotificationPreferenceRow.tsx`
+- **Purpose**: Preference toggle row rendering channel-specific switches (in-LMS, email) for a notification type, indicating governance mode (`rule` vs `legacy`), channel availability, and locked/greyed-out mandatory enforcement states with tooltip explanations.
+- **Props**: `pref: Preference`, `savingChannel: 'inLms' | 'email' | null`, `onToggle: (type: string, channel: 'inLms' | 'email', currentVal: boolean) => void`
+- **Used By**: `src/features/profiles/components/NotificationsTab.tsx`
+- **Dependencies**: React, `react-i18next`, `lucide-react`
+
+
 
 

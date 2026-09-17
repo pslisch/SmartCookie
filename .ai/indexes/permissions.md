@@ -74,6 +74,8 @@ Every permission represents a logical action on a module:
 | `theme` | `set-ready` | Transition a draft theme to READY status after validating font references, or revert back to DRAFT | `POST /api/themes/:id/set-ready`, `POST /api/themes/:id/set-draft` | "Mark as Ready" / "Revert to Draft" action triggers in Theme Management & Theme Editor |
 | `theme` | `activate` | Activate a ready theme immediately, schedule future activations, cancel pending schedules, or manually run scheduled activations | `POST /api/themes/:id/activate`, `POST /api/themes/:id/cancel-schedule`, `POST /api/themes/run-scheduled-activation` | "Activate" button, ActivateScheduleModal, "Cancel Schedule" action trigger |
 | `theme` | `delete` | Soft-delete draft or ready themes (requires confirmation if scheduled) | `DELETE /api/themes/:id` | Delete theme action button & confirmation dialog |
+| `notifications` | `view-delivery-failures` | Authorizes receiving in-LMS alert notifications when email delivery reaches permanent failure | Dynamic permission check via `permissionResolverService.filterUsersWithPermission` in `deliveryFailureNotification.service.ts` (internal service gate, not an HTTP route middleware) | None (Phase 1 notification alert only; no admin management UI in Phase 1) |
+
 
 
 

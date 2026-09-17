@@ -145,7 +145,17 @@ Each feature should eventually map:
 - **Routes**: Client: Settings > Theme tab; Backend: `/api/themes/*`, `/api/fonts/*`
 - **Events**: Font upload/validation, cascading font replacement, lock heartbeat/acquisition/release, test mode trigger/exit, scheduled activation execution
 
+### 15. Notification System Subsystem
+- **Uses**: `src/shared/types/index.ts`, `src/shared/types/notifications.ts`, `src/shared/components/NotificationItemRow.tsx`, `nodemailer`
+- **Used By**: `src/shared/components/layout/Navbar.tsx`, `src/features/profiles/components/NotificationsTab.tsx`, `src/features/profiles/pages/Profile.tsx`
+- **Database**: `notification_rules`, `notification_instances`, `notification_recipients`, `notification_deliveries`, `notification_preferences`
+- **Services**: `notificationEvent.service.ts`, `recipientResolver.service.ts`, `channelDelivery.service.ts`, `emailDelivery.service.ts`, `deadlineOverdueEvent.service.ts`, `lessonCompletionEvent.service.ts`, `lessonAssignedEvent.service.ts`, `deliveryFailureNotification.service.ts`, `scheduledTasks.service.ts`
+- **Components**: `NotificationBell.tsx`, `NotificationItemRow.tsx`, `NotificationHistoryModal.tsx`, `NotificationPreferenceRow.tsx`, `NotificationsTab.tsx`
+- **Routes**: Client: Navbar Bell trigger, Settings/Profile Notifications tab; Backend: `/api/notifications/*`, `/api/notification-preferences`
+- **Events**: `scheduler:deadline-and-overdue-assignment-reminders`, `lesson:completed`, `lesson:assigned`, `notifications:email-delivery-permanently-failed`
+
 ---
+
 
 ## 🟡 Unused / Reserved Dependencies
 - **Packages**: `@google/genai` (Platform-injected default, currently unused pending explicit AI feature requests).

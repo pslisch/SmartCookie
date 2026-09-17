@@ -305,6 +305,43 @@ Every logged feature should eventually document:
 - **Events**: `scheduler:theme-scheduled-activation`, `theme:lock-heartbeat`
 - **Dependencies**: Prisma ORM, Node.js, Express, `fontkit`, `multer`, React, Tailwind CSS v4 (`@theme`), `motion/react`, `lucide-react`
 
+---
+
+## 🟢 v1.13.0 Notification System
+
+### 17. Notification System & Hub (Phase 1)
+- **Description**: Comprehensive, tenant-scoped automated notification pipeline and in-LMS Notification Hub. Implements an event-driven lifecycle (`event -> rule resolution -> recipient resolution -> dedup -> instance -> channel delivery`) supporting multi-channel delivery (in-LMS notifications and queued transactional emails with exponential retry). Features an in-LMS Notification Hub bell trigger in the global Navbar with polling and unread count badge, an interactive dropdown flyout with real-time mark-as-read and action navigation, a portal-mounted 365-day paginated Notification History modal, domain event dispatchers for assignment lifecycle events (activation, due soon reminders, overdue escalation, completion confirmations for learners and direct managers), an asynchronous email delivery engine with 3-attempt exponential backoff, automated in-LMS failure alerts for designated permission holders when email delivery permanently fails, and granular per-channel user notification preferences with server-side mandatory lock enforcement.
+- **Components**:
+  - `NotificationBell` (`src/shared/components/NotificationBell.tsx`)
+  - `NotificationItemRow` (`src/shared/components/NotificationItemRow.tsx`)
+  - `NotificationHistoryModal` (`src/shared/components/NotificationHistoryModal.tsx`)
+  - `NotificationPreferenceRow` (`src/features/profiles/components/NotificationPreferenceRow.tsx`)
+  - `NotificationsTab` (`src/features/profiles/components/NotificationsTab.tsx`)
+- **Pages**: `src/features/profiles/pages/Profile.tsx` (Notifications tab), global Navbar layout (`src/shared/components/layout/Navbar.tsx`)
+- **Services**:
+  - `NotificationEventService` (`server/src/features/notifications/services/notificationEvent.service.ts`)
+  - `RecipientResolverService` (`server/src/features/notifications/services/recipientResolver.service.ts`)
+  - `ChannelDeliveryService` (`server/src/features/notifications/services/channelDelivery.service.ts`)
+  - `EmailDeliveryService` (`server/src/features/notifications/services/emailDelivery.service.ts`)
+  - `DeadlineOverdueEventService` (`server/src/features/notifications/services/deadlineOverdueEvent.service.ts`)
+  - `LessonCompletionEventService` (`server/src/features/notifications/services/lessonCompletionEvent.service.ts`)
+  - `LessonAssignedEventService` (`server/src/features/notifications/services/lessonAssignedEvent.service.ts`)
+  - `DeliveryFailureNotificationService` (`server/src/features/notifications/services/deliveryFailureNotification.service.ts`)
+- **APIs**:
+  - `GET /api/notifications` (list unread & recent read notifications)
+  - `PATCH /api/notifications/:deliveryId/read` (mark notification delivery as read)
+  - `GET /api/notifications/history` (paginated notification history)
+  - `GET /api/notification-preferences` (fetch user preferences)
+  - `PATCH /api/notification-preferences` (per-channel preference update with mandatory enforcement)
+- **Database**: `notification_rules`, `notification_instances`, `notification_recipients`, `notification_deliveries`, `notification_preferences` (Prisma schema with `NotificationType`, `NotificationChannel`, `NotificationDeliveryStatus` enums)
+- **Permissions**: `notifications:view-delivery-failures`
+- **Routes**:
+  - Client: Global Navbar bell trigger (flyout/modal), Settings/Profile `notifications` tab
+  - Backend: `/api/notifications/*` (`server/src/features/notifications/routes/notifications.routes.ts`), `/api/notification-preferences` (`server/src/features/profiles/routes/notificationPreferences.routes.ts`)
+- **Events**: `scheduler:deadline-and-overdue-assignment-reminders`, `lesson:completed`, `lesson:assigned`, `notifications:email-delivery-permanently-failed`
+- **Dependencies**: Prisma ORM, Node.js, Express, Nodemailer, React, Tailwind CSS, `motion/react`, `lucide-react`, `react-i18next`
+
+
 
 
 

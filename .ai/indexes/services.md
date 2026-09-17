@@ -240,6 +240,42 @@ Each reusable service should include:
 - **Consumers**: `ScheduledTasksService` (`scheduledTasks.service.ts`)
 - **Dependencies**: Prisma, `NotificationEventService`
 
+### 46. NotificationEventService
+- **Purpose**: Core notification engine pipeline orchestrator. Receives domain events (`NotificationEventPayload`), resolves matching active company notification rules (`rule.notificationType === event.type && rule.enabled`), evaluates rule conditions, performs idempotency deduplication, creates `NotificationInstance` records (`@@unique([ruleId, sourceEventType, sourceEventId])`), and delegates to `RecipientResolverService` and `ChannelDeliveryService`.
+- **Consumers**: `deadlineOverdueEvent.service.ts`, `lessonAssignedEvent.service.ts`, `lessonCompletionEvent.service.ts`
+- **Dependencies**: Prisma, `recipientResolver.service.ts`, `channelDelivery.service.ts`
+
+### 47. RecipientResolverService
+- **Purpose**: Resolves target recipient user IDs from notification rule configurations (`LEARNER`, `DIRECT_MANAGER`, `SPECIFIC_USERS`, `LEARNING_GROUPS`, `ORGANIZATION_UNITS`, `ENTIRE_COMPANY`), filtering out inactive or archived users and scoping to the target company boundary.
+- **Consumers**: `NotificationEventService` (`notificationEvent.service.ts`)
+- **Dependencies**: Prisma
+
+### 48. ChannelDeliveryService
+- **Purpose**: Evaluates configured delivery channels (`IN_LMS`, `EMAIL`) against user channel preferences (`NotificationPreference.inLmsEnabled`, `NotificationPreference.emailEnabled`) unless the notification rule is marked mandatory. Creates `NotificationRecipient` and `NotificationDelivery` records, triggering immediate background processing for pending email deliveries.
+- **Consumers**: `NotificationEventService` (`notificationEvent.service.ts`)
+- **Dependencies**: Prisma, `emailDelivery.service.ts`
+
+### 49. EmailDeliveryService
+- **Purpose**: Renders notification email templates, dispatches messages via `EmailService` using company SMTP configurations with fallback, and orchestrates exponential retry backoff logic (up to 3 attempts). When delivery reaches `PERMANENTLY_FAILED`, notifies designated failure-alert permission holders via `DeliveryFailureNotificationService`.
+- **Consumers**: `channelDelivery.service.ts`, `ScheduledTasksService` (`scheduledTasks.service.ts`)
+- **Dependencies**: Prisma, `EmailService`, `deliveryFailureNotification.service.ts`
+
+### 50. LessonCompletionEventService
+- **Purpose**: Emits completion notifications (`ASSIGNMENT_COMPLETED_LEARNER` and `ASSIGNMENT_COMPLETED_MANAGER`) upon lesson or course completion, resolving learner and direct manager contexts.
+- **Consumers**: `contentAttempt.service.ts` (rollupInstance), `completion.service.ts` (markComplete)
+- **Dependencies**: Prisma, `NotificationEventService`
+
+### 51. LessonAssignedEventService
+- **Purpose**: Emits `ASSIGNMENT_ACTIVATED` notifications when assignment instances are created and become active for learners.
+- **Consumers**: `materialization.service.ts` (instant assignment materialization), `scheduledTasks.service.ts` (activation of scheduled assignments)
+- **Dependencies**: Prisma, `NotificationEventService`
+
+### 52. DeliveryFailureNotificationService
+- **Purpose**: Creates direct in-LMS alert notifications for users with `notifications:view-delivery-failures` permission when an email delivery reaches `PERMANENTLY_FAILED`. Employs application-level idempotency checks and deliberately avoids creating email deliveries to prevent failure loops.
+- **Consumers**: `emailDelivery.service.ts`
+- **Dependencies**: Prisma, `permissionResolverService.ts`
+
+
 
 
 

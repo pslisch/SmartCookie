@@ -37,7 +37,7 @@ This document serves as the top-level directory map and semantic index of the **
 ### 4. Backend Server Core
 - **`server/`**: Full-stack backend layer containing Express + TypeScript server, middleware, services, and database integration.
   - **`server/src/index.ts`**: Express application entrypoint, middleware configuration, and API route mounting.
-  - **`server/src/features/`**: Modular backend feature routes, controllers, services, and permission declarations (`auth`, `rbac`, `organization`, `assignments`, `content`, `profiles`, `identity`, `preview`, `theme`).
+  - **`server/src/features/`**: Modular backend feature routes, controllers, services, and permission declarations (`auth`, `rbac`, `organization`, `assignments`, `content`, `profiles`, `identity`, `preview`, `theme`, `notifications`).
   - **`server/src/shared/`**: Cross-cutting backend infrastructure:
     - **`server/src/shared/audit/`**: Audit logging service.
     - **`server/src/shared/crypto/`**: AES-256-GCM encryption utilities for credentials and secrets.

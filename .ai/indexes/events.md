@@ -122,3 +122,24 @@ Every documented event should eventually include:
 - **Consumer**: `POST /api/themes/:id/lock` -> `themeLock.service.ts`
 - **Payload**: `{ themeId: string, lockType: "EDIT" | "TEST" }`
 
+### 13. `lesson:completed`
+- **Event Identifier**: `lesson:completed`
+- **Producer**: `LessonCompletionEventService` (`lessonCompletionEvent.service.ts`), triggered from `contentAttempt.service.ts` (`rollupInstance`) and `completion.service.ts` (`markComplete`)
+- **Consumer**: Notification pipeline (`NotificationEventService` -> `channelDelivery.service.ts` -> `emailDelivery.service.ts`)
+- **Payload**: Emits domain events:
+  - `ASSIGNMENT_COMPLETED_LEARNER` (`NotificationType.COMPLETION` for the completing learner)
+  - `ASSIGNMENT_COMPLETED_MANAGER` (`NotificationType.MANAGER_COMPLETION` for the learner's direct manager)
+
+### 14. `lesson:assigned`
+- **Event Identifier**: `lesson:assigned`
+- **Producer**: `LessonAssignedEventService` (`lessonAssignedEvent.service.ts`), triggered from `materialization.service.ts` (`materializeTarget`) and `scheduledTasks.service.ts` (`activateScheduledAssignments`)
+- **Consumer**: Notification pipeline (`NotificationEventService` -> `channelDelivery.service.ts` -> `emailDelivery.service.ts`)
+- **Payload**: Emits domain event `ASSIGNMENT_ACTIVATED` (`NotificationType.LESSON_ASSIGNED`) for newly active assignment instances.
+
+### 15. `notifications:email-delivery-permanently-failed`
+- **Event Identifier**: `notifications:email-delivery-permanently-failed`
+- **Producer**: `EmailDeliveryService` (`emailDelivery.service.ts`), when an email delivery reaches `PERMANENTLY_FAILED` (missing recipient email address or retry attempts exhausted)
+- **Consumer**: `DeliveryFailureNotificationService` (`deliveryFailureNotification.service.ts`), creating direct in-LMS alerts for company users holding the `notifications:view-delivery-failures` permission
+- **Payload**: `{ companyId: string, deliveryId: string, recipientEmail: string | null, failureReason: string }`
+
+

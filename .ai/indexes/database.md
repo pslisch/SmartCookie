@@ -612,10 +612,99 @@ This index describes the data models, entity relationships, and schemas supporti
 - **Relations**:
   - Belongs to `Theme` (via `themeId`, cascade on delete)
 
+### Notification Rules (`notification_rules`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `name` (String)
+  - `notificationType` (Enum: `NotificationType`, maps to `notification_type`)
+  - `enabled` (Boolean, Default: `true`)
+  - `mandatory` (Boolean, Default: `false`)
+  - `recipientConfig` (Json, maps to `recipient_config`)
+  - `channels` (Json)
+  - `conditions` (Json, Nullable)
+  - `titleKey` (String, Nullable, maps to `title_key`)
+  - `bodyKey` (String, Nullable, maps to `body_key`)
+  - `actionType` (String, Nullable, maps to `action_type`)
+  - `actionUrl` (String, Nullable, maps to `action_url`)
+  - `isSystemDefault` (Boolean, Default: `false`, maps to `is_system_default`)
+  - `createdById` (String, Nullable, Foreign Key to `users.id`, maps to `created_by_id`)
+  - `createdAt` (DateTime, Default: `now()`, maps to `created_at`)
+  - `updatedAt` (DateTime, Auto-updated, maps to `updated_at`)
+  - `deletedAt` (DateTime, Nullable, maps to `deleted_at`)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to creator `User` (via `createdById`, set null on delete)
+  - Has many `NotificationInstance`s (via `instances`)
+
+### Notification Instances (`notification_instances`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`)
+  - `ruleId` (String, Nullable, Foreign Key to `notification_rules.id`, maps to `rule_id`)
+  - `sourceEventType` (String, maps to `source_event_type`)
+  - `sourceEventId` (String, Nullable, maps to `source_event_id`)
+  - `titleKey` (String, Nullable, maps to `title_key`)
+  - `titleParams` (Json, Nullable, maps to `title_params`)
+  - `bodyKey` (String, Nullable, maps to `body_key`)
+  - `bodyParams` (Json, Nullable, maps to `body_params`)
+  - `actionType` (String, Nullable, maps to `action_type`)
+  - `actionEntityType` (String, Nullable, maps to `action_entity_type`)
+  - `actionEntityId` (String, Nullable, maps to `action_entity_id`)
+  - `actionUrl` (String, Nullable, maps to `action_url`)
+  - `createdAt` (DateTime, Default: `now()`, maps to `created_at`)
+- **Indexes & Constraints**:
+  - Unique composite constraint on `(ruleId, sourceEventType, sourceEventId)`
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to optional `NotificationRule` (via `ruleId`, set null on delete)
+  - Has many `NotificationRecipient`s (via `recipients`)
+
+### Notification Recipients (`notification_recipients`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `notificationInstanceId` (String, Foreign Key to `notification_instances.id`, maps to `notification_instance_id`)
+  - `userId` (String, Foreign Key to `users.id`, maps to `user_id`)
+  - `createdAt` (DateTime, Default: `now()`, maps to `created_at`)
+- **Indexes & Constraints**:
+  - Unique composite constraint on `(notificationInstanceId, userId)`
+- **Relations**:
+  - Belongs to `NotificationInstance` (via `notificationInstanceId`, cascade on delete)
+  - Belongs to `User` (via `userId`, cascade on delete)
+  - Has many `NotificationDelivery`s (via `deliveries`)
+
+### Notification Deliveries (`notification_deliveries`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `notificationRecipientId` (String, Foreign Key to `notification_recipients.id`, maps to `notification_recipient_id`)
+  - `channel` (Enum: `IN_LMS`, `EMAIL`)
+  - `status` (Enum: `PENDING`, `SENT`, `FAILED`, `RETRIED`, `PERMANENTLY_FAILED`, Default: `PENDING`)
+  - `attemptCount` (Int, Default: 0, maps to `attempt_count`)
+  - `lastAttemptAt` (DateTime, Nullable, maps to `last_attempt_at`)
+  - `sentAt` (DateTime, Nullable, maps to `sent_at`)
+  - `readAt` (DateTime, Nullable, maps to `read_at`)
+  - `errorMessage` (String, Text, Nullable, maps to `error_message`)
+  - `createdAt` (DateTime, Default: `now()`, maps to `created_at`)
+  - `updatedAt` (DateTime, Auto-updated, maps to `updated_at`)
+- **Relations**:
+  - Belongs to `NotificationRecipient` (via `notificationRecipientId`, cascade on delete)
+
+### Notification Preferences (`notification_preferences`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `userId` (String, Foreign Key to `users.id`, maps to `user_id`)
+  - `notificationType` (Enum: `NotificationType`, maps to `notification_type`)
+  - `emailEnabled` (Boolean, Default: `true`, maps to `email_enabled`)
+  - `inLmsEnabled` (Boolean, Default: `true`, maps to `in_lms_enabled`)
+- **Indexes & Constraints**:
+  - Unique composite index on `(userId, notificationType)`
+- **Relations**:
+  - Belongs to `User` (via `userId`, cascade on delete)
+
 
 ---
 
-## 🟢 Schema Registry (v1.12.0)
+## 🟢 Schema Registry (v1.13.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
@@ -628,6 +717,7 @@ This index describes the data models, entity relationships, and schemas supporti
 - **v1.9.0**: Profiles & User Management Extensions. Added `ProfileFieldCategory`, `ProfileFieldDefinition`, `FieldEditableByRole`, `ProfileFieldValue`, and `NotificationPreference` models. Extended `User` with first/last names, profile picture, and last login. Added `mandatoryNotificationTypes` to `Company`. Added `EMAIL_CHANGE` token purpose and `pendingEmail` to `Token`.
 - **v1.10.0**: Local MFA (TOTP). Added `mfaEnabled`, `mfaSecretEncrypted`, and `mfaEnabledAt` to `User`. Added `MfaRecoveryCode` table. Added `mfaPolicy` enum default `DISABLED` to `Company`. Added `MfaPolicyRole` join table. Added `MFA_CHALLENGE` to `TokenPurpose` enum.
 - **v1.11.0**: Microsoft Entra ID Integration Backend. Added `IdentityProviderConfig`, `EntraGroupSelection`, and `SyncLog` tables. Added `entraObjectId` and `profilePictureManuallySet` to `User` table. Added `syncSource` and `entraGroupId` to `OrganizationUnit` table. Added `SyncSource`, `IdentityProviderType`, `LoginMode`, `ImportStrategy`, `SyncStatus`, and `SyncTriggerType` enums.
-- **v1.12.0 (Current)**: Theme & Branding Data Models. Added `Theme`, `Font`, and `ThemeLock` tables with `ThemeStatus` (`DRAFT`, `READY`, `ACTIVE`) and `ThemeLockType` (`EDIT`, `TEST`) enums. Soft-delete support with 14-day purge window on `Theme`. Seeded mandatory Smart Cookie Default theme and system `Inter` font per company.
+- **v1.12.0**: Theme & Branding Data Models. Added `Theme`, `Font`, and `ThemeLock` tables with `ThemeStatus` (`DRAFT`, `READY`, `ACTIVE`) and `ThemeLockType` (`EDIT`, `TEST`) enums. Soft-delete support with 14-day purge window on `Theme`. Seeded mandatory Smart Cookie Default theme and system `Inter` font per company.
+- **v1.13.0 (Current)**: Notification System Phase 1. Added `NotificationRule`, `NotificationInstance`, `NotificationRecipient`, and `NotificationDelivery` models. Extended `NotificationPreference` with `emailEnabled` and `inLmsEnabled` columns (replacing the legacy `enabled` boolean, with persisted preference migration). Extended `NotificationType` enum with `MANAGER_COMPLETION` and `MANAGER_OVERDUE`. Added `NotificationChannel` (`IN_LMS`, `EMAIL`) and `NotificationDeliveryStatus` (`PENDING`, `SENT`, `FAILED`, `RETRIED`, `PERMANENTLY_FAILED`) enums.
 
 
