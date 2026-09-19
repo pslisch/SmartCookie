@@ -932,7 +932,7 @@ Every documented endpoint logs:
 - **Response**: `{ preferences: Array<{ notificationType: string, governedBy: 'rule' | 'legacy', hasInLmsChannel: boolean, hasEmailChannel: boolean, mandatory: boolean, inLmsEnabled: boolean, emailEnabled: boolean }> }` (200 OK)
 - **Used By**: `NotificationsTab.tsx`
 - **Permissions**: `requireAuth`
-- **Rules**: Unifies user preferences across active company notification rules and legacy settings. Reports whether each type is governed by `rule` or `legacy`, channel availability (`hasInLmsChannel`, `hasEmailChannel`), mandatory status, and per-channel toggle states (`inLmsEnabled`, `emailEnabled`).
+- **Rules**: Unifies user preferences across active company notification rules and legacy settings. Reports whether each type is governed by `rule` or `legacy`, channel availability (`hasInLmsChannel`, `hasEmailChannel`), mandatory status, and per-channel toggle states (`inLmsEnabled`, `emailEnabled`). Filters out manager-only notification types (`MANAGER_COMPLETION`, `MANAGER_OVERDUE`) for users who do not currently hold an active `MANAGER`-type OU membership.
 
 ### 113. Update Notification Preference Per-Channel
 - **Endpoint**: `/api/notification-preferences`

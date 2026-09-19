@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../../../shared/db/prisma';
 import { requireAuth } from '../../../shared/middleware/session.middleware';
 import { requirePermission } from '../../../shared/middleware/permission.middleware';
-import { NotificationType } from '@prisma/client';
+import { MembershipStatus, MembershipType, NotificationType } from '@prisma/client';
 import { NotificationChannels } from '../../notifications/types/notificationEvent.types';
 
 const router = Router();
@@ -18,7 +18,7 @@ router.get('/notification-preferences', requireAuth, async (req: Request, res: R
     const userId = req.user!.id;
     const companyId = req.user!.companyId;
 
-    const [userPrefs, rules, company] = await Promise.all([
+    const [userPrefs, rules, company, isManager] = await Promise.all([
       prisma.notificationPreference.findMany({
         where: { userId },
       }),
@@ -42,6 +42,15 @@ router.get('/notification-preferences', requireAuth, async (req: Request, res: R
             select: { mandatoryNotificationTypes: true },
           })
         : Promise.resolve(null),
+      prisma.membership.findFirst({
+        where: {
+          userId,
+          membershipType: MembershipType.MANAGER,
+          status: MembershipStatus.ACTIVE,
+          deletedAt: null,
+          organizationUnitId: { not: null },
+        },
+      }),
     ]);
 
     // Map user preferences by NotificationType
@@ -70,7 +79,14 @@ router.get('/notification-preferences', requireAuth, async (req: Request, res: R
       Array.isArray(legacyMandatoryRaw) ? (legacyMandatoryRaw as string[]) : []
     );
 
-    const allTypes = Object.values(NotificationType) as NotificationType[];
+    let allTypes = Object.values(NotificationType) as NotificationType[];
+    if (!isManager) {
+      allTypes = allTypes.filter(
+        (type) =>
+          type !== NotificationType.MANAGER_COMPLETION &&
+          type !== NotificationType.MANAGER_OVERDUE
+      );
+    }
 
     const preferences = allTypes.map((notificationType) => {
       const matchingRules = rulesByType.get(notificationType);
