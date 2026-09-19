@@ -17,6 +17,7 @@ import contentAttemptsRouter from './features/content/routes/contentAttempts.rou
 import previewRouter from './features/preview/routes/preview.routes';
 import notificationPreferencesRouter from './features/profiles/routes/notificationPreferences.routes';
 import notificationsRouter from './features/notifications/routes/notifications.routes';
+import notificationAdminRouter from './features/notifications/routes/notificationAdmin.routes';
 import bulkImportRouter from './features/profiles/routes/bulkImport.routes';
 import profileRouter from './features/profiles/routes/profile.routes';
 import profileFieldRouter from './features/profiles/routes/profileField.routes';
@@ -115,6 +116,7 @@ async function startServer() {
   app.use('/api', previewRouter);
   app.use('/api', notificationPreferencesRouter);
   app.use('/api/notifications', notificationsRouter);
+  app.use('/api/notification-admin', notificationAdminRouter);
   app.use('/api/profile', profileRouter);
   app.use('/api/profile-fields', profileFieldRouter);
   app.use('/api/identity-providers', identityProviderRouter);
