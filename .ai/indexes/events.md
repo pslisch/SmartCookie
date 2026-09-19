@@ -127,7 +127,7 @@ Every documented event should eventually include:
 - **Producer**: `LessonCompletionEventService` (`lessonCompletionEvent.service.ts`), triggered from `contentAttempt.service.ts` (`rollupInstance`) and `completion.service.ts` (`markComplete`)
 - **Consumer**: Notification pipeline (`NotificationEventService` -> `channelDelivery.service.ts` -> `emailDelivery.service.ts`)
 - **Payload**: Emits domain events:
-  - `ASSIGNMENT_COMPLETED_LEARNER` (`NotificationType.COMPLETION` for the completing learner)
+  - `ASSIGNMENT_COMPLETED_LEARNER` (`NotificationType.COMPLETION_CONFIRMATION` for the completing learner)
   - `ASSIGNMENT_COMPLETED_MANAGER` (`NotificationType.MANAGER_COMPLETION` for the learner's direct manager)
 
 ### 14. `lesson:assigned`

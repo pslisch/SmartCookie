@@ -241,23 +241,23 @@ Each reusable service should include:
 - **Dependencies**: Prisma, `NotificationEventService`
 
 ### 46. NotificationEventService
-- **Purpose**: Core notification engine pipeline orchestrator. Receives domain events (`NotificationEventPayload`), resolves matching active company notification rules (`rule.notificationType === event.type && rule.enabled`), evaluates rule conditions, performs idempotency deduplication, creates `NotificationInstance` records (`@@unique([ruleId, sourceEventType, sourceEventId])`), and delegates to `RecipientResolverService` and `ChannelDeliveryService`.
+- **Purpose**: Core notification engine pipeline orchestrator. Receives domain events (`NotificationEvent`), resolves matching active company notification rules by `companyId`, `notificationType`, and `enabled` (does not evaluate `rule.conditions`, which is read separately only by `deadlineOverdueEvent.service.ts`), performs idempotency deduplication, creates `NotificationInstance` records (`@@unique([ruleId, sourceEventType, sourceEventId])`), and delegates to `RecipientResolverService` and `ChannelDeliveryService`.
 - **Consumers**: `deadlineOverdueEvent.service.ts`, `lessonAssignedEvent.service.ts`, `lessonCompletionEvent.service.ts`
 - **Dependencies**: Prisma, `recipientResolver.service.ts`, `channelDelivery.service.ts`
 
 ### 47. RecipientResolverService
-- **Purpose**: Resolves target recipient user IDs from notification rule configurations (`LEARNER`, `DIRECT_MANAGER`, `SPECIFIC_USERS`, `LEARNING_GROUPS`, `ORGANIZATION_UNITS`, `ENTIRE_COMPANY`), filtering out inactive or archived users and scoping to the target company boundary.
+- **Purpose**: Resolves target recipient user IDs from a rule's `RecipientConfig` object (`learner: boolean`, `directManager: boolean`, `entireCompany: boolean`, `groupIds: string[]`, `userIds: string[]`) and the triggering `NotificationEvent`. Direct manager resolution inspects active OU manager membership internally (no direct OU recipient targeting exists). Filters out inactive or archived users and scopes candidates to the target company boundary.
 - **Consumers**: `NotificationEventService` (`notificationEvent.service.ts`)
 - **Dependencies**: Prisma
 
 ### 48. ChannelDeliveryService
-- **Purpose**: Evaluates configured delivery channels (`IN_LMS`, `EMAIL`) against user channel preferences (`NotificationPreference.inLmsEnabled`, `NotificationPreference.emailEnabled`) unless the notification rule is marked mandatory. Creates `NotificationRecipient` and `NotificationDelivery` records, triggering immediate background processing for pending email deliveries.
+- **Purpose**: Evaluates configured delivery channels (`IN_LMS`, `EMAIL`) against user channel preferences (`NotificationPreference.inLmsEnabled`, `NotificationPreference.emailEnabled`) unless the notification rule is marked mandatory. Creates `NotificationRecipient` records and per-channel `NotificationDelivery` records (`IN_LMS` marked `SENT` immediately; `EMAIL` created as `PENDING` only, picked up later independently by the hourly scheduler poller without blocking the originating LMS operation).
 - **Consumers**: `NotificationEventService` (`notificationEvent.service.ts`)
-- **Dependencies**: Prisma, `emailDelivery.service.ts`
+- **Dependencies**: Prisma
 
 ### 49. EmailDeliveryService
-- **Purpose**: Renders notification email templates, dispatches messages via `EmailService` using company SMTP configurations with fallback, and orchestrates exponential retry backoff logic (up to 3 attempts). When delivery reaches `PERMANENTLY_FAILED`, notifies designated failure-alert permission holders via `DeliveryFailureNotificationService`.
-- **Consumers**: `channelDelivery.service.ts`, `ScheduledTasksService` (`scheduledTasks.service.ts`)
+- **Purpose**: Renders notification email templates and dispatches messages via `EmailService` using company SMTP configurations with fallback. Orchestrates a two-attempt delivery lifecycle with exactly one retry and no exponential backoff: a delivery transitions `PENDING → FAILED` on first failure, then `FAILED → PERMANENTLY_FAILED` on the second failure (`attemptCount >= 2`), picked up on the existing hourly scheduler poller's regular tick without any special backoff schedule. When delivery reaches `PERMANENTLY_FAILED`, notifies designated failure-alert permission holders via `DeliveryFailureNotificationService`.
+- **Consumers**: `ScheduledTasksService` (`scheduledTasks.service.ts`)
 - **Dependencies**: Prisma, `EmailService`, `deliveryFailureNotification.service.ts`
 
 ### 50. LessonCompletionEventService
