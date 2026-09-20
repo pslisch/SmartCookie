@@ -6,19 +6,21 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { Sliders, ArrowLeft, Settings2, Palette } from 'lucide-react';
+import { Sliders, ArrowLeft, Settings2, Palette, Bell } from 'lucide-react';
 import { useAuth } from '../../../shared/components/AppGate';
 import { usePermission } from '../../../shared/hooks/usePermission';
 import { FieldBuilder } from '../../profiles/pages/FieldBuilder';
 import { ThemeManagement } from '../../theme/pages/ThemeManagement';
+import { NotificationRuleManagement } from '../../notifications/pages/NotificationRuleManagement';
 
 export const Settings: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [view, setView] = useState<'hub' | 'fields' | 'theme'>('hub');
+  const [view, setView] = useState<'hub' | 'fields' | 'theme' | 'notifications'>('hub');
 
   const canManageFields = usePermission('profile-fields', 'manage-fields');
   const canViewThemes = usePermission('theme', 'view');
+  const canManageNotificationRules = usePermission('notifications', 'manage-rules');
 
   return (
     <motion.div
@@ -47,6 +49,8 @@ export const Settings: React.FC = () => {
                 ? t('settings.title')
                 : view === 'theme'
                 ? t('settings.themeManagement')
+                : view === 'notifications'
+                ? t('settings.notificationRules')
                 : t('settings.fieldBuilder')}
             </h1>
             <p className="mt-1.5 text-sm text-text-muted max-w-2xl font-sans">
@@ -54,6 +58,8 @@ export const Settings: React.FC = () => {
                 ? t('settings.hubSubtitle')
                 : view === 'theme'
                 ? t('settings.themeManagementSubtitle')
+                : view === 'notifications'
+                ? t('settings.notificationRulesSubtitle')
                 : t('settings.fieldBuilderSubtitle')}
             </p>
           </div>
@@ -76,7 +82,7 @@ export const Settings: React.FC = () => {
       {/* Hub View */}
       {view === 'hub' && (
         <>
-          {canManageFields || canViewThemes ? (
+          {canManageFields || canViewThemes || canManageNotificationRules ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6" id="settings-hub-grid">
               {canManageFields && (
                 <motion.button
@@ -125,6 +131,30 @@ export const Settings: React.FC = () => {
                   </span>
                 </motion.button>
               )}
+
+              {canManageNotificationRules && (
+                <motion.button
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  whileTap={{ y: 0, scale: 0.99 }}
+                  onClick={() => setView('notifications')}
+                  className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
+                  id="card-notification-rules"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
+                    <Bell className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-text-heading font-sans">
+                    {t('settings.notificationRules')}
+                  </h3>
+                  <p className="text-sm text-text-muted mt-2 font-sans">
+                    {t('settings.notificationRulesDesc')}
+                  </p>
+                  <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
+                    <span>{t('settings.manageNotificationRulesBtn')}</span>
+                    <span>&rarr;</span>
+                  </span>
+                </motion.button>
+              )}
             </div>
           ) : (
             /* Empty State message (No permissions config) */
@@ -153,6 +183,12 @@ export const Settings: React.FC = () => {
       {view === 'theme' && canViewThemes && (
         <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="theme-subview">
           <ThemeManagement />
+        </div>
+      )}
+
+      {view === 'notifications' && canManageNotificationRules && (
+        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="notifications-subview">
+          <NotificationRuleManagement />
         </div>
       )}
     </motion.div>
