@@ -1204,5 +1204,42 @@
     "timeMinutesAgo": "{{count}}m ago",
     "timeHoursAgo": "{{count}}h ago",
     "timeDaysAgo": "{{count}}d ago"
+  },
+  "pickers": {
+    "user": {
+      "searchPlaceholder": "Search users by name or email...",
+      "loading": "Loading users...",
+      "errorGeneric": "Failed to load users.",
+      "errorForbidden": "Viewing and targeting specific users requires organization-view permission.",
+      "emptyNoUsers": "No active users found.",
+      "emptyNoMatches": "No users match \"{{query}}\"",
+      "selectedCount": "{{count}} users selected",
+      "selectedCount_one": "1 user selected",
+      "selectedCount_zero": "0 users selected",
+      "clearAll": "Clear all",
+      "selectAllMatching": "Select all matching",
+      "deselectAllMatching": "Deselect matching",
+      "removeAria": "Remove {{name}}",
+      "retry": "Retry"
+    },
+    "group": {
+      "searchPlaceholder": "Search learning groups by name...",
+      "loading": "Loading learning groups...",
+      "errorGeneric": "Failed to load learning groups.",
+      "errorForbidden": "Viewing and targeting learning groups requires organization-view permission.",
+      "emptyNoGroups": "No learning groups found.",
+      "emptyNoMatches": "No learning groups match \"{{query}}\"",
+      "selectedCount": "{{count}} groups selected",
+      "selectedCount_one": "1 group selected",
+      "selectedCount_zero": "0 groups selected",
+      "clearAll": "Clear all",
+      "selectAllMatching": "Select all matching",
+      "deselectAllMatching": "Deselect matching",
+      "removeAria": "Remove {{name}}",
+      "retry": "Retry",
+      "memberCount": "{{count}} members",
+      "memberCount_one": "1 member",
+      "memberCount_zero": "0 members"
+    }
   }
 }
