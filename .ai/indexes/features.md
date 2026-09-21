@@ -340,6 +340,7 @@ Every logged feature should eventually document:
   - Backend: `/api/notifications/*` (`server/src/features/notifications/routes/notifications.routes.ts`), `/api/notification-preferences` (`server/src/features/profiles/routes/notificationPreferences.routes.ts`)
 - **Events**: `scheduler:deadline-and-overdue-assignment-reminders`, `lesson:completed`, `lesson:assigned`, `notifications:email-delivery-permanently-failed`
 - **Dependencies**: Prisma ORM, Node.js, Express, Nodemailer, React, Tailwind CSS, `motion/react`, `lucide-react`, `react-i18next`
+- **Phase 2 Status**: Phase 2 rule administration (list/enable-disable/duplicate/delete UI) is complete, and the create/edit rule form (with recipient targeting) is still pending.
 
 
 
