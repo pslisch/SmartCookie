@@ -319,6 +319,21 @@ Every registered component should include:
 - **Used By**: `src/features/profiles/components/NotificationsTab.tsx`
 - **Dependencies**: React, `react-i18next`, `lucide-react`
 
+### 39. `NotificationRuleManagement`
+- **Location**: `src/features/notifications/pages/NotificationRuleManagement.tsx`
+- **Purpose**: Administration view for tenant notification rules. Displays rule table with type badges, recipient tags, delivery channel icons, mandatory indicators, enabled/disabled toggles, rule duplication, deletion of custom rules, and create/edit form triggers.
+- **Props**: `onBack?: () => void`
+- **Used By**: `src/features/management/pages/Management.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `NotificationRuleForm.tsx`
+
+### 40. `NotificationRuleForm`
+- **Location**: `src/features/notifications/components/NotificationRuleForm.tsx`
+- **Purpose**: Reusable creation and edit modal form for NotificationRules. Features rule name, immutable notificationType select on edit, enabled/mandatory switches, multi-recipient targeting (`UserMultiSelect`, `GroupMultiSelect`, learner/manager/entire company checkboxes), delivery channels (inLms, email), specialized `DUE_SOON` conditions number input (`daysBeforeDue`), advanced JSON conditions editor for other types, title/body template customizers with parameter token hints, and action links.
+- **Props**: `rule: NotificationRule | null`, `onClose: () => void`, `onSuccess: () => void`
+- **Used By**: `src/features/notifications/pages/NotificationRuleManagement.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `UserMultiSelect.tsx`, `GroupMultiSelect.tsx`
+
+
 
 
 

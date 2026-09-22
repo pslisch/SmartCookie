@@ -934,14 +934,51 @@ Every documented endpoint logs:
 - **Permissions**: `requireAuth`
 - **Rules**: Unifies user preferences across active company notification rules and legacy settings. Reports whether each type is governed by `rule` or `legacy`, channel availability (`hasInLmsChannel`, `hasEmailChannel`), mandatory status, and per-channel toggle states (`inLmsEnabled`, `emailEnabled`). Filters out manager-only notification types (`MANAGER_COMPLETION`, `MANAGER_OVERDUE`) for users who do not currently hold an active `MANAGER`-type OU membership.
 
-### 113. Update Notification Preference Per-Channel
-- **Endpoint**: `/api/notification-preferences`
+### 114. List Notification Rules
+- **Endpoint**: `/api/notification-admin/rules`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `NotificationRule[]` (200 OK)
+- **Used By**: `NotificationRuleManagement.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-rules`
+- **Rules**: Returns all active notification rules for the user's company (`deletedAt: null`), ordered with system defaults first, then by creation date.
+
+### 115. Create Notification Rule
+- **Endpoint**: `/api/notification-admin/rules`
+- **Method**: `POST`
+- **Request**: `{ name: string, notificationType: NotificationType, enabled?: boolean, mandatory?: boolean, recipientConfig?: RecipientConfig, channels?: NotificationChannels, conditions?: any, titleKey?: string, bodyKey?: string, actionType?: string, actionUrl?: string }`
+- **Response**: `NotificationRule` (201 Created)
+- **Used By**: `NotificationRuleForm.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-rules`
+- **Rules**: Validates rule name, non-empty `channels` (at least one of `inLms` or `email` must be true), and valid `notificationType`. If `DUE_SOON`, enforces valid `conditions.daysBeforeDue` (integer >= 0). Creates custom rule with `isSystemDefault: false`.
+
+### 116. Update Notification Rule
+- **Endpoint**: `/api/notification-admin/rules/:id`
 - **Method**: `PATCH`
-- **Request**: `{ notificationType: NotificationType, channel: 'inLms' | 'email', enabled: boolean }`
-- **Response**: `{ success: true, notificationType: string, channel: 'inLms' | 'email', enabled: boolean }` (200 OK)
-- **Used By**: `NotificationsTab.tsx`, `NotificationPreferenceRow.tsx`
-- **Permissions**: `requireAuth`
-- **Rules**: Validates `notificationType`, `channel` (`inLms` or `email`), and boolean `enabled`. Enforces server-side channel support check and mandatory lock enforcement (returns 403 Forbidden if attempting to disable a mandatory notification). Upserts the user's `NotificationPreference` row per channel.
+- **Request**: `{ name?: string, enabled?: boolean, mandatory?: boolean, recipientConfig?: RecipientConfig, channels?: NotificationChannels, conditions?: any, titleKey?: string, bodyKey?: string, actionType?: string, actionUrl?: string }`
+- **Response**: `NotificationRule` (200 OK)
+- **Used By**: `NotificationRuleManagement.tsx`, `NotificationRuleForm.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-rules`
+- **Rules**: Validates rule exists and belongs to company. Rejects attempts to alter `notificationType` (returns 400 Bad Request; `notificationType` is strictly immutable). Enforces channel validation if updated. For system default rules, allows updating channels, templates, and enabled status.
+
+### 117. Delete Notification Rule
+- **Endpoint**: `/api/notification-admin/rules/:id`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true }` (200 OK)
+- **Used By**: `NotificationRuleManagement.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-rules`
+- **Rules**: Soft-deletes a custom rule (`deletedAt = now()`). Blocks deletion of system-default rules (`isSystemDefault: true`) with 403 Forbidden.
+
+### 118. Duplicate Notification Rule
+- **Endpoint**: `/api/notification-admin/rules/:id/duplicate`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `NotificationRule` (201 Created)
+- **Used By**: `NotificationRuleManagement.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-rules`
+- **Rules**: Clones target rule (system-default or custom) into a new custom rule with `(Copy)` appended to the name, `isSystemDefault: false`, and `enabled: false`.
+
 
 
 

@@ -21,8 +21,10 @@ import {
   Award,
   Megaphone,
   Plus,
+  Edit,
 } from 'lucide-react';
 import { NotificationRule } from '../types';
+import { NotificationRuleForm } from '../components/NotificationRuleForm';
 
 function getCsrfToken(): string {
   const match = document.cookie.match(/csrfToken=([^;]+)/);
@@ -37,6 +39,7 @@ export const NotificationRuleManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Action states
+  const [formRule, setFormRule] = useState<NotificationRule | null | undefined>(undefined);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [ruleToDelete, setRuleToDelete] = useState<NotificationRule | null>(null);
@@ -245,6 +248,27 @@ export const NotificationRuleManagement: React.FC = () => {
     }
   };
 
+  if (formRule !== undefined) {
+    return (
+      <div className="space-y-6" id="notification-rule-management">
+        <NotificationRuleForm
+          rule={formRule}
+          onSuccess={(savedRule) => {
+            const isEdit = Boolean(formRule);
+            setFormRule(undefined);
+            setActionSuccess(
+              isEdit
+                ? t('notificationRules.form.editSuccess', { name: savedRule.name })
+                : t('notificationRules.form.createSuccess', { name: savedRule.name })
+            );
+            fetchRules();
+          }}
+          onCancel={() => setFormRule(undefined)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6" id="notification-rule-management">
       {/* Top Header Row */}
@@ -268,14 +292,13 @@ export const NotificationRuleManagement: React.FC = () => {
           </p>
         </div>
 
-        {/* Visibly disabled Create Rule button for Phase 3 */}
+        {/* Create Rule Button */}
         <div className="shrink-0">
           <button
             type="button"
-            disabled
-            className="inline-flex items-center space-x-2 rounded-xl border border-card-border bg-card-header-bg/60 px-4 py-2 text-sm font-semibold text-text-muted cursor-not-allowed opacity-60 shadow-xs"
-            id="create-rule-disabled-btn"
-            title={t('notificationRules.createRuleComingSoon')}
+            onClick={() => setFormRule(null)}
+            className="inline-flex items-center space-x-2 rounded-xl bg-btn-primary-bg px-4 py-2 text-sm font-semibold text-btn-primary-text shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
+            id="create-rule-btn"
           >
             <Plus className="h-4 w-4" />
             <span>{t('notificationRules.createRuleBtn')}</span>
@@ -373,6 +396,15 @@ export const NotificationRuleManagement: React.FC = () => {
           <p className="text-sm text-text-muted mt-1 max-w-sm font-sans">
             {t('notificationRules.emptyStateDesc')}
           </p>
+          <button
+            type="button"
+            onClick={() => setFormRule(null)}
+            className="mt-4 inline-flex items-center space-x-2 rounded-xl bg-btn-primary-bg px-4 py-2 text-sm font-semibold text-btn-primary-text shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
+            id="empty-state-create-rule-btn"
+          >
+            <Plus className="h-4 w-4" />
+            <span>{t('notificationRules.createRuleBtn')}</span>
+          </button>
         </div>
       ) : (
         /* Rules Table */
@@ -521,9 +553,21 @@ export const NotificationRuleManagement: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* Actions: Duplicate & Delete */}
+                      {/* Actions: Edit, Duplicate & Delete */}
                       <td className="px-6 py-4 align-middle text-right">
                         <div className="flex items-center justify-end space-x-2">
+                          {/* Edit Button (Available for both System Default and Custom) */}
+                          <button
+                            type="button"
+                            onClick={() => setFormRule(rule)}
+                            className="inline-flex items-center space-x-1.5 rounded-lg border border-card-border bg-card-bg px-2.5 py-1.5 text-xs font-semibold text-text-body shadow-xs hover:bg-card-header-bg hover:text-text-heading transition-colors cursor-pointer"
+                            id={`edit-rule-btn-${rule.id}`}
+                            title={t('notificationRules.editBtn')}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                            <span>{t('notificationRules.editBtn')}</span>
+                          </button>
+
                           {/* Duplicate Button (Always Available) */}
                           <button
                             type="button"
