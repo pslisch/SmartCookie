@@ -1,12 +1,158 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../../../shared/db/prisma';
 import { requirePermission } from '../../../shared/middleware/permission.middleware';
-import { NotificationType, Prisma } from '@prisma/client';
+import { NotificationChannel, NotificationDeliveryStatus, NotificationType, Prisma } from '@prisma/client';
 import { RecipientConfig, NotificationChannels } from '../types/notificationEvent.types';
+import { interpolate } from '../services/emailDelivery.service';
 
 const router = Router();
 
-// All routes gated by requirePermission('notifications', 'manage-rules')
+interface DeliveryFailureRecipient {
+  userId: string;
+  username: string | null;
+  email: string | null;
+}
+
+interface DeliveryFailureNotification {
+  instanceId: string;
+  sourceEventType: string;
+  title: string;
+}
+
+interface DeliveryFailureItem {
+  deliveryId: string;
+  channel: NotificationChannel;
+  status: NotificationDeliveryStatus;
+  attemptCount: number;
+  lastAttemptAt: Date | null;
+  errorMessage: string | null;
+  recipient: DeliveryFailureRecipient;
+  notification: DeliveryFailureNotification;
+}
+
+/**
+ * GET /api/notification-admin/delivery-failures
+ * Paginated list of NotificationDelivery rows in FAILED or PERMANENTLY_FAILED status
+ * for the requesting admin user's company.
+ * Query params: ?page=1&pageSize=20 (pageSize capped at 50)
+ * Gated explicitly by: requirePermission('notifications', 'view-delivery-failures')
+ */
+router.get(
+  '/delivery-failures',
+  requirePermission('notifications', 'view-delivery-failures'),
+  async (req: Request, res: Response) => {
+    try {
+      const companyId = req.user?.companyId;
+      if (!companyId) {
+        return res.status(400).json({ error: 'No company associated with current user.' });
+      }
+
+      const page = Math.max(1, parseInt(String(req.query.page), 10) || 1);
+      const rawPageSize = parseInt(String(req.query.pageSize), 10) || 20;
+      const pageSize = Math.min(50, Math.max(1, rawPageSize));
+      const skip = (page - 1) * pageSize;
+
+      const whereClause: Prisma.NotificationDeliveryWhereInput = {
+        status: {
+          in: [
+            NotificationDeliveryStatus.FAILED,
+            NotificationDeliveryStatus.PERMANENTLY_FAILED,
+          ],
+        },
+        notificationRecipient: {
+          notificationInstance: {
+            companyId,
+          },
+        },
+      };
+
+      const [totalCount, deliveries] = await Promise.all([
+        prisma.notificationDelivery.count({
+          where: whereClause,
+        }),
+        prisma.notificationDelivery.findMany({
+          where: whereClause,
+          select: {
+            id: true,
+            channel: true,
+            status: true,
+            attemptCount: true,
+            lastAttemptAt: true,
+            errorMessage: true,
+            notificationRecipient: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                  },
+                },
+                notificationInstance: {
+                  select: {
+                    id: true,
+                    sourceEventType: true,
+                    titleKey: true,
+                    titleParams: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            updatedAt: 'desc',
+          },
+          skip,
+          take: pageSize,
+        }),
+      ]);
+
+      const items: DeliveryFailureItem[] = deliveries.map((d) => {
+        const instance = d.notificationRecipient.notificationInstance;
+        const titleParams =
+          instance.titleParams &&
+          typeof instance.titleParams === 'object' &&
+          !Array.isArray(instance.titleParams)
+            ? (instance.titleParams as Record<string, unknown>)
+            : null;
+
+        return {
+          deliveryId: d.id,
+          channel: d.channel,
+          status: d.status,
+          attemptCount: d.attemptCount,
+          lastAttemptAt: d.lastAttemptAt,
+          errorMessage: d.errorMessage,
+          recipient: {
+            userId: d.notificationRecipient.user.id,
+            username: d.notificationRecipient.user.username,
+            email: d.notificationRecipient.user.email,
+          },
+          notification: {
+            instanceId: instance.id,
+            sourceEventType: instance.sourceEventType,
+            title: interpolate(instance.titleKey, titleParams),
+          },
+        };
+      });
+
+      return res.json({
+        items,
+        totalCount,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalCount / pageSize),
+      });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to retrieve delivery failures.';
+      console.error('[Notification Admin] GET /delivery-failures error:', error);
+      return res.status(500).json({ error: message });
+    }
+  }
+);
+
+// All subsequent rule-management routes gated by requirePermission('notifications', 'manage-rules')
 router.use(requirePermission('notifications', 'manage-rules'));
 
 /**
