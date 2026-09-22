@@ -41,6 +41,7 @@ model User {
   auditLogs          AuditLog[] @relation("UserAuditLogs")
   createdContents    Content[]  @relation("ContentCreator")
   createdNotificationRules NotificationRule[] @relation("NotificationRuleCreator")
+  createdScheduledNotifications ScheduledNotification[] @relation("ScheduledNotificationCreator")
   notificationRecipients   NotificationRecipient[]
 
   firstName          String?    @map("first_name")
@@ -117,6 +118,7 @@ model Company {
   fonts                           Font[]
   notificationRules               NotificationRule[]
   notificationInstances           NotificationInstance[]
+  scheduledNotifications          ScheduledNotification[]
 
   @@map("companies")
 }
@@ -757,6 +759,42 @@ model NotificationPreference {
 
   @@unique([userId, notificationType])
   @@map("notification_preferences")
+}
+
+enum ScheduledNotificationRecurrence {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ScheduledNotificationStatus {
+  ACTIVE
+  CANCELLED
+}
+
+model ScheduledNotification {
+  id              String                          @id @default(uuid())
+  companyId       String                          @map("company_id")
+  company         Company                         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title           String
+  message         String                          @db.Text
+  recipientConfig Json                            @map("recipient_config")
+  channels        Json
+  actionUrl       String?                         @map("action_url")
+  startAt         DateTime                        @map("start_at")
+  recurrence      ScheduledNotificationRecurrence @default(NONE)
+  endAt           DateTime?                       @map("end_at")
+  status          ScheduledNotificationStatus     @default(ACTIVE)
+  nextExecutionAt DateTime                        @map("next_execution_at")
+  lastExecutedAt  DateTime?                       @map("last_executed_at")
+  createdById     String?                         @map("created_by_id")
+  createdBy       User?                           @relation("ScheduledNotificationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt       DateTime                        @default(now()) @map("created_at")
+  updatedAt       DateTime                        @updatedAt @map("updated_at")
+  deletedAt       DateTime?                       @map("deleted_at")
+
+  @@map("scheduled_notifications")
 }
 
 enum MfaPolicy {

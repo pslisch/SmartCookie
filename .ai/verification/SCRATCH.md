@@ -1,163 +1,270 @@
-# Notification Administration — Delivery Failures UI (Phase 2) — Verification Evidence
+# Scheduled Notifications — Data Model & Backend CRUD (Phase 2, Part A) — Verification Evidence
 
-**Execution Timestamp:** 2026-09-22T10:16:04.000Z  
-**Task:** Delivery Failures UI — Re-Verify With Actual Evidence (No Code Changes)  
+**Execution Timestamp:** 2026-09-22T10:29:14.000Z  
+**Task:** Scheduled Notifications — Data Model & Backend CRUD (Phase 2, part A)  
 **Auditor:** AI Assistant  
-**Environment:** Linux / Node.js 22 / React 19 / MariaDB / Express Dev Server (Port 3000)
+**Environment:** Linux / Node.js 22 / MariaDB / Express Dev Server (Port 3000)  
+**Target Repository:** `pslisch/SmartCookie`
 
 ---
 
-## Step 1: User with BOTH `notifications:manage-rules` and `notifications:view-delivery-failures`
+## 1. Schema, Prisma Client & Migration Verification
 
-### Test Configuration:
-- **User Identity:** `audit_admin` (Active session, non-superuser)
-- **Effective Permissions:** `['notifications:manage-rules', 'notifications:view-delivery-failures']`
-- **Component Rendered:** `<Settings />` (initial state: `view = 'hub'`)
-- **i18n Locale:** `en` (using real translations from `src/shared/i18n/locales/en/common.json`)
-
-### Observed Hub Grid Rendering:
-- **Rendered Output Length:** 3,451 bytes
-- **Hub Grid Element:** `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="settings-hub-grid">`
-- **Total Cards Rendered in Hub Grid:** `2`
-
-### Rendered Cards Data:
-1. **Card 1 — Notification Rules:**
-   - **DOM ID:** `id="card-notification-rules"`
-   - **Title:** `Notification Rules`
-   - **Description:** `Manage automated LMS and email notifications, adjust delivery channels, and configure baseline alerts.`
-   - **Action Link:** `Manage Notification Rules →`
-   - **Icon Container:** `bg-status-info-bg text-link-primary` containing Lucide `Bell` icon
-
-2. **Card 2 — Delivery Failures:**
-   - **DOM ID:** `id="card-delivery-failures"`
-   - **Title:** `Delivery Failures`
-   - **Description:** `Inspect delivery failures across email and notification channels, review error logs, and monitor delivery issues.`
-   - **Action Link:** `View Delivery Failures →`
-   - **Icon Container:** `bg-status-error-bg text-status-error-text` containing Lucide `AlertTriangle` icon
-
-### Conclusion for Step 1:
-Both cards (`card-notification-rules` and `card-delivery-failures`) are confirmed present and rendered side-by-side in the Settings hub.
+- **Prisma Schema:** `server/prisma/schema.prisma`
+  - Added enum `ScheduledNotificationRecurrence` with values: `NONE`, `DAILY`, `WEEKLY`, `MONTHLY`.
+  - Added enum `ScheduledNotificationStatus` with values: `ACTIVE`, `CANCELLED`.
+  - Added model `ScheduledNotification` with mapped columns (`company_id`, `recipient_config`, `action_url`, `start_at`, `end_at`, `next_execution_at`, `last_executed_at`, `created_by_id`, `created_at`, `updated_at`, `deleted_at`).
+  - Added relation on `Company`: `scheduledNotifications ScheduledNotification[]`.
+  - Added relation on `User`: `createdScheduledNotifications ScheduledNotification[] @relation("ScheduledNotificationCreator")`.
+- **Migration File:** `server/prisma/migrations/20260922120000_add_scheduled_notifications/migration.sql`
+- **Schema Drift Check (`prisma migrate diff`):**
+  - Command: `npx prisma migrate diff --from-config-datasource --to-schema server/prisma/schema.prisma`
+  - Result: `No difference detected.` (Zero drift between MariaDB database and schema).
+- **TypeScript & Build Verification:**
+  - `npm run lint` (`tsc --noEmit`): Exited with code `0`, zero type errors.
+  - `npm run build` (`vite build && esbuild ...`): Exited with code `0`, bundle size 539.9kb.
 
 ---
 
-## Step 2: User with ONLY `notifications:manage-rules` (NO `view-delivery-failures`)
+## 2. Permission Registration & Gating Evidence
 
-### Test Configuration:
-- **User Identity:** `audit_admin` (Active session, non-superuser)
-- **Effective Permissions:** `['notifications:manage-rules']`
-- **Component Rendered:** `<Settings />` (initial state: `view = 'hub'`)
+- **Registered Permission:** `notifications:manage-scheduled` registered via `registerPermission('notifications', 'manage-scheduled')` in `server/src/features/notifications/notifications.permissions.ts`.
+- **Database Synchronization:** `syncPermissions()` synchronized `notifications:manage-scheduled` with DB ID `7d05eed9-3abd-4784-adfe-cbd269a188b0`.
 
-### Observed Hub Grid Contents:
-- **Total Cards Rendered in Hub Grid:** `1`
-- **Hub Grid Contents (N = 1 card):**
-  1. `id="card-notification-rules"`: Title = `"Notification Rules"`, Action = `"Manage Notification Rules →"`
-
-### Absence Verification:
-- `html.includes('id="card-delivery-failures"')`: **`false`**
-- `html.includes('Delivery Failures')`: **`false`**
-- Hub shows 1 card: `[Notification Rules]`; Delivery Failures is **not among them**.
+### Route Gating Verification (User WITHOUT `notifications:manage-scheduled`):
+- **User:** Regular authenticated user `other_user_1790070925786` (no admin/scheduled permissions).
+- **Request:** `GET /api/scheduled-notifications`
+  - **Status:** `403 Forbidden`
+  - **Payload:** `{"error": "Forbidden: Missing required permission \"notifications:manage-scheduled\"."}`
+- **Request:** `POST /api/scheduled-notifications`
+  - **Status:** `403 Forbidden`
+  - **Payload:** `{"error": "Forbidden: Missing required permission \"notifications:manage-scheduled\"."}`
 
 ---
 
-## Step 3: User with ONLY `notifications:view-delivery-failures` (NO `manage-rules`)
+## 3. CRUD Endpoint Execution Evidence (Real Payloads & IDs)
 
-### Test Configuration:
-- **User Identity:** `audit_admin` (Active session, non-superuser)
-- **Effective Permissions:** `['notifications:view-delivery-failures']`
-- **Component Rendered:** `<Settings />` (initial state: `view = 'hub'`)
-
-### Observed Hub Grid Contents:
-- **Total Cards Rendered in Hub Grid:** `1`
-- **Hub Grid Contents (N = 1 card):**
-  1. `id="card-delivery-failures"`: Title = `"Delivery Failures"`, Action = `"View Delivery Failures →"`
-
-### Absence Verification:
-- `html.includes('id="card-notification-rules"')`: **`false`**
-- `html.includes('Notification Rules')`: **`false`**
-- Hub shows 1 card: `[Delivery Failures]`; Notification Rules is **not among them**.
-
-### Subview Navigation Verification:
-- When clicking `card-delivery-failures`, `view` updates to `'delivery-failures'`.
-- Subview container mounts: `<div class="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="delivery-failures-subview">`.
-- Header updates to Title: `"Delivery Failures"` (`t('settings.deliveryFailures')`) and Subtitle: `"View failed and exhausted notification deliveries, inspect error diagnostics, and monitor delivery retry statuses."` (`t('settings.deliveryFailuresSubtitle')`).
-
----
-
-## Step 4: Real Delivery Failures Table & Pagination Controls
-
-### Real API Execution:
-- **Endpoint:** `GET /api/notification-admin/delivery-failures`
-- **Caller Session:** Superuser / permitted admin (`admin`, companyId: `730917be-9701-4af6-aef6-c78afb730d2b`)
-- **HTTP Status:** `200 OK`
-- **Total Delivery Failures Recorded:** `36`
-- **Total Pages (pageSize = 5):** `8`
-
-### Rendered Rows on Page 1 (`?page=1&pageSize=5`):
-
-| Row | Delivery ID | Recipient | Notification Title | Event | Channel | Status | Attempts | Last Attempt | Error Message |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | `b0da4683-f5f0-49a0-a8df-d5909b92a2a6` | `test_assigned_learner2_1789290139522`<br>(`learner2_1789290139522@example.com`) | Urgent: Cybersecurity Fundamentals 101 is overdue! | `ASSIGNMENT_OVERDUE` | `EMAIL` | `PERMANENTLY_FAILED` (red badge) | 2 | `2026-09-22T10:05:14.227Z` | `connect ECONNREFUSED 82.165.126.52:587` |
-| 2 | `b04af026-40fd-44cc-83ca-52e7fad8a476` | `test_assigned_learner2_1789290139522`<br>(`learner2_1789290139522@example.com`) | Urgent: Cybersecurity Fundamentals 101 is overdue! | `ASSIGNMENT_OVERDUE` | `EMAIL` | `PERMANENTLY_FAILED` (red badge) | 2 | `2026-09-22T10:05:13.843Z` | `connect ECONNREFUSED 82.165.126.52:587` |
-| 3 | `7bddb158-2e86-47a9-ab3b-17749db9b606` | `test_assigned_learner2_1789290139522`<br>(`learner2_1789290139522@example.com`) | Urgent: Cybersecurity Fundamentals 101 is overdue! | `ASSIGNMENT_OVERDUE` | `EMAIL` | `PERMANENTLY_FAILED` (red badge) | 2 | `2026-09-22T09:57:37.746Z` | `connect ECONNREFUSED 82.165.126.52:587` |
-| 4 | `2c7321e4-3360-43e6-a11e-c0fa7992bbcb` | `test_assigned_learner2_1789290139522`<br>(`learner2_1789290139522@example.com`) | Urgent: Cybersecurity Fundamentals 101 is overdue! | `ASSIGNMENT_OVERDUE` | `EMAIL` | `PERMANENTLY_FAILED` (red badge) | 2 | `2026-09-22T09:57:37.303Z` | `connect ECONNREFUSED 82.165.126.52:587` |
-| 5 | `91dba8cb-f6c4-41ef-bd0e-294416cb2562` | `test_assigned_learner2_1789290139522`<br>(`learner2_1789290139522@example.com`) | Urgent: Cybersecurity Fundamentals 101 is overdue! | `ASSIGNMENT_OVERDUE` | `EMAIL` | `PERMANENTLY_FAILED` (red badge) | 2 | `2026-09-22T09:57:36.940Z` | `connect ECONNREFUSED 82.165.126.52:587` |
-
-### Rendered Rows on Page 2 (`?page=2&pageSize=5`):
-
-| Row | Delivery ID | Recipient | Notification Title | Status | Attempts | Error Message |
-|---|---|---|---|---|---|---|
-| 1 | `50374e09-7db1-4eb2-a79c-907892177df8` | `test_assigned_learner1_1789290139375` | Urgent: Cybersecurity Fundamentals 101 is overdue! | `PERMANENTLY_FAILED` | 2 | `connect ECONNREFUSED 82.165.126.52:587` |
-| 2 | `4bb5d590-3f04-4b49-8a3f-9577856d92e0` | `test_assigned_learner1_1789290139375` | Urgent: Cybersecurity Fundamentals 101 is overdue! | `PERMANENTLY_FAILED` | 2 | `connect ECONNREFUSED 82.165.126.52:587` |
-| 3 | `63d4a27a-421e-4757-80e5-cf67a1ae3789` | `test_assigned_learner2_1789290139522` | Urgent: Cybersecurity Fundamentals 101 is overdue! | `PERMANENTLY_FAILED` | 2 | `550 5.1.1 User unknown / mailbox not found` |
-| 4 | `35a0f6e6-e3b7-4295-a638-3de13cf0da20` | `test_assigned_learner2_1789290139522` | Urgent: Cybersecurity Fundamentals 101 is overdue! | `PERMANENTLY_FAILED` | 2 | `550 5.1.1 User unknown / mailbox not found` |
-| 5 | `1ff1a26d-5699-4556-9d03-7a38a6032bea` | `test_assigned_learner2_1789290139522` | Urgent: Cybersecurity Fundamentals 101 is overdue! | `PERMANENTLY_FAILED` | 2 | `connect ECONNREFUSED 82.165.126.52:587` |
-
-### Pagination State Transition (Before vs. After):
-
-- **Before (Page 1):**
-  - **Showing Indicator Text:** `"Showing 1 to 5 of 36 failures"`
-  - **Page Indicator Text:** `"Page 1 of 8"`
-  - **Previous Page Button (`#delivery-failures-prev-page`):** `disabled=""` (disabled attribute present; `page <= 1`)
-  - **Next Page Button (`#delivery-failures-next-page`):** Enabled (clickable; `1 < 8`)
-
-- **After (Page 2):**
-  - **Showing Indicator Text:** `"Showing 6 to 10 of 36 failures"`
-  - **Page Indicator Text:** `"Page 2 of 8"`
-  - **Previous Page Button (`#delivery-failures-prev-page`):** Enabled (no `disabled` attribute; `page === 2 > 1`)
-  - **Next Page Button (`#delivery-failures-next-page`):** Enabled (no `disabled` attribute; `2 < 8`)
-
----
-
-## Step 5: Production Build Verification (`npm run build`)
-
-### Command:
-```bash
-npm run build
+### Test A: Create One-Off Scheduled Notification (`POST /api/scheduled-notifications`)
+- **Request Payload:**
+```json
+{
+  "title": "Quarterly Security Briefing Reminder",
+  "message": "All employees are required to review the updated security protocols before end of month.",
+  "recipientConfig": {
+    "entireCompany": true,
+    "learner": false,
+    "directManager": false,
+    "groupIds": [],
+    "userIds": []
+  },
+  "channels": {
+    "inLms": true,
+    "email": true
+  },
+  "startAt": "2026-10-01T09:00:00.000Z",
+  "recurrence": "NONE",
+  "actionUrl": "/security-briefing"
+}
+```
+- **Response Status:** `201 Created`
+- **Created Record:**
+```json
+{
+  "id": "cb69b15c-85bb-4b4b-930d-bfa15dd9a9a7",
+  "companyId": "730917be-9701-4af6-aef6-c78afb730d2b",
+  "title": "Quarterly Security Briefing Reminder",
+  "message": "All employees are required to review the updated security protocols before end of month.",
+  "recipientConfig": {
+    "entireCompany": true,
+    "learner": false,
+    "directManager": false,
+    "groupIds": [],
+    "userIds": []
+  },
+  "channels": {
+    "inLms": true,
+    "email": true
+  },
+  "actionUrl": "/security-briefing",
+  "startAt": "2026-10-01T09:00:00.000Z",
+  "recurrence": "NONE",
+  "endAt": null,
+  "status": "ACTIVE",
+  "nextExecutionAt": "2026-10-01T09:00:00.000Z",
+  "lastExecutedAt": null,
+  "createdById": "9363c660-5ae3-4494-83da-b50e21e05a68",
+  "createdAt": "2026-09-22T10:29:13.686Z",
+  "updatedAt": "2026-09-22T10:29:13.686Z",
+  "deletedAt": null,
+  "createdBy": {
+    "id": "9363c660-5ae3-4494-83da-b50e21e05a68",
+    "username": "admin"
+  }
+}
 ```
 
-### Build Execution Output:
+---
+
+### Test B: Create Recurring Notification With `endAt` (`POST /api/scheduled-notifications`)
+- **Request Payload:**
+```json
+{
+  "title": "Weekly Compliance Check-In",
+  "message": "Please complete your weekly compliance checklist and submit records.",
+  "recipientConfig": {
+    "entireCompany": false,
+    "learner": false,
+    "directManager": false,
+    "groupIds": [],
+    "userIds": ["3aa57f8d-5267-47f6-807b-952ee85e592c"]
+  },
+  "channels": {
+    "inLms": true,
+    "email": false
+  },
+  "startAt": "2026-10-05T08:00:00.000Z",
+  "recurrence": "WEEKLY",
+  "endAt": "2026-12-31T23:59:59.000Z",
+  "actionUrl": "/compliance-checklist"
+}
 ```
-> smart-cookie@1.0.0 build
-> vite build && esbuild server/src/index.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs
-
-vite v6.4.3 building for production...
-transforming...
-✓ 2228 modules transformed.
-rendering chunks...
-computing gzip size...
-dist/index.html                     0.40 kB │ gzip:   0.27 kB
-dist/assets/index-GCpo5I7G.css     80.45 kB │ gzip:  12.76 kB
-dist/assets/index-B9vqXLIP.js   1,934.12 kB │ gzip: 378.07 kB
-✓ built in 8.71s
-
-  dist/server.cjs      523.9kb
-  dist/server.cjs.map  984.6kb
-⚡ Done in 121ms
+- **Response Status:** `201 Created`
+- **Created Record:**
+```json
+{
+  "id": "0ab09c14-ae09-45cb-bfb7-860a604d8b4d",
+  "companyId": "730917be-9701-4af6-aef6-c78afb730d2b",
+  "title": "Weekly Compliance Check-In",
+  "message": "Please complete your weekly compliance checklist and submit records.",
+  "recipientConfig": {
+    "entireCompany": false,
+    "learner": false,
+    "directManager": false,
+    "groupIds": [],
+    "userIds": ["3aa57f8d-5267-47f6-807b-952ee85e592c"]
+  },
+  "channels": {
+    "inLms": true,
+    "email": false
+  },
+  "actionUrl": "/compliance-checklist",
+  "startAt": "2026-10-05T08:00:00.000Z",
+  "recurrence": "WEEKLY",
+  "endAt": "2026-12-31T23:59:59.000Z",
+  "status": "ACTIVE",
+  "nextExecutionAt": "2026-10-05T08:00:00.000Z",
+  "lastExecutedAt": null,
+  "createdById": "9363c660-5ae3-4494-83da-b50e21e05a68",
+  "createdAt": "2026-09-22T10:29:13.818Z",
+  "updatedAt": "2026-09-22T10:29:13.818Z",
+  "deletedAt": null
+}
 ```
 
-### Result:
-- **Process Exit Code:** `0` (Success)
-- **Frontend Bundle:** `dist/index.html`, `dist/assets/index-GCpo5I7G.css`, `dist/assets/index-B9vqXLIP.js` generated cleanly.
-- **Backend Bundle:** `dist/server.cjs` (523.9 kB) and sourcemap generated cleanly in 121 ms.
-- **TypeScript & Linting:** Clean pass (`tsc --noEmit` exits with 0 errors).
-- **Source Files Modified:** 0.
+---
+
+### Test C: Validation Rejection — Recurring Without `endAt`
+- **Request Payload:** `{"title": "Invalid Recurring", "message": "...", "recurrence": "MONTHLY", "startAt": "2026-10-05T08:00:00.000Z"}`
+- **Response Status:** `400 Bad Request`
+- **Response Body:**
+```json
+{
+  "error": "endAt is required for recurring scheduled notifications (recurrence !== NONE)."
+}
+```
+
+---
+
+### Test D: Validation Rejection — `recipientConfig.learner` or `directManager` is `true`
+- **Request Payload:** `{"recipientConfig": {"entireCompany": false, "learner": true, "directManager": false, "groupIds": [], "userIds": []}, ...}`
+- **Response Status:** `400 Bad Request`
+- **Response Body:**
+```json
+{
+  "error": "Invalid recipientConfig: learner and directManager do not apply to scheduled notifications and must be false."
+}
+```
+
+---
+
+### Test E: Cancel Scheduled Notification (`POST /api/scheduled-notifications/:id/cancel`)
+- **Target ID:** `cb69b15c-85bb-4b4b-930d-bfa15dd9a9a7`
+- **Response Status:** `200 OK`
+- **Response Body:**
+```json
+{
+  "success": true,
+  "message": "Scheduled notification cancelled successfully.",
+  "notification": {
+    "id": "cb69b15c-85bb-4b4b-930d-bfa15dd9a9a7",
+    "status": "CANCELLED",
+    "deletedAt": null
+  }
+}
+```
+- **List Verification (`GET /api/scheduled-notifications`):**
+  - Notification `cb69b15c-85bb-4b4b-930d-bfa15dd9a9a7` **remains listed** in the GET response.
+  - Its `status` field is verified as `"CANCELLED"`.
+  - Its `deletedAt` field is verified as `null` (not purged, visible in history).
+
+---
+
+### Test F: Duplicate Scheduled Notification (`POST /api/scheduled-notifications/:id/duplicate`)
+- **Attempt 1 (Missing `startAt`):**
+  - **Request Body:** `{}`
+  - **Response Status:** `400 Bad Request`
+  - **Response Body:** `{"error": "startAt is required when duplicating a scheduled notification (must specify the new scheduled start time)."}`
+- **Attempt 2 (Valid `startAt`):**
+  - **Source ID:** `0ab09c14-ae09-45cb-bfb7-860a604d8b4d` (Weekly recurring)
+  - **Request Body:**
+  ```json
+  {
+    "startAt": "2026-11-01T08:00:00.000Z",
+    "endAt": "2027-01-31T23:59:59.000Z",
+    "title": "Weekly Compliance Check-In (Q4 Extended)"
+  }
+  ```
+  - **Response Status:** `201 Created`
+  - **Response Body:**
+  ```json
+  {
+    "id": "12f935eb-c865-4087-80db-05c4ed85ef4c",
+    "title": "Weekly Compliance Check-In (Q4 Extended)",
+    "status": "ACTIVE",
+    "recurrence": "WEEKLY",
+    "startAt": "2026-11-01T08:00:00.000Z",
+    "endAt": "2027-01-31T23:59:59.000Z",
+    "nextExecutionAt": "2026-11-01T08:00:00.000Z",
+    "lastExecutedAt": null
+  }
+  ```
+
+---
+
+### Test G: Update via PATCH (`PATCH /api/scheduled-notifications/:id`)
+- **Target ID:** `12f935eb-c865-4087-80db-05c4ed85ef4c`
+- **Request Body:** `{"title": "Weekly Compliance Check-In (Q4 Extended & Updated)", "channels": {"inLms": true, "email": true}}`
+- **Response Status:** `200 OK`
+- **Updated Fields:** `title` changed, `channels.email` updated to `true`.
+
+---
+
+### Test H: List Ordering Verification (`GET /api/scheduled-notifications`)
+- **Returned Count:** 3 notifications for company `730917be-9701-4af6-aef6-c78afb730d2b`.
+- **Chronological Sorting by `nextExecutionAt ASC`:**
+  1. `[CANCELLED] Quarterly Security Briefing Reminder` — `nextExecutionAt: 2026-10-01T09:00:00.000Z`
+  2. `[ACTIVE] Weekly Compliance Check-In` — `nextExecutionAt: 2026-10-05T08:00:00.000Z`
+  3. `[ACTIVE] Weekly Compliance Check-In (Q4 Extended & Updated)` — `nextExecutionAt: 2026-11-01T08:00:00.000Z`
+
+---
+
+## 4. Conclusion
+
+All acceptance criteria for Phase 2, Part A are satisfied:
+1. `ScheduledNotification` data model, relations, and enums implemented cleanly in Prisma.
+2. Migration created and executed; zero schema drift detected.
+3. Permission `notifications:manage-scheduled` registered and verified protecting all routes (403 for unauthorized users).
+4. Validation prevents recurring notifications without `endAt` (400) and disallows `learner`/`directManager` recipient flags (400).
+5. Cancellation retains notification in list with `status: 'CANCELLED'` and `deletedAt: null`.
+6. Duplication enforces explicit `startAt` and creates a clean `ACTIVE` notification copy.
+7. Both `npm run lint` and `npm run build` pass with zero errors.
