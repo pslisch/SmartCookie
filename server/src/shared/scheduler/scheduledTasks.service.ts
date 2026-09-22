@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { NotificationType, ThemeStatus, AssignmentStatus, UserAssignmentInstanceStatus } from '@prisma/client';
 import { entraSyncService } from '../../features/identity/services/entraSync.service';
 import { processPendingEmailDeliveries } from '../../features/notifications/services/emailDelivery.service';
+import { processScheduledNotifications } from '../../features/notifications/services/scheduledNotificationFiring.service';
 import { triggerLessonAssignedNotification } from '../../features/notifications/services/lessonAssignedEvent.service';
 import {
   processDeadlineReminders,
@@ -123,6 +124,7 @@ export class ScheduledTasksService {
     await processOverdueReminders();
     await this.runEntraSync();
     await this.activateScheduledThemes();
+    await processScheduledNotifications();
     await processPendingEmailDeliveries();
     console.log('[Scheduler] All periodic tasks finished.');
   }
