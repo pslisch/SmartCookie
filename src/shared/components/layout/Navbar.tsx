@@ -51,7 +51,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const canManageFields = usePermission('profile-fields', 'manage-fields');
   const canViewThemes = usePermission('theme', 'view');
   const canManageNotificationRules = usePermission('notifications', 'manage-rules');
-  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || canManageNotificationRules;
+  const canViewDeliveryFailures = usePermission('notifications', 'view-delivery-failures');
+  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures;
 
   const canPreview = usePermission('preview', 'use');
   const [eligibleRoles, setEligibleRoles] = useState<Array<{ id: string; name: string }>>([]);

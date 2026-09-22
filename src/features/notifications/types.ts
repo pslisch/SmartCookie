@@ -36,3 +36,37 @@ export interface NotificationRule {
   updatedAt: string;
   deletedAt: string | null;
 }
+
+export type NotificationDeliveryStatus = 'PENDING' | 'SENT' | 'FAILED' | 'PERMANENTLY_FAILED';
+export type NotificationChannel = 'IN_LMS' | 'EMAIL';
+
+export interface DeliveryFailureRecipient {
+  userId: string;
+  username: string | null;
+  email: string | null;
+}
+
+export interface DeliveryFailureNotification {
+  instanceId: string;
+  sourceEventType: string;
+  title: string;
+}
+
+export interface DeliveryFailureItem {
+  deliveryId: string;
+  channel: NotificationChannel;
+  status: NotificationDeliveryStatus;
+  attemptCount: number;
+  lastAttemptAt: string | null;
+  errorMessage: string | null;
+  recipient: DeliveryFailureRecipient;
+  notification: DeliveryFailureNotification;
+}
+
+export interface DeliveryFailuresResponse {
+  items: DeliveryFailureItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

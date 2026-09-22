@@ -89,7 +89,8 @@ function AppContent({ appName }: { appName: string }) {
   const canManageFields = usePermission('profile-fields', 'manage-fields');
   const canViewThemes = usePermission('theme', 'view');
   const canManageNotificationRules = usePermission('notifications', 'manage-rules');
-  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || canManageNotificationRules;
+  const canViewDeliveryFailures = usePermission('notifications', 'view-delivery-failures');
+  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures;
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {
