@@ -16,6 +16,37 @@ export interface NotificationChannels {
   email: boolean;
 }
 
+export type ScheduledNotificationRecurrence = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+export type ScheduledNotificationStatus = 'ACTIVE' | 'CANCELLED';
+
+export interface ScheduledNotificationCreatedBy {
+  id: string;
+  username: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+export interface ScheduledNotification {
+  id: string;
+  companyId: string;
+  title: string;
+  message: string;
+  recipientConfig: RecipientConfig;
+  channels: NotificationChannels;
+  actionUrl: string | null;
+  startAt: string;
+  recurrence: ScheduledNotificationRecurrence;
+  endAt: string | null;
+  status: ScheduledNotificationStatus;
+  nextExecutionAt: string;
+  lastExecutedAt: string | null;
+  createdById: string;
+  createdBy?: ScheduledNotificationCreatedBy;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface NotificationRule {
   id: string;
   companyId: string;

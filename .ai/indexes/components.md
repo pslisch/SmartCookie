@@ -333,6 +333,28 @@ Every registered component should include:
 - **Used By**: `src/features/notifications/pages/NotificationRuleManagement.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `UserMultiSelect.tsx`, `GroupMultiSelect.tsx`
 
+### 41. `DeliveryFailures`
+- **Location**: `src/features/notifications/pages/DeliveryFailures.tsx`
+- **Purpose**: Administration view for inspecting permanently failed email deliveries. Features server-side pagination, date range filtering, recipient email searching, error message previews with full error details drawer/modal, and direct access from the Settings hub.
+- **Props**: None (page component)
+- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`
+
+### 42. `ScheduledNotificationManagement`
+- **Location**: `src/features/notifications/pages/ScheduledNotificationManagement.tsx`
+- **Purpose**: Administration view for tenant scheduled notifications. Lists active, cancelled, and expired scheduled notifications in chronological order with recipient badges, channel icons, recurrence labels, client-side expired badges (`recurrence !== 'NONE' && nextExecutionAt > endAt`), cancel confirmation modal, duplicate modal with startAt/endAt picker, create notification button, edit action triggers, and seamless form toggling.
+- **Props**: None (page component)
+- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `ScheduledNotificationForm.tsx`
+
+### 43. `ScheduledNotificationForm`
+- **Location**: `src/features/notifications/components/ScheduledNotificationForm.tsx`
+- **Purpose**: Creation and editing form for scheduled notifications. Features title, rich message body, action URL deep linking, recipient targeting (entire company radio or custom groups & users using `GroupMultiSelect` and `UserMultiSelect` — deliberately omitting learner and directManager options), channel checkboxes (inLms, email), startAt datetime picker, recurrence selector (NONE, DAILY, WEEKLY, MONTHLY), and conditionally required endAt picker with strict validation (`endAt > startAt`).
+- **Props**: `notification?: ScheduledNotification | null`, `onSuccess: (notification: ScheduledNotification) => void`, `onCancel: () => void`
+- **Used By**: `src/features/notifications/pages/ScheduledNotificationManagement.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `UserMultiSelect.tsx`, `GroupMultiSelect.tsx`
+
+
 
 
 

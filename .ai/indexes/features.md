@@ -318,7 +318,8 @@ Every logged feature should eventually document:
   - `NotificationPreferenceRow` (`src/features/profiles/components/NotificationPreferenceRow.tsx`)
   - `NotificationsTab` (`src/features/profiles/components/NotificationsTab.tsx`)
   - `NotificationRuleForm` (`src/features/notifications/components/NotificationRuleForm.tsx`)
-- **Pages**: `src/features/profiles/pages/Profile.tsx` (Notifications tab), global Navbar layout (`src/shared/components/layout/Navbar.tsx`), `src/features/notifications/pages/NotificationRuleManagement.tsx` (accessible via Management hub)
+  - `ScheduledNotificationForm` (`src/features/notifications/components/ScheduledNotificationForm.tsx`)
+- **Pages**: `src/features/profiles/pages/Profile.tsx` (Notifications tab), global Navbar layout (`src/shared/components/layout/Navbar.tsx`), `src/features/notifications/pages/NotificationRuleManagement.tsx` (accessible via Management hub), `src/features/notifications/pages/DeliveryFailures.tsx` (accessible via Settings hub), `src/features/notifications/pages/ScheduledNotificationManagement.tsx` (accessible via Settings hub)
 - **Services**:
   - `NotificationEventService` (`server/src/features/notifications/services/notificationEvent.service.ts`)
   - `RecipientResolverService` (`server/src/features/notifications/services/recipientResolver.service.ts`)
@@ -328,6 +329,7 @@ Every logged feature should eventually document:
   - `LessonCompletionEventService` (`server/src/features/notifications/services/lessonCompletionEvent.service.ts`)
   - `LessonAssignedEventService` (`server/src/features/notifications/services/lessonAssignedEvent.service.ts`)
   - `DeliveryFailureNotificationService` (`server/src/features/notifications/services/deliveryFailureNotification.service.ts`)
+  - `ScheduledNotificationFiringService` (`server/src/features/notifications/services/scheduledNotificationFiring.service.ts`)
 - **APIs**:
   - `GET /api/notifications` (list unread & recent read notifications)
   - `PATCH /api/notifications/:deliveryId/read` (mark notification delivery as read)
@@ -339,14 +341,20 @@ Every logged feature should eventually document:
   - `PATCH /api/notification-admin/rules/:id` (update notification rule)
   - `DELETE /api/notification-admin/rules/:id` (soft-delete custom notification rule)
   - `POST /api/notification-admin/rules/:id/duplicate` (duplicate notification rule)
-- **Database**: `notification_rules`, `notification_instances`, `notification_recipients`, `notification_deliveries`, `notification_preferences` (Prisma schema with `NotificationType`, `NotificationChannel`, `NotificationDeliveryStatus` enums)
-- **Permissions**: `notifications:view-delivery-failures`, `notifications:manage-rules`
+  - `GET /api/notification-admin/delivery-failures` (paginated list of permanently failed email deliveries)
+  - `GET /api/scheduled-notifications` (list active and cancelled scheduled notifications ordered by nextExecutionAt ASC)
+  - `POST /api/scheduled-notifications` (create one-off or recurring scheduled notification)
+  - `PATCH /api/scheduled-notifications/:id` (update scheduled notification fields and recalculate nextExecutionAt)
+  - `POST /api/scheduled-notifications/:id/cancel` (cancel active scheduled notification while preserving row in history)
+  - `POST /api/scheduled-notifications/:id/duplicate` (duplicate scheduled notification with new startAt)
+- **Database**: `notification_rules`, `notification_instances`, `notification_recipients`, `notification_deliveries`, `notification_preferences`, `scheduled_notifications` (Prisma schema with `NotificationType`, `NotificationChannel`, `NotificationDeliveryStatus`, `ScheduledNotificationRecurrence`, `ScheduledNotificationStatus` enums)
+- **Permissions**: `notifications:view-delivery-failures`, `notifications:manage-rules`, `notifications:manage-scheduled`
 - **Routes**:
-  - Client: Global Navbar bell trigger (flyout/modal), Settings/Profile `notifications` tab, Management hub `Notification Rules` view
-  - Backend: `/api/notifications/*` (`server/src/features/notifications/routes/notifications.routes.ts`), `/api/notification-preferences` (`server/src/features/profiles/routes/notificationPreferences.routes.ts`), `/api/notification-admin/rules/*` (`server/src/features/notifications/routes/notificationAdmin.routes.ts`)
-- **Events**: `scheduler:deadline-and-overdue-assignment-reminders`, `lesson:completed`, `lesson:assigned`, `notifications:email-delivery-permanently-failed`
+  - Client: Global Navbar bell trigger (flyout/modal), Settings/Profile `notifications` tab, Management hub `Notification Rules` view, Settings hub `Delivery Failures` and `Scheduled Notifications` views
+  - Backend: `/api/notifications/*` (`server/src/features/notifications/routes/notifications.routes.ts`), `/api/notification-preferences` (`server/src/features/profiles/routes/notificationPreferences.routes.ts`), `/api/notification-admin/*` (`server/src/features/notifications/routes/notificationAdmin.routes.ts`), `/api/scheduled-notifications/*` (`server/src/features/notifications/routes/scheduledNotifications.routes.ts`)
+- **Events**: `scheduler:deadline-and-overdue-assignment-reminders`, `lesson:completed`, `lesson:assigned`, `notifications:email-delivery-permanently-failed`, `scheduler:scheduled-notification-firing`
 - **Dependencies**: Prisma ORM, Node.js, Express, Nodemailer, React, Tailwind CSS, `motion/react`, `lucide-react`, `react-i18next`
-- **Phase 2 Status**: Complete. Rule administration UI (list/enable-disable/duplicate/delete) and the create/edit rule form (with recipient targeting, DUE_SOON conditions, immutable notificationType enforcement, and template customization) are fully implemented and verified end-to-end.
+- **Phase 2 Status**: Complete. Rule administration UI, Delivery Failures monitoring, Scheduled Notifications data model, CRUD APIs, background firing engine with poller integration, and the complete Scheduled Notification List, Cancel, Duplicate, and Create/Edit Form UI are fully implemented and verified end-to-end.
 
 
 

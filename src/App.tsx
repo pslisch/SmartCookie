@@ -90,7 +90,8 @@ function AppContent({ appName }: { appName: string }) {
   const canViewThemes = usePermission('theme', 'view');
   const canManageNotificationRules = usePermission('notifications', 'manage-rules');
   const canViewDeliveryFailures = usePermission('notifications', 'view-delivery-failures');
-  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures;
+  const canManageScheduledNotifications = usePermission('notifications', 'manage-scheduled');
+  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications;
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {

@@ -979,10 +979,56 @@ Every documented endpoint logs:
 - **Permissions**: `requireAuth`, `notifications:manage-rules`
 - **Rules**: Clones target rule (system-default or custom) into a new custom rule with `(Copy)` appended to the name, `isSystemDefault: false`, and `enabled: false`.
 
+### 119. Delivery Failures Listing
+- **Endpoint**: `/api/notification-admin/delivery-failures`
+- **Method**: `GET`
+- **Request**: Query parameters: `page?: number`, `pageSize?: number`, `recipientEmail?: string`, `dateFrom?: string`, `dateTo?: string`
+- **Response**: `{ failures: DeliveryFailureItem[], pagination: { page, pageSize, totalCount, totalPages } }` (200 OK)
+- **Used By**: `DeliveryFailures.tsx`
+- **Permissions**: `requireAuth`, `notifications:view-delivery-failures`
+- **Rules**: Returns paginated permanently failed email deliveries for the user's company, ordered by failure time descending.
 
+### 120. Scheduled Notifications Listing
+- **Endpoint**: `/api/scheduled-notifications`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `ScheduledNotification[]` (200 OK)
+- **Used By**: `ScheduledNotificationManagement.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-scheduled`
+- **Rules**: Returns all scheduled notifications for the company (both `ACTIVE` and `CANCELLED`, excluding soft-deleted `deletedAt IS NULL`), ordered chronologically by `nextExecutionAt ASC`.
 
+### 121. Create Scheduled Notification
+- **Endpoint**: `/api/scheduled-notifications`
+- **Method**: `POST`
+- **Request**: `{ title: string, message: string, recipientConfig: { entireCompany: boolean, groupIds: string[], userIds: string[], learner?: false, directManager?: false }, channels: { inLms: boolean, email: boolean }, startAt: string, recurrence: "NONE" | "DAILY" | "WEEKLY" | "MONTHLY", endAt?: string | null, actionUrl?: string | null }`
+- **Response**: `ScheduledNotification` (201 Created)
+- **Used By**: `ScheduledNotificationForm.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-scheduled`
+- **Rules**: Enforces non-empty title/message, at least one delivery channel, non-learner/directManager recipient config with at least one recipient targeted, valid ISO start date. If `recurrence !== "NONE"`, `endAt` is strictly required and must be after `startAt`. Sets `nextExecutionAt = startAt` and `status = "ACTIVE"`.
 
+### 122. Update Scheduled Notification
+- **Endpoint**: `/api/scheduled-notifications/:id`
+- **Method**: `PATCH`
+- **Request**: `{ title?: string, message?: string, recipientConfig?: any, channels?: any, startAt?: string, recurrence?: "NONE" | "DAILY" | "WEEKLY" | "MONTHLY", endAt?: string | null, actionUrl?: string | null }`
+- **Response**: `ScheduledNotification` (200 OK)
+- **Used By**: `ScheduledNotificationForm.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-scheduled`
+- **Rules**: Updates existing non-deleted notification belonging to company. Re-validates channels, recipient config, and conditional `endAt` requirement if recurrence is altered. Recalculates `nextExecutionAt` if `startAt` is updated and notification has not yet executed.
 
+### 123. Cancel Scheduled Notification
+- **Endpoint**: `/api/scheduled-notifications/:id/cancel`
+- **Method**: `POST`
+- **Request**: None
+- **Response**: `{ success: true, message: string, notification: ScheduledNotification }` (200 OK)
+- **Used By**: `ScheduledNotificationManagement.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-scheduled`
+- **Rules**: Cancels an active scheduled notification. Sets `status = "CANCELLED"`. Retains the record in the list for audit history (`deletedAt` remains `null`).
 
-
-
+### 124. Duplicate Scheduled Notification
+- **Endpoint**: `/api/scheduled-notifications/:id/duplicate`
+- **Method**: `POST`
+- **Request**: `{ startAt: string, endAt?: string | null, title?: string }`
+- **Response**: `ScheduledNotification` (201 Created)
+- **Used By**: `ScheduledNotificationManagement.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-scheduled`
+- **Rules**: Creates a new `ACTIVE` copy of an existing scheduled notification with a new `startAt` and optional `endAt` and `title`. Sets `nextExecutionAt = startAt` and `lastExecutedAt = null`.
