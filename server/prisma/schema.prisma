@@ -42,6 +42,7 @@ model User {
   createdContents    Content[]  @relation("ContentCreator")
   createdNotificationRules NotificationRule[] @relation("NotificationRuleCreator")
   createdScheduledNotifications ScheduledNotification[] @relation("ScheduledNotificationCreator")
+  createdEmailTemplates EmailTemplate[] @relation("EmailTemplateCreator")
   notificationRecipients   NotificationRecipient[]
 
   firstName          String?    @map("first_name")
@@ -119,6 +120,7 @@ model Company {
   notificationRules               NotificationRule[]
   notificationInstances           NotificationInstance[]
   scheduledNotifications          ScheduledNotification[]
+  emailTemplates                  EmailTemplate[]
 
   @@map("companies")
 }
@@ -683,6 +685,8 @@ model NotificationRule {
   actionType      String?              @map("action_type")
   actionUrl       String?              @map("action_url")
   isSystemDefault Boolean              @default(false) @map("is_system_default")
+  emailTemplateId String?              @map("email_template_id")
+  emailTemplate   EmailTemplate?       @relation(fields: [emailTemplateId], references: [id], onDelete: SetNull)
   createdById     String?              @map("created_by_id")
   createdBy       User?                @relation("NotificationRuleCreator", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt       DateTime             @default(now()) @map("created_at")
@@ -795,6 +799,24 @@ model ScheduledNotification {
   deletedAt       DateTime?                       @map("deleted_at")
 
   @@map("scheduled_notifications")
+}
+
+model EmailTemplate {
+  id                String             @id @default(uuid())
+  companyId         String             @map("company_id")
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name              String
+  isDefault         Boolean            @default(false) @map("is_default")
+  htmlContent       String             @db.Text @map("html_content")
+  createdById       String?            @map("created_by_id")
+  createdBy         User?              @relation("EmailTemplateCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  deletedAt         DateTime?          @map("deleted_at")
+
+  notificationRules NotificationRule[]
+
+  @@map("email_templates")
 }
 
 enum MfaPolicy {

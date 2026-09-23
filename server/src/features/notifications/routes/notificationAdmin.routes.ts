@@ -248,6 +248,7 @@ router.post('/rules', async (req: Request, res: Response) => {
       bodyKey,
       actionType,
       actionUrl,
+      emailTemplateId,
     } = req.body;
 
     // Validate name
@@ -299,6 +300,27 @@ router.post('/rules', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'actionUrl must be a string or null.' });
     }
 
+    let validatedTemplateId: string | null = null;
+    if (emailTemplateId !== undefined && emailTemplateId !== null) {
+      if (typeof emailTemplateId !== 'string') {
+        return res.status(400).json({ error: 'emailTemplateId must be a string or null.' });
+      }
+      const trimmedTemplateId = emailTemplateId.trim();
+      if (trimmedTemplateId.length > 0) {
+        const template = await prisma.emailTemplate.findFirst({
+          where: {
+            id: trimmedTemplateId,
+            companyId,
+            deletedAt: null,
+          },
+        });
+        if (!template) {
+          return res.status(404).json({ error: 'Email template not found or does not belong to your company.' });
+        }
+        validatedTemplateId = trimmedTemplateId;
+      }
+    }
+
     const newRule = await prisma.notificationRule.create({
       data: {
         companyId,
@@ -315,6 +337,7 @@ router.post('/rules', async (req: Request, res: Response) => {
         bodyKey: bodyKey ? bodyKey.trim() : (bodyKey === null ? null : null),
         actionType: actionType ? actionType.trim() : (actionType === null ? null : null),
         actionUrl: actionUrl ? actionUrl.trim() : (actionUrl === null ? null : null),
+        emailTemplateId: validatedTemplateId,
         isSystemDefault: false,
         createdById: userId,
       },
@@ -370,9 +393,10 @@ router.patch('/rules/:id', async (req: Request, res: Response) => {
       bodyKey,
       actionType,
       actionUrl,
+      emailTemplateId,
     } = req.body;
 
-    const updateData: Prisma.NotificationRuleUpdateInput = {};
+    const updateData: Prisma.NotificationRuleUncheckedUpdateInput = {};
 
     if (name !== undefined) {
       if (typeof name !== 'string' || name.trim().length === 0) {
@@ -446,6 +470,31 @@ router.patch('/rules/:id', async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'actionUrl must be a string or null.' });
       }
       updateData.actionUrl = actionUrl === null ? null : actionUrl.trim();
+    }
+
+    if (emailTemplateId !== undefined) {
+      if (emailTemplateId === null) {
+        updateData.emailTemplateId = null;
+      } else if (typeof emailTemplateId === 'string') {
+        const trimmedTemplateId = emailTemplateId.trim();
+        if (trimmedTemplateId.length === 0) {
+          updateData.emailTemplateId = null;
+        } else {
+          const template = await prisma.emailTemplate.findFirst({
+            where: {
+              id: trimmedTemplateId,
+              companyId,
+              deletedAt: null,
+            },
+          });
+          if (!template) {
+            return res.status(404).json({ error: 'Email template not found or does not belong to your company.' });
+          }
+          updateData.emailTemplateId = trimmedTemplateId;
+        }
+      } else {
+        return res.status(400).json({ error: 'emailTemplateId must be a string or null.' });
+      }
     }
 
     const updatedRule = await prisma.notificationRule.update({

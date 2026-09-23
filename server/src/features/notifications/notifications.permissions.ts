@@ -4,3 +4,4 @@ import { registerPermission } from '../../shared/permissions/registry';
 registerPermission('notifications', 'view-delivery-failures');
 registerPermission('notifications', 'manage-rules');
 registerPermission('notifications', 'manage-scheduled');
+registerPermission('notifications', 'manage-templates');
