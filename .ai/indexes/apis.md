@@ -1032,3 +1032,49 @@ Every documented endpoint logs:
 - **Used By**: `ScheduledNotificationManagement.tsx`
 - **Permissions**: `requireAuth`, `notifications:manage-scheduled`
 - **Rules**: Creates a new `ACTIVE` copy of an existing scheduled notification with a new `startAt` and optional `endAt` and `title`. Sets `nextExecutionAt = startAt` and `lastExecutedAt = null`.
+
+### 125. List Email Templates
+- **Endpoint**: `/api/email-templates`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `Array<EmailTemplate & { createdBy: { id, username, email, firstName, lastName }, _count: { notificationRules: number } }>` (200 OK)
+- **Used By**: `EmailTemplateManagement.tsx`, `NotificationRuleForm.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-templates`
+- **Rules**: Lists all non-deleted (`deletedAt: null`) email templates belonging to the user's company, ordered by `isDefault DESC, createdAt DESC`. Includes the creator's identity summary and the active referencing notification rules count.
+
+### 126. Get Email Template by ID
+- **Endpoint**: `/api/email-templates/:id`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `EmailTemplate & { createdBy: { id, username, email, firstName, lastName }, _count: { notificationRules: number } }` (200 OK)
+- **Used By**: `EmailTemplateForm.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-templates`
+- **Rules**: Fetches a single active email template by ID scoped to the requesting user's company (`deletedAt: null`). Returns 404 if not found.
+
+### 127. Create Email Template
+- **Endpoint**: `/api/email-templates`
+- **Method**: `POST`
+- **Request**: `{ name: string, htmlContent: string, isDefault?: boolean }`
+- **Response**: `EmailTemplate` (201 Created)
+- **Used By**: `EmailTemplateForm.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-templates`
+- **Rules**: Validates that `name` and `htmlContent` are non-empty strings. If `isDefault: true`, executes inside a database transaction to atomically unset `isDefault` on any other active template in the company before creating the new template. Associates `createdById` with the authenticated user.
+
+### 128. Update Email Template
+- **Endpoint**: `/api/email-templates/:id`
+- **Method**: `PATCH`
+- **Request**: `{ name?: string, htmlContent?: string, isDefault?: boolean }`
+- **Response**: `EmailTemplate` (200 OK)
+- **Used By**: `EmailTemplateForm.tsx`, `EmailTemplateManagement.tsx` (Set Default action)
+- **Permissions**: `requireAuth`, `notifications:manage-templates`
+- **Rules**: Updates an existing active template belonging to the company. If `isDefault` is set to `true`, atomically unsets `isDefault` on all other templates for that company within a Prisma transaction. Validates non-empty string constraints if `name` or `htmlContent` are provided.
+
+### 129. Soft-Delete Email Template
+- **Endpoint**: `/api/email-templates/:id`
+- **Method**: `DELETE`
+- **Request**: None
+- **Response**: `{ success: true, message: string }` (200 OK)
+- **Used By**: `EmailTemplateManagement.tsx`
+- **Permissions**: `requireAuth`, `notifications:manage-templates`
+- **Rules**: Soft-deletes a template by setting `deletedAt = now()`. Rejects deletion with 400 Bad Request if the template is currently marked as default (`isDefault: true`), requiring unsetting default status or designating another default first. Rejects deletion with 400 Bad Request if the template is currently referenced by any active `NotificationRule` (`deletedAt: null`), returning the count of referencing rules.
+

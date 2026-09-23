@@ -328,7 +328,7 @@ Every registered component should include:
 
 ### 40. `NotificationRuleForm`
 - **Location**: `src/features/notifications/components/NotificationRuleForm.tsx`
-- **Purpose**: Reusable creation and edit modal form for NotificationRules. Features rule name, immutable notificationType select on edit, enabled/mandatory switches, multi-recipient targeting (`UserMultiSelect`, `GroupMultiSelect`, learner/manager/entire company checkboxes), delivery channels (inLms, email), specialized `DUE_SOON` conditions number input (`daysBeforeDue`), advanced JSON conditions editor for other types, title/body template customizers with parameter token hints, and action links.
+- **Purpose**: Reusable creation and edit modal form for NotificationRules. Features rule name, immutable notificationType select on edit, enabled/mandatory switches, multi-recipient targeting (`UserMultiSelect`, `GroupMultiSelect`, learner/manager/entire company checkboxes), delivery channels (inLms, email), linked Email Template selector (fetching active company `EmailTemplate`s and optionally associating custom HTML bodies), specialized `DUE_SOON` conditions number input (`daysBeforeDue`), advanced JSON conditions editor for other types, title/body template customizers with parameter token hints, and action links.
 - **Props**: `rule: NotificationRule | null`, `onClose: () => void`, `onSuccess: () => void`
 - **Used By**: `src/features/notifications/pages/NotificationRuleManagement.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `UserMultiSelect.tsx`, `GroupMultiSelect.tsx`
@@ -353,6 +353,21 @@ Every registered component should include:
 - **Props**: `notification?: ScheduledNotification | null`, `onSuccess: (notification: ScheduledNotification) => void`, `onCancel: () => void`
 - **Used By**: `src/features/notifications/pages/ScheduledNotificationManagement.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `UserMultiSelect.tsx`, `GroupMultiSelect.tsx`
+
+### 44. `EmailTemplateManagement`
+- **Location**: `src/features/notifications/pages/EmailTemplateManagement.tsx`
+- **Purpose**: Administration dashboard for company email templates. Displays template catalog with default badges, referencing notification rules count, created-by metadata, action triggers to set default, edit, create new template, and soft-delete (with confirmation modals protecting current default templates and templates referenced by active rules).
+- **Props**: None (page component)
+- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `EmailTemplateForm.tsx`
+
+### 45. `EmailTemplateForm`
+- **Location**: `src/features/notifications/components/EmailTemplateForm.tsx`
+- **Purpose**: Creation and editing form for rich HTML email templates. Features template name input, default toggle, live cursor-position variable insertion toolbar buttons (`{{learnerName}}`, `{{lessonTitle}}`, `{{dueDate}}`, `{{actionUrl}}`, etc.), textarea HTML editor, and a sandboxed live preview pane (`<iframe sandbox="...">`) that safely renders markup and CSS isolated from the parent DOM.
+- **Props**: `template?: EmailTemplate | null`, `onSuccess: () => void`, `onCancel: () => void`
+- **Used By**: `src/features/notifications/pages/EmailTemplateManagement.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`
+
 
 
 

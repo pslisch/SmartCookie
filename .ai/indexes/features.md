@@ -310,7 +310,7 @@ Every logged feature should eventually document:
 ## 🟢 v1.13.0 Notification System
 
 ### 17. Notification System & Hub (Phase 1 & Phase 2)
-- **Description**: Comprehensive, tenant-scoped automated notification pipeline, in-LMS Notification Hub, and administrator rule management. Implements an event-driven lifecycle (`event -> rule resolution -> recipient resolution -> dedup -> instance -> channel delivery`) supporting multi-channel delivery (in-LMS notifications and queued transactional emails with a single retry). Features an in-LMS Notification Hub bell trigger in the global Navbar with polling and unread count badge, an interactive dropdown flyout with real-time mark-as-read and action navigation, a portal-mounted 365-day paginated Notification History modal, domain event dispatchers for assignment lifecycle events (activation, due soon reminders, overdue escalation, completion confirmations for learners and direct managers), an asynchronous email delivery engine with a two-attempt delivery lifecycle (exactly one retry, no exponential backoff; transitions `PENDING → FAILED → PERMANENTLY_FAILED` on regular hourly scheduler ticks), automated in-LMS failure alerts for designated permission holders when email delivery permanently fails, granular per-channel user notification preferences with server-side mandatory lock enforcement, and an administrative notification rule management suite supporting rule listing, enable/disable toggling, rule duplication, custom rule deletion, and an end-to-end create/edit rule modal with recipient targeting (learners, managers, entire company, specific groups/users), channel delivery switches, specialized `DUE_SOON` daysBeforeDue condition configuration, and template customization.
+- **Description**: Comprehensive, tenant-scoped automated notification pipeline, in-LMS Notification Hub, administrator rule management, scheduled announcements, and custom rich HTML email templates. Implements an event-driven lifecycle (`event -> rule resolution -> recipient resolution -> dedup -> instance -> channel delivery`) supporting multi-channel delivery (in-LMS notifications and queued transactional emails with a single retry). Features an in-LMS Notification Hub bell trigger in the global Navbar with polling and unread count badge, an interactive dropdown flyout with real-time mark-as-read and action navigation, a portal-mounted 365-day paginated Notification History modal, domain event dispatchers for assignment lifecycle events (activation, due soon reminders, overdue escalation, completion confirmations for learners and direct managers), an asynchronous email delivery engine with a two-attempt delivery lifecycle (exactly one retry, no exponential backoff; transitions `PENDING → FAILED → PERMANENTLY_FAILED` on regular scheduler ticks), batched custom email template lookups supporting rule-linked rich HTML email templates with interpolated event tokens (`{{learnerName}}`, `{{lessonTitle}}`, `{{dueDate}}`) and graceful generic template fallback, automated in-LMS failure alerts for designated permission holders when email delivery permanently fails, granular per-channel user notification preferences with server-side mandatory lock enforcement, an administrative notification rule management suite supporting rule listing, enable/disable toggling, rule duplication, custom rule deletion, and an end-to-end create/edit rule modal with recipient targeting (learners, managers, entire company, specific groups/users), channel delivery switches, linked email template selection, specialized `DUE_SOON` daysBeforeDue condition configuration, and template customization; an administrative Scheduled Notifications subsystem supporting one-off and recurring broadcasts with recipient targeting, delivery channels, recurrence calculation, cancellation, duplication, and background firing poller; and an Email Template authoring dashboard and editor with cursor-position variable insertion toolbar buttons, default template designation, deletion protection against active rule references, and an isolated, sandboxed preview iframe.
 - **Components**:
   - `NotificationBell` (`src/shared/components/NotificationBell.tsx`)
   - `NotificationItemRow` (`src/shared/components/NotificationItemRow.tsx`)
@@ -319,7 +319,8 @@ Every logged feature should eventually document:
   - `NotificationsTab` (`src/features/profiles/components/NotificationsTab.tsx`)
   - `NotificationRuleForm` (`src/features/notifications/components/NotificationRuleForm.tsx`)
   - `ScheduledNotificationForm` (`src/features/notifications/components/ScheduledNotificationForm.tsx`)
-- **Pages**: `src/features/profiles/pages/Profile.tsx` (Notifications tab), global Navbar layout (`src/shared/components/layout/Navbar.tsx`), `src/features/notifications/pages/NotificationRuleManagement.tsx` (accessible via Management hub), `src/features/notifications/pages/DeliveryFailures.tsx` (accessible via Settings hub), `src/features/notifications/pages/ScheduledNotificationManagement.tsx` (accessible via Settings hub)
+  - `EmailTemplateForm` (`src/features/notifications/components/EmailTemplateForm.tsx`)
+- **Pages**: `src/features/profiles/pages/Profile.tsx` (Notifications tab), global Navbar layout (`src/shared/components/layout/Navbar.tsx`), `src/features/notifications/pages/NotificationRuleManagement.tsx` (accessible via Management hub), `src/features/notifications/pages/DeliveryFailures.tsx` (accessible via Settings hub), `src/features/notifications/pages/ScheduledNotificationManagement.tsx` (accessible via Settings hub), `src/features/notifications/pages/EmailTemplateManagement.tsx` (accessible via Settings hub)
 - **Services**:
   - `NotificationEventService` (`server/src/features/notifications/services/notificationEvent.service.ts`)
   - `RecipientResolverService` (`server/src/features/notifications/services/recipientResolver.service.ts`)
@@ -330,6 +331,7 @@ Every logged feature should eventually document:
   - `LessonAssignedEventService` (`server/src/features/notifications/services/lessonAssignedEvent.service.ts`)
   - `DeliveryFailureNotificationService` (`server/src/features/notifications/services/deliveryFailureNotification.service.ts`)
   - `ScheduledNotificationFiringService` (`server/src/features/notifications/services/scheduledNotificationFiring.service.ts`)
+  - `customHtmlNotificationTemplate` (`server/src/shared/email/templates/customHtmlNotification.ts`)
 - **APIs**:
   - `GET /api/notifications` (list unread & recent read notifications)
   - `PATCH /api/notifications/:deliveryId/read` (mark notification delivery as read)
@@ -347,14 +349,24 @@ Every logged feature should eventually document:
   - `PATCH /api/scheduled-notifications/:id` (update scheduled notification fields and recalculate nextExecutionAt)
   - `POST /api/scheduled-notifications/:id/cancel` (cancel active scheduled notification while preserving row in history)
   - `POST /api/scheduled-notifications/:id/duplicate` (duplicate scheduled notification with new startAt)
-- **Database**: `notification_rules`, `notification_instances`, `notification_recipients`, `notification_deliveries`, `notification_preferences`, `scheduled_notifications` (Prisma schema with `NotificationType`, `NotificationChannel`, `NotificationDeliveryStatus`, `ScheduledNotificationRecurrence`, `ScheduledNotificationStatus` enums)
-- **Permissions**: `notifications:view-delivery-failures`, `notifications:manage-rules`, `notifications:manage-scheduled`
+  - `GET /api/email-templates` (list company email templates with creator summary and rule usage counts)
+  - `GET /api/email-templates/:id` (retrieve single email template by ID)
+  - `POST /api/email-templates` (create email template with atomic default management)
+  - `PATCH /api/email-templates/:id` (update email template with atomic default management)
+  - `DELETE /api/email-templates/:id` (soft-delete email template with default and rule-reference protection)
+- **Database**: `notification_rules`, `notification_instances`, `notification_recipients`, `notification_deliveries`, `notification_preferences`, `scheduled_notifications`, `email_templates` (Prisma schema with `NotificationType`, `NotificationChannel`, `NotificationDeliveryStatus`, `ScheduledNotificationRecurrence`, `ScheduledNotificationStatus` enums)
+- **Permissions**: `notifications:view-delivery-failures`, `notifications:manage-rules`, `notifications:manage-scheduled`, `notifications:manage-templates`
 - **Routes**:
-  - Client: Global Navbar bell trigger (flyout/modal), Settings/Profile `notifications` tab, Management hub `Notification Rules` view, Settings hub `Delivery Failures` and `Scheduled Notifications` views
-  - Backend: `/api/notifications/*` (`server/src/features/notifications/routes/notifications.routes.ts`), `/api/notification-preferences` (`server/src/features/profiles/routes/notificationPreferences.routes.ts`), `/api/notification-admin/*` (`server/src/features/notifications/routes/notificationAdmin.routes.ts`), `/api/scheduled-notifications/*` (`server/src/features/notifications/routes/scheduledNotifications.routes.ts`)
+  - Client: Global Navbar bell trigger (flyout/modal), Settings/Profile `notifications` tab, Management hub `Notification Rules` view, Settings hub `Delivery Failures`, `Scheduled Notifications`, and `Email Templates` views
+  - Backend: `/api/notifications/*` (`server/src/features/notifications/routes/notifications.routes.ts`), `/api/notification-preferences` (`server/src/features/profiles/routes/notificationPreferences.routes.ts`), `/api/notification-admin/*` (`server/src/features/notifications/routes/notificationAdmin.routes.ts`), `/api/scheduled-notifications/*` (`server/src/features/notifications/routes/scheduledNotifications.routes.ts`), `/api/email-templates/*` (`server/src/features/notifications/routes/emailTemplates.routes.ts`)
 - **Events**: `scheduler:deadline-and-overdue-assignment-reminders`, `lesson:completed`, `lesson:assigned`, `notifications:email-delivery-permanently-failed`, `scheduler:scheduled-notification-firing`
 - **Dependencies**: Prisma ORM, Node.js, Express, Nodemailer, React, Tailwind CSS, `motion/react`, `lucide-react`, `react-i18next`
-- **Phase 2 Status**: Complete. Rule administration UI, Delivery Failures monitoring, Scheduled Notifications data model, CRUD APIs, background firing engine with poller integration, and the complete Scheduled Notification List, Cancel, Duplicate, and Create/Edit Form UI are fully implemented and verified end-to-end.
+- **Phase 2 Status**: Complete. All deliverables across Phase 2 are implemented, integrated, and verified end-to-end:
+  1. Notification Rule Admin UI & CRUD
+  2. Delivery Failures Monitor & Reporting
+  3. Scheduled Notifications (Data model, CRUD APIs, background poller engine, and Management UI)
+  4. Email Templates (Data model, CRUD APIs, Authoring UI with sandboxed preview and cursor variable insertion, rule form selector linkage, and send-path delivery integration with batched lookups and parameter interpolation).
+
 
 
 

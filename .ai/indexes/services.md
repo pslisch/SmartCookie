@@ -256,7 +256,7 @@ Each reusable service should include:
 - **Dependencies**: Prisma
 
 ### 49. EmailDeliveryService
-- **Purpose**: Renders notification email templates and dispatches messages via `EmailService` using company SMTP configurations with fallback. Orchestrates a two-attempt delivery lifecycle with exactly one retry and no exponential backoff: a delivery transitions `PENDING → FAILED` on first failure, then `FAILED → PERMANENTLY_FAILED` on the second failure (`attemptCount >= 2`), picked up on the existing hourly scheduler poller's regular tick without any special backoff schedule. When delivery reaches `PERMANENTLY_FAILED`, notifies designated failure-alert permission holders via `DeliveryFailureNotificationService`.
+- **Purpose**: Renders notification email templates and dispatches messages via `EmailService` using company SMTP configurations with fallback. Batches lookups of linked `EmailTemplate` records by `emailTemplateId` to prevent N+1 queries. When a notification's rule has an active linked custom template, renders `custom-html-notification` with interpolated event parameters (`{{learnerName}}`, `{{lessonTitle}}`, `{{dueDate}}`); otherwise falls back gracefully to `generic-notification` (for rules with no template, deleted templates, or `ruleId: null` notifications such as `ScheduledNotification` and delivery-failure alerts). Orchestrates a two-attempt delivery lifecycle with exactly one retry and no exponential backoff: a delivery transitions `PENDING → FAILED` on first failure, then `FAILED → PERMANENTLY_FAILED` on the second failure (`attemptCount >= 2`), picked up on the regular scheduler poller. When delivery reaches `PERMANENTLY_FAILED`, notifies designated failure-alert permission holders via `DeliveryFailureNotificationService`.
 - **Consumers**: `ScheduledTasksService` (`scheduledTasks.service.ts`)
 - **Dependencies**: Prisma, `EmailService`, `deliveryFailureNotification.service.ts`
 
@@ -274,6 +274,17 @@ Each reusable service should include:
 - **Purpose**: Creates direct in-LMS alert notifications for users with `notifications:view-delivery-failures` permission when an email delivery reaches `PERMANENTLY_FAILED`. Employs application-level idempotency checks and deliberately avoids creating email deliveries to prevent failure loops.
 - **Consumers**: `emailDelivery.service.ts`
 - **Dependencies**: Prisma, `permissionResolverService.ts`
+
+### 53. ScheduledNotificationFiringService
+- **Purpose**: Background execution engine for scheduled notifications. Polls for due active records (`status: ACTIVE`, `deletedAt: null`, `nextExecutionAt <= now()`), creates `NotificationInstance` records with `ruleId: null`, invokes `RecipientResolverService` and `ChannelDeliveryService`, and calculates next execution dates for recurring schedules (`DAILY`, `WEEKLY`, `MONTHLY`) or marks one-off (`NONE`) or expired recurring schedules as completed.
+- **Consumers**: `ScheduledTasksService` (`scheduledTasks.service.ts`)
+- **Dependencies**: Prisma, `RecipientResolverService`, `ChannelDeliveryService`
+
+### 54. CustomHtmlNotificationTemplate
+- **Purpose**: Renders custom HTML notification emails with dynamic subject and safe plain-text fallback (HTML tag stripping), registered under the `'custom-html-notification'` template key in `EmailService`.
+- **Consumers**: `EmailService` (`email.service.ts`), `EmailDeliveryService` (`emailDelivery.service.ts`)
+- **Dependencies**: None
+
 
 
 

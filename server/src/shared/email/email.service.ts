@@ -7,12 +7,13 @@ import { assignmentReminderTemplate, AssignmentReminderData } from './templates/
 import { emailChangeVerificationTemplate, EmailChangeVerificationData } from './templates/emailChangeVerification';
 import { entraSyncFailureTemplate, EntraSyncFailureData } from './templates/entraSyncFailure';
 import { genericNotificationTemplate, GenericNotificationData } from './templates/genericNotification';
+import { customHtmlNotificationTemplate, CustomHtmlNotificationData } from './templates/customHtmlNotification';
 import { prisma } from '../db/prisma';
 import { decrypt } from '../crypto/encryption';
 
-export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder' | 'email-change-verification' | 'entra-sync-failure' | 'generic-notification';
+export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder' | 'email-change-verification' | 'entra-sync-failure' | 'generic-notification' | 'custom-html-notification';
 
-export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData | EmailChangeVerificationData | EntraSyncFailureData | GenericNotificationData;
+export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData | EmailChangeVerificationData | EntraSyncFailureData | GenericNotificationData | CustomHtmlNotificationData;
 
 export interface EmailService {
   send(to: string, template: EmailTemplateName, data: EmailTemplateData, companyId?: string): Promise<void>;
@@ -111,6 +112,13 @@ class EmailServiceImpl implements EmailService {
         html = rendered.html;
         break;
       }
+      case 'custom-html-notification': {
+        const rendered = customHtmlNotificationTemplate(data as CustomHtmlNotificationData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
       default:
         throw new Error(`Unsupported email template: ${template}`);
     }
@@ -139,7 +147,7 @@ class EmailServiceImpl implements EmailService {
     let dbTransporter: nodemailer.Transporter | null = null;
     let fromAddress: string | null = null;
 
-    if (resolvedCompanyId) {
+    if (resolvedCompanyId && process.env.SMTP_STUB !== 'true') {
       try {
         const config = await prisma.emailConfig.findUnique({
           where: { companyId: resolvedCompanyId }
@@ -164,7 +172,7 @@ class EmailServiceImpl implements EmailService {
       }
     }
 
-    const activeTransporter = dbTransporter || this.transporter;
+    const activeTransporter = process.env.SMTP_STUB === 'true' ? null : (dbTransporter || this.transporter);
     const from = fromAddress || process.env.SMTP_FROM || 'no-reply@smartcookie.ai';
 
     if (!activeTransporter) {
@@ -173,6 +181,9 @@ class EmailServiceImpl implements EmailService {
       console.log(`To: ${to}`);
       console.log(`Subject: ${subject}`);
       console.log(`Text Body:\n${text}`);
+      if (html) {
+        console.log(`HTML Body:\n${html}`);
+      }
       console.log('--------------------------------');
       return;
     }

@@ -79,6 +79,13 @@ export async function processPendingEmailDeliveries(): Promise<void> {
               actionUrl: true,
               actionEntityType: true,
               actionEntityId: true,
+              ruleId: true,
+              rule: {
+                select: {
+                  id: true,
+                  emailTemplateId: true,
+                },
+              },
             },
           },
         },
@@ -91,6 +98,32 @@ export async function processPendingEmailDeliveries(): Promise<void> {
 
   if (eligibleDeliveries.length === 0) {
     return;
+  }
+
+  // Batch-fetch any active custom email templates linked via notificationInstance.rule
+  const templateIds = Array.from(
+    new Set(
+      eligibleDeliveries
+        .map((d) => d.notificationRecipient?.notificationInstance?.rule?.emailTemplateId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    )
+  );
+
+  const templateMap = new Map<string, string>();
+  if (templateIds.length > 0) {
+    const activeTemplates = await prisma.emailTemplate.findMany({
+      where: {
+        id: { in: templateIds },
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        htmlContent: true,
+      },
+    });
+    for (const t of activeTemplates) {
+      templateMap.set(t.id, t.htmlContent);
+    }
   }
 
   for (const delivery of eligibleDeliveries) {
@@ -147,17 +180,34 @@ export async function processPendingEmailDeliveries(): Promise<void> {
     const body = interpolate(instance?.bodyKey, bodyParams);
     const actionUrl = instance?.actionUrl ?? undefined;
 
+    // Check if the linked rule has an active custom EmailTemplate
+    const emailTemplateId = instance?.rule?.emailTemplateId;
+    const customHtmlContent = emailTemplateId ? templateMap.get(emailTemplateId) : undefined;
+
     try {
-      await emailService.send(
-        recipientEmail,
-        'generic-notification',
-        {
-          title,
-          body,
-          actionUrl,
-        },
-        instance?.companyId
-      );
+      if (customHtmlContent) {
+        const interpolatedHtml = interpolate(customHtmlContent, bodyParams);
+        await emailService.send(
+          recipientEmail,
+          'custom-html-notification',
+          {
+            subject: title,
+            html: interpolatedHtml,
+          },
+          instance?.companyId
+        );
+      } else {
+        await emailService.send(
+          recipientEmail,
+          'generic-notification',
+          {
+            title,
+            body,
+            actionUrl,
+          },
+          instance?.companyId
+        );
+      }
 
       // On success: mark as SENT
       await prisma.notificationDelivery.update({

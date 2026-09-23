@@ -628,12 +628,14 @@ This index describes the data models, entity relationships, and schemas supporti
   - `actionType` (String, Nullable, maps to `action_type`)
   - `actionUrl` (String, Nullable, maps to `action_url`)
   - `isSystemDefault` (Boolean, Default: `false`, maps to `is_system_default`)
+  - `emailTemplateId` (String, Nullable, Foreign Key to `email_templates.id`, maps to `email_template_id`)
   - `createdById` (String, Nullable, Foreign Key to `users.id`, maps to `created_by_id`)
   - `createdAt` (DateTime, Default: `now()`, maps to `created_at`)
   - `updatedAt` (DateTime, Auto-updated, maps to `updated_at`)
   - `deletedAt` (DateTime, Nullable, maps to `deleted_at`)
 - **Relations**:
   - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to optional `EmailTemplate` (via `emailTemplateId`, set null on delete)
   - Belongs to creator `User` (via `createdById`, set null on delete)
   - Has many `NotificationInstance`s (via `instances`)
 
@@ -701,10 +703,48 @@ This index describes the data models, entity relationships, and schemas supporti
 - **Relations**:
   - Belongs to `User` (via `userId`, cascade on delete)
 
+### Scheduled Notifications (`scheduled_notifications`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`, maps to `company_id`)
+  - `title` (String)
+  - `message` (String, Text)
+  - `recipientConfig` (Json, maps to `recipient_config`)
+  - `channels` (Json)
+  - `actionUrl` (String, Nullable, maps to `action_url`)
+  - `startAt` (DateTime, maps to `start_at`)
+  - `recurrence` (Enum: `ScheduledNotificationRecurrence`: `NONE`, `DAILY`, `WEEKLY`, `MONTHLY`, Default: `NONE`)
+  - `endAt` (DateTime, Nullable, maps to `end_at`)
+  - `status` (Enum: `ScheduledNotificationStatus`: `ACTIVE`, `CANCELLED`, Default: `ACTIVE`)
+  - `nextExecutionAt` (DateTime, maps to `next_execution_at`)
+  - `lastExecutedAt` (DateTime, Nullable, maps to `last_executed_at`)
+  - `createdById` (String, Nullable, Foreign Key to `users.id`, maps to `created_by_id`)
+  - `createdAt` (DateTime, Default: `now()`, maps to `created_at`)
+  - `updatedAt` (DateTime, Auto-updated, maps to `updated_at`)
+  - `deletedAt` (DateTime, Nullable, maps to `deleted_at`)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to creator `User` (via `createdById`, set null on delete)
+
+### Email Templates (`email_templates`)
+- **Fields**:
+  - `id` (String, UUID, Primary Key)
+  - `companyId` (String, Foreign Key to `companies.id`, maps to `company_id`)
+  - `name` (String)
+  - `isDefault` (Boolean, Default: `false`, maps to `is_default`)
+  - `htmlContent` (String, Text, maps to `html_content`)
+  - `createdById` (String, Nullable, Foreign Key to `users.id`, maps to `created_by_id`)
+  - `createdAt` (DateTime, Default: `now()`, maps to `created_at`)
+  - `updatedAt` (DateTime, Auto-updated, maps to `updated_at`)
+  - `deletedAt` (DateTime, Nullable, maps to `deleted_at`)
+- **Relations**:
+  - Belongs to `Company` (via `companyId`, cascade on delete)
+  - Belongs to creator `User` (via `createdById`, set null on delete)
+  - Has many `NotificationRule`s (via `notificationRules`)
 
 ---
 
-## 🟢 Schema Registry (v1.13.0)
+## 🟢 Schema Registry (v1.14.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
@@ -718,6 +758,8 @@ This index describes the data models, entity relationships, and schemas supporti
 - **v1.10.0**: Local MFA (TOTP). Added `mfaEnabled`, `mfaSecretEncrypted`, and `mfaEnabledAt` to `User`. Added `MfaRecoveryCode` table. Added `mfaPolicy` enum default `DISABLED` to `Company`. Added `MfaPolicyRole` join table. Added `MFA_CHALLENGE` to `TokenPurpose` enum.
 - **v1.11.0**: Microsoft Entra ID Integration Backend. Added `IdentityProviderConfig`, `EntraGroupSelection`, and `SyncLog` tables. Added `entraObjectId` and `profilePictureManuallySet` to `User` table. Added `syncSource` and `entraGroupId` to `OrganizationUnit` table. Added `SyncSource`, `IdentityProviderType`, `LoginMode`, `ImportStrategy`, `SyncStatus`, and `SyncTriggerType` enums.
 - **v1.12.0**: Theme & Branding Data Models. Added `Theme`, `Font`, and `ThemeLock` tables with `ThemeStatus` (`DRAFT`, `READY`, `ACTIVE`) and `ThemeLockType` (`EDIT`, `TEST`) enums. Soft-delete support with 14-day purge window on `Theme`. Seeded mandatory Smart Cookie Default theme and system `Inter` font per company.
-- **v1.13.0 (Current)**: Notification System Phase 1. Added `NotificationRule`, `NotificationInstance`, `NotificationRecipient`, and `NotificationDelivery` models. Extended `NotificationPreference` with `emailEnabled` and `inLmsEnabled` columns (replacing the legacy `enabled` boolean, with persisted preference migration). Extended `NotificationType` enum with `MANAGER_COMPLETION` and `MANAGER_OVERDUE`. Added `NotificationChannel` (`IN_LMS`, `EMAIL`) and `NotificationDeliveryStatus` (`PENDING`, `SENT`, `FAILED`, `RETRIED`, `PERMANENTLY_FAILED`) enums.
+- **v1.13.0**: Notification System Phase 1. Added `NotificationRule`, `NotificationInstance`, `NotificationRecipient`, and `NotificationDelivery` models. Extended `NotificationPreference` with `emailEnabled` and `inLmsEnabled` columns (replacing the legacy `enabled` boolean, with persisted preference migration). Extended `NotificationType` enum with `MANAGER_COMPLETION` and `MANAGER_OVERDUE`. Added `NotificationChannel` (`IN_LMS`, `EMAIL`) and `NotificationDeliveryStatus` (`PENDING`, `SENT`, `FAILED`, `RETRIED`, `PERMANENTLY_FAILED`) enums.
+- **v1.14.0 (Current)**: Notification System Phase 2. Added `ScheduledNotification` model with recurrence (`NONE`, `DAILY`, `WEEKLY`, `MONTHLY`) and status (`ACTIVE`, `CANCELLED`). Added `EmailTemplate` model for rich HTML templates with `isDefault` per company and soft deletion. Linked `NotificationRule` to optional `EmailTemplate` via `emailTemplateId`.
+
 
 
