@@ -62,10 +62,35 @@ export interface NotificationRule {
   actionType: string | null;
   actionUrl: string | null;
   isSystemDefault: boolean;
+  emailTemplateId?: string | null;
   createdById: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+}
+
+export interface EmailTemplateCreatedBy {
+  id: string;
+  username: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+export interface EmailTemplate {
+  id: string;
+  companyId: string;
+  name: string;
+  isDefault: boolean;
+  htmlContent: string;
+  createdById: string | null;
+  createdBy?: EmailTemplateCreatedBy;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  _count?: {
+    notificationRules: number;
+  };
 }
 
 export type NotificationDeliveryStatus = 'PENDING' | 'SENT' | 'FAILED' | 'PERMANENTLY_FAILED';

@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { Sliders, ArrowLeft, Settings2, Palette, Bell, AlertTriangle, CalendarClock } from 'lucide-react';
+import { Sliders, ArrowLeft, Settings2, Palette, Bell, AlertTriangle, CalendarClock, FileCode } from 'lucide-react';
 import { useAuth } from '../../../shared/components/AppGate';
 import { usePermission } from '../../../shared/hooks/usePermission';
 import { FieldBuilder } from '../../profiles/pages/FieldBuilder';
@@ -14,17 +14,19 @@ import { ThemeManagement } from '../../theme/pages/ThemeManagement';
 import { NotificationRuleManagement } from '../../notifications/pages/NotificationRuleManagement';
 import { DeliveryFailures } from '../../notifications/pages/DeliveryFailures';
 import { ScheduledNotificationManagement } from '../../notifications/pages/ScheduledNotificationManagement';
+import { EmailTemplateManagement } from '../../notifications/pages/EmailTemplateManagement';
 
 export const Settings: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [view, setView] = useState<'hub' | 'fields' | 'theme' | 'notifications' | 'delivery-failures' | 'scheduled-notifications'>('hub');
+  const [view, setView] = useState<'hub' | 'fields' | 'theme' | 'notifications' | 'delivery-failures' | 'scheduled-notifications' | 'email-templates'>('hub');
 
   const canManageFields = usePermission('profile-fields', 'manage-fields');
   const canViewThemes = usePermission('theme', 'view');
   const canManageNotificationRules = usePermission('notifications', 'manage-rules');
   const canViewDeliveryFailures = usePermission('notifications', 'view-delivery-failures');
   const canManageScheduledNotifications = usePermission('notifications', 'manage-scheduled');
+  const canManageEmailTemplates = usePermission('notifications', 'manage-templates');
 
   return (
     <motion.div
@@ -59,6 +61,8 @@ export const Settings: React.FC = () => {
                 ? t('settings.deliveryFailures')
                 : view === 'scheduled-notifications'
                 ? t('settings.scheduledNotifications')
+                : view === 'email-templates'
+                ? t('settings.emailTemplates')
                 : t('settings.fieldBuilder')}
             </h1>
             <p className="mt-1.5 text-sm text-text-muted max-w-2xl font-sans">
@@ -72,6 +76,8 @@ export const Settings: React.FC = () => {
                 ? t('settings.deliveryFailuresSubtitle')
                 : view === 'scheduled-notifications'
                 ? t('settings.scheduledNotificationsSubtitle')
+                : view === 'email-templates'
+                ? t('settings.emailTemplatesSubtitle')
                 : t('settings.fieldBuilderSubtitle')}
             </p>
           </div>
@@ -94,7 +100,7 @@ export const Settings: React.FC = () => {
       {/* Hub View */}
       {view === 'hub' && (
         <>
-          {canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications ? (
+          {canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications || canManageEmailTemplates ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="settings-hub-grid">
               {canManageFields && (
                 <motion.button
@@ -215,6 +221,30 @@ export const Settings: React.FC = () => {
                   </span>
                 </motion.button>
               )}
+
+              {canManageEmailTemplates && (
+                <motion.button
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  whileTap={{ y: 0, scale: 0.99 }}
+                  onClick={() => setView('email-templates')}
+                  className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
+                  id="card-email-templates"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
+                    <FileCode className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-text-heading font-sans">
+                    {t('settings.emailTemplates')}
+                  </h3>
+                  <p className="text-sm text-text-muted mt-2 font-sans">
+                    {t('settings.emailTemplatesDesc')}
+                  </p>
+                  <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
+                    <span>{t('settings.manageEmailTemplatesBtn')}</span>
+                    <span>&rarr;</span>
+                  </span>
+                </motion.button>
+              )}
             </div>
           ) : (
             /* Empty State message (No permissions config) */
@@ -261,6 +291,12 @@ export const Settings: React.FC = () => {
       {view === 'scheduled-notifications' && canManageScheduledNotifications && (
         <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="scheduled-notifications-subview">
           <ScheduledNotificationManagement />
+        </div>
+      )}
+
+      {view === 'email-templates' && canManageEmailTemplates && (
+        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="email-templates-subview">
+          <EmailTemplateManagement />
         </div>
       )}
     </motion.div>

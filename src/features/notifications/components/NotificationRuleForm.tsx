@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -16,8 +16,9 @@ import {
   Info,
   Calendar,
   Code,
+  Mail,
 } from 'lucide-react';
-import { NotificationRule } from '../types';
+import { NotificationRule, EmailTemplate } from '../types';
 import { UserMultiSelect } from '../../../shared/components/UserMultiSelect';
 import { GroupMultiSelect } from '../../../shared/components/GroupMultiSelect';
 
@@ -107,6 +108,32 @@ export const NotificationRuleForm: React.FC<NotificationRuleFormProps> = ({
   // Message Content Template State
   const [titleKey, setTitleKey] = useState<string>(rule?.titleKey || '');
   const [bodyKey, setBodyKey] = useState<string>(rule?.bodyKey || '');
+  const [emailTemplateId, setEmailTemplateId] = useState<string | null>(
+    rule?.emailTemplateId || null
+  );
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+
+  // Fetch available company email templates
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/email-templates', {
+      headers: { Accept: 'application/json' },
+      credentials: 'include',
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (isMounted && Array.isArray(data)) {
+          setEmailTemplates(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('[NotificationRuleForm] Could not load email templates:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Action / Deep Link State
   const [actionType, setActionType] = useState<string>(rule?.actionType || '');
@@ -198,6 +225,7 @@ export const NotificationRuleForm: React.FC<NotificationRuleFormProps> = ({
           bodyKey: bodyKey.trim() || null,
           actionType: actionType.trim() || null,
           actionUrl: actionUrl.trim() || null,
+          emailTemplateId: emailTemplateId || null,
         };
 
         res = await fetch(`/api/notification-admin/rules/${rule.id}`, {
@@ -223,6 +251,7 @@ export const NotificationRuleForm: React.FC<NotificationRuleFormProps> = ({
           bodyKey: bodyKey.trim() || null,
           actionType: actionType.trim() || null,
           actionUrl: actionUrl.trim() || null,
+          emailTemplateId: emailTemplateId || null,
         };
 
         res = await fetch('/api/notification-admin/rules', {
@@ -785,6 +814,33 @@ export const NotificationRuleForm: React.FC<NotificationRuleFormProps> = ({
                 placeholder={t('notificationRules.form.bodyTemplatePlaceholder')}
                 className="w-full rounded-xl border border-card-border px-3.5 py-2.5 text-sm text-text-heading bg-card-bg shadow-xs focus:outline-none focus:ring-2 focus:ring-link-primary/20 font-mono text-xs"
               />
+            </div>
+
+            {/* Email Template Selector */}
+            <div className="pt-3 border-t border-card-border">
+              <label htmlFor="rule-email-template-select" className="block text-xs font-bold text-text-heading uppercase tracking-wider mb-2 font-sans flex items-center space-x-1.5">
+                <Mail className="h-3.5 w-3.5 text-link-primary" />
+                <span>{t('notificationRules.form.emailTemplate', 'Email Template')}</span>
+              </label>
+              <select
+                id="rule-email-template-select"
+                value={emailTemplateId || ''}
+                onChange={(e) => setEmailTemplateId(e.target.value || null)}
+                className="w-full rounded-xl border border-card-border px-3.5 py-2.5 text-sm text-text-heading bg-card-bg shadow-xs focus:outline-none focus:ring-2 focus:ring-link-primary/20 font-sans cursor-pointer"
+              >
+                <option value="">{t('notificationRules.form.useDefaultTemplate', 'Use default')}</option>
+                {emailTemplates.map((tmpl) => (
+                  <option key={tmpl.id} value={tmpl.id}>
+                    {tmpl.name} {tmpl.isDefault ? `(${t('emailTemplates.defaultBadge', 'Default')})` : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-text-muted mt-1.5 font-sans">
+                {t(
+                  'notificationRules.form.emailTemplateHelp',
+                  'Optionally link this rule to a custom HTML email template. If "Use default" is selected, the company default template is used.'
+                )}
+              </p>
             </div>
           </div>
         </div>
