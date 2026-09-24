@@ -167,6 +167,16 @@
     "themeManagementDesc": "Manage themes, customize color palettes and typography, and preview branding styles.",
     "themeManagementSubtitle": "Create, customize, and configure application themes and visual styles.",
     "manageThemesBtn": "Manage Themes",
+    "notifications": "Notifications",
+    "notificationsDesc": "Configure automated rules, monitor delivery failures, oversee scheduled broadcasts, and manage email templates.",
+    "notificationsSubtitle": "Manage notification policies, delivery health, scheduled messages, and email templates.",
+    "manageNotificationsBtn": "Manage Notifications",
+    "notificationsTabs": {
+      "rules": "Notification Rules",
+      "deliveryFailures": "Delivery Failures",
+      "scheduled": "Scheduled Notifications",
+      "templates": "Email Templates"
+    },
     "notificationRules": "Notification Rules",
     "notificationRulesDesc": "Manage automated LMS and email notifications, adjust delivery channels, and configure baseline alerts.",
     "notificationRulesSubtitle": "Configure automated notifications, delivery channels, and company alert policies.",

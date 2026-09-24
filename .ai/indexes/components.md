@@ -335,16 +335,16 @@ Every registered component should include:
 
 ### 41. `DeliveryFailures`
 - **Location**: `src/features/notifications/pages/DeliveryFailures.tsx`
-- **Purpose**: Administration view for inspecting permanently failed email deliveries. Features server-side pagination, date range filtering, recipient email searching, error message previews with full error details drawer/modal, and direct access from the Settings hub.
+- **Purpose**: Administration view for inspecting permanently failed email deliveries. Features server-side pagination, date range filtering, recipient email searching, error message previews with full error details drawer/modal, and direct access from the Notifications hub.
 - **Props**: None (page component)
-- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Used By**: `src/features/notifications/pages/NotificationsHub.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`
 
 ### 42. `ScheduledNotificationManagement`
 - **Location**: `src/features/notifications/pages/ScheduledNotificationManagement.tsx`
 - **Purpose**: Administration view for tenant scheduled notifications. Lists active, cancelled, and expired scheduled notifications in chronological order with recipient badges, channel icons, recurrence labels, client-side expired badges (`recurrence !== 'NONE' && nextExecutionAt > endAt`), cancel confirmation modal, duplicate modal with startAt/endAt picker, create notification button, edit action triggers, and seamless form toggling.
 - **Props**: None (page component)
-- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Used By**: `src/features/notifications/pages/NotificationsHub.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `ScheduledNotificationForm.tsx`
 
 ### 43. `ScheduledNotificationForm`
@@ -358,7 +358,7 @@ Every registered component should include:
 - **Location**: `src/features/notifications/pages/EmailTemplateManagement.tsx`
 - **Purpose**: Administration dashboard for company email templates. Displays template catalog with default badges, referencing notification rules count, created-by metadata, action triggers to set default, edit, create new template, and soft-delete (with confirmation modals protecting current default templates and templates referenced by active rules).
 - **Props**: None (page component)
-- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Used By**: `src/features/notifications/pages/NotificationsHub.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `EmailTemplateForm.tsx`
 
 ### 45. `EmailTemplateForm`
@@ -374,6 +374,14 @@ Every registered component should include:
 - **Props**: `textareaRef: React.RefObject<HTMLTextAreaElement | null>`, `value: string`, `onChange: (newValue: string) => void`
 - **Used By**: `EmailTemplateForm.tsx`
 - **Dependencies**: React, `react-i18next`, `lucide-react`
+
+### 47. `NotificationsHub`
+- **Location**: `src/features/notifications/pages/NotificationsHub.tsx`
+- **Purpose**: Consolidated administration hub for all notification capabilities (replacing the four separate Settings hub cards). Houses sub-tabs for Notification Rules, Delivery Failures, Scheduled Notifications, and Email Templates. Features individually permission-gated tab buttons (`notifications:manage-rules`, `notifications:view-delivery-failures`, `notifications:manage-scheduled`, `notifications:manage-templates`) with automatic first-permitted tab selection, tab transition animation, and isolated sub-view component rendering (`NotificationRuleManagement`, `DeliveryFailures`, `ScheduledNotificationManagement`, `EmailTemplateManagement`).
+- **Props**: None (page component)
+- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `usePermission.ts`, `NotificationRuleManagement.tsx`, `DeliveryFailures.tsx`, `ScheduledNotificationManagement.tsx`, `EmailTemplateManagement.tsx`
+
 
 
 

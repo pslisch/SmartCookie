@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Tab } from '../../types';
 import { User, Menu, X, BookOpen, Compass, Languages, Settings, LayoutDashboard, Eye, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -50,16 +50,50 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const canManageFields = usePermission('profile-fields', 'manage-fields');
   const canViewThemes = usePermission('theme', 'view');
-  const canManageNotificationRules = usePermission('notifications', 'manage-rules');
-  const canViewDeliveryFailures = usePermission('notifications', 'view-delivery-failures');
-  const canManageScheduledNotifications = usePermission('notifications', 'manage-scheduled');
-  const canManageEmailTemplates = usePermission('notifications', 'manage-templates');
-  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications || canManageEmailTemplates;
+  const hasNotificationAccess =
+    usePermission('notifications', 'manage-rules') ||
+    usePermission('notifications', 'view-delivery-failures') ||
+    usePermission('notifications', 'manage-scheduled') ||
+    usePermission('notifications', 'manage-templates');
+  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || hasNotificationAccess;
 
   const canPreview = usePermission('preview', 'use');
   const [eligibleRoles, setEligibleRoles] = useState<Array<{ id: string; name: string }>>([]);
   const [showPicker, setShowPicker] = useState(false);
   const { enterPreview } = usePreview();
+
+  const quickProfileRef = useRef<HTMLDivElement>(null);
+  const previewPickerRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close quick profile dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (quickProfileRef.current && !quickProfileRef.current.contains(event.target as Node)) {
+        setShowQuickProfile(false);
+      }
+    };
+    if (showQuickProfile) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showQuickProfile]);
+
+  // Handle click outside to close preview picker dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (previewPickerRef.current && !previewPickerRef.current.contains(event.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    if (showPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPicker]);
 
   useEffect(() => {
     if (canPreview) {
@@ -127,7 +161,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-card-border bg-nav-bg/80 backdrop-blur-md" id="navbar-root">
+    <nav className="z-50 w-full border-b border-card-border bg-nav-bg/80 backdrop-blur-md" id="navbar-root">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           
@@ -233,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Side: Account button */}
           <div className="hidden md:flex items-center space-x-4">
             {canPreview && eligibleRoles.length > 0 && (
-              <div className="relative">
+              <div className="relative" ref={previewPickerRef}>
                 <button
                   onClick={() => setShowPicker(!showPicker)}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-card-border bg-bg-subtle text-nav-text transition-colors hover:bg-card-border hover:text-link-primary focus:outline-none"
@@ -292,7 +326,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onNavigate={handleNotificationNavigate}
               onOpenHistory={() => setShowNotificationHistory(true)}
             />
-            <div className="relative">
+            <div className="relative" ref={quickProfileRef}>
               <button
                 onClick={() => setShowQuickProfile(!showQuickProfile)}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-card-border bg-bg-subtle text-nav-text transition-colors hover:bg-card-border"

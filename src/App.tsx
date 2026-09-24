@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Tab } from './shared/types';
 import { Shell } from './shared/components/layout/Shell';
 import { Navbar } from './shared/components/layout/Navbar';
+import { PreviewBanner } from './shared/components/PreviewBanner';
 import { Footer } from './shared/components/layout/Footer';
 import { MyLessons } from './features/lessons/pages/MyLessons';
 import { Catalog } from './features/catalog/pages/Catalog';
@@ -88,11 +89,12 @@ function AppContent({ appName }: { appName: string }) {
 
   const canManageFields = usePermission('profile-fields', 'manage-fields');
   const canViewThemes = usePermission('theme', 'view');
-  const canManageNotificationRules = usePermission('notifications', 'manage-rules');
-  const canViewDeliveryFailures = usePermission('notifications', 'view-delivery-failures');
-  const canManageScheduledNotifications = usePermission('notifications', 'manage-scheduled');
-  const canManageEmailTemplates = usePermission('notifications', 'manage-templates');
-  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications || canManageEmailTemplates;
+  const hasNotificationAccess =
+    usePermission('notifications', 'manage-rules') ||
+    usePermission('notifications', 'view-delivery-failures') ||
+    usePermission('notifications', 'manage-scheduled') ||
+    usePermission('notifications', 'manage-templates');
+  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || hasNotificationAccess;
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {
@@ -111,12 +113,15 @@ function AppContent({ appName }: { appName: string }) {
 
   return (
     <Shell>
-      {/* Top sticky responsive Navbar */}
-      <Navbar
-        currentTab={currentTab}
-        onTabChange={setCurrentTab}
-        appName={appName}
-      />
+      {/* Sticky Header: PreviewBanner + Navbar pinned together */}
+      <div className="sticky top-0 z-50">
+        <PreviewBanner />
+        <Navbar
+          currentTab={currentTab}
+          onTabChange={setCurrentTab}
+          appName={appName}
+        />
+      </div>
 
       <RequiredFieldReminder onNavigateToProfile={() => setCurrentTab(Tab.Profile)} />
 

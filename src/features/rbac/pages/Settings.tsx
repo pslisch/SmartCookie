@@ -6,20 +6,17 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { Sliders, ArrowLeft, Settings2, Palette, Bell, AlertTriangle, CalendarClock, FileCode } from 'lucide-react';
+import { Sliders, ArrowLeft, Settings2, Palette, Bell } from 'lucide-react';
 import { useAuth } from '../../../shared/components/AppGate';
 import { usePermission } from '../../../shared/hooks/usePermission';
 import { FieldBuilder } from '../../profiles/pages/FieldBuilder';
 import { ThemeManagement } from '../../theme/pages/ThemeManagement';
-import { NotificationRuleManagement } from '../../notifications/pages/NotificationRuleManagement';
-import { DeliveryFailures } from '../../notifications/pages/DeliveryFailures';
-import { ScheduledNotificationManagement } from '../../notifications/pages/ScheduledNotificationManagement';
-import { EmailTemplateManagement } from '../../notifications/pages/EmailTemplateManagement';
+import { NotificationsHub } from '../../notifications/pages/NotificationsHub';
 
 export const Settings: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [view, setView] = useState<'hub' | 'fields' | 'theme' | 'notifications' | 'delivery-failures' | 'scheduled-notifications' | 'email-templates'>('hub');
+  const [view, setView] = useState<'hub' | 'fields' | 'theme' | 'notifications'>('hub');
 
   const canManageFields = usePermission('profile-fields', 'manage-fields');
   const canViewThemes = usePermission('theme', 'view');
@@ -27,6 +24,7 @@ export const Settings: React.FC = () => {
   const canViewDeliveryFailures = usePermission('notifications', 'view-delivery-failures');
   const canManageScheduledNotifications = usePermission('notifications', 'manage-scheduled');
   const canManageEmailTemplates = usePermission('notifications', 'manage-templates');
+  const hasNotificationAccess = canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications || canManageEmailTemplates;
 
   return (
     <motion.div
@@ -56,13 +54,7 @@ export const Settings: React.FC = () => {
                 : view === 'theme'
                 ? t('settings.themeManagement')
                 : view === 'notifications'
-                ? t('settings.notificationRules')
-                : view === 'delivery-failures'
-                ? t('settings.deliveryFailures')
-                : view === 'scheduled-notifications'
-                ? t('settings.scheduledNotifications')
-                : view === 'email-templates'
-                ? t('settings.emailTemplates')
+                ? t('settings.notifications')
                 : t('settings.fieldBuilder')}
             </h1>
             <p className="mt-1.5 text-sm text-text-muted max-w-2xl font-sans">
@@ -71,13 +63,7 @@ export const Settings: React.FC = () => {
                 : view === 'theme'
                 ? t('settings.themeManagementSubtitle')
                 : view === 'notifications'
-                ? t('settings.notificationRulesSubtitle')
-                : view === 'delivery-failures'
-                ? t('settings.deliveryFailuresSubtitle')
-                : view === 'scheduled-notifications'
-                ? t('settings.scheduledNotificationsSubtitle')
-                : view === 'email-templates'
-                ? t('settings.emailTemplatesSubtitle')
+                ? t('settings.notificationsSubtitle')
                 : t('settings.fieldBuilderSubtitle')}
             </p>
           </div>
@@ -100,7 +86,7 @@ export const Settings: React.FC = () => {
       {/* Hub View */}
       {view === 'hub' && (
         <>
-          {canManageFields || canViewThemes || canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications || canManageEmailTemplates ? (
+          {canManageFields || canViewThemes || hasNotificationAccess ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="settings-hub-grid">
               {canManageFields && (
                 <motion.button
@@ -150,97 +136,25 @@ export const Settings: React.FC = () => {
                 </motion.button>
               )}
 
-              {canManageNotificationRules && (
+              {hasNotificationAccess && (
                 <motion.button
                   whileHover={{ y: -3, scale: 1.01 }}
                   whileTap={{ y: 0, scale: 0.99 }}
                   onClick={() => setView('notifications')}
                   className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
-                  id="card-notification-rules"
+                  id="card-notifications"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
                     <Bell className="h-6 w-6" />
                   </div>
                   <h3 className="text-lg font-bold text-text-heading font-sans">
-                    {t('settings.notificationRules')}
+                    {t('settings.notifications')}
                   </h3>
                   <p className="text-sm text-text-muted mt-2 font-sans">
-                    {t('settings.notificationRulesDesc')}
+                    {t('settings.notificationsDesc')}
                   </p>
                   <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
-                    <span>{t('settings.manageNotificationRulesBtn')}</span>
-                    <span>&rarr;</span>
-                  </span>
-                </motion.button>
-              )}
-
-              {canViewDeliveryFailures && (
-                <motion.button
-                  whileHover={{ y: -3, scale: 1.01 }}
-                  whileTap={{ y: 0, scale: 0.99 }}
-                  onClick={() => setView('delivery-failures')}
-                  className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
-                  id="card-delivery-failures"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-error-bg text-status-error-text mb-4 border border-status-error-text/20">
-                    <AlertTriangle className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-text-heading font-sans">
-                    {t('settings.deliveryFailures')}
-                  </h3>
-                  <p className="text-sm text-text-muted mt-2 font-sans">
-                    {t('settings.deliveryFailuresDesc')}
-                  </p>
-                  <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
-                    <span>{t('settings.viewDeliveryFailuresBtn')}</span>
-                    <span>&rarr;</span>
-                  </span>
-                </motion.button>
-              )}
-
-              {canManageScheduledNotifications && (
-                <motion.button
-                  whileHover={{ y: -3, scale: 1.01 }}
-                  whileTap={{ y: 0, scale: 0.99 }}
-                  onClick={() => setView('scheduled-notifications')}
-                  className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
-                  id="card-scheduled-notifications"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
-                    <CalendarClock className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-text-heading font-sans">
-                    {t('settings.scheduledNotifications')}
-                  </h3>
-                  <p className="text-sm text-text-muted mt-2 font-sans">
-                    {t('settings.scheduledNotificationsDesc')}
-                  </p>
-                  <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
-                    <span>{t('settings.manageScheduledNotificationsBtn')}</span>
-                    <span>&rarr;</span>
-                  </span>
-                </motion.button>
-              )}
-
-              {canManageEmailTemplates && (
-                <motion.button
-                  whileHover={{ y: -3, scale: 1.01 }}
-                  whileTap={{ y: 0, scale: 0.99 }}
-                  onClick={() => setView('email-templates')}
-                  className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
-                  id="card-email-templates"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
-                    <FileCode className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-text-heading font-sans">
-                    {t('settings.emailTemplates')}
-                  </h3>
-                  <p className="text-sm text-text-muted mt-2 font-sans">
-                    {t('settings.emailTemplatesDesc')}
-                  </p>
-                  <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
-                    <span>{t('settings.manageEmailTemplatesBtn')}</span>
+                    <span>{t('settings.manageNotificationsBtn')}</span>
                     <span>&rarr;</span>
                   </span>
                 </motion.button>
@@ -276,27 +190,9 @@ export const Settings: React.FC = () => {
         </div>
       )}
 
-      {view === 'notifications' && canManageNotificationRules && (
+      {view === 'notifications' && hasNotificationAccess && (
         <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="notifications-subview">
-          <NotificationRuleManagement />
-        </div>
-      )}
-
-      {view === 'delivery-failures' && canViewDeliveryFailures && (
-        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="delivery-failures-subview">
-          <DeliveryFailures />
-        </div>
-      )}
-
-      {view === 'scheduled-notifications' && canManageScheduledNotifications && (
-        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="scheduled-notifications-subview">
-          <ScheduledNotificationManagement />
-        </div>
-      )}
-
-      {view === 'email-templates' && canManageEmailTemplates && (
-        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="email-templates-subview">
-          <EmailTemplateManagement />
+          <NotificationsHub />
         </div>
       )}
     </motion.div>
