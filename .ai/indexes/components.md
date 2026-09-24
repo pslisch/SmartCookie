@@ -366,7 +366,14 @@ Every registered component should include:
 - **Purpose**: Creation and editing form for rich HTML email templates. Features template name input, default toggle, live cursor-position variable insertion toolbar buttons (`{{learnerName}}`, `{{lessonTitle}}`, `{{dueDate}}`, `{{actionUrl}}`, etc.), textarea HTML editor, and a sandboxed live preview pane (`<iframe sandbox="...">`) that safely renders markup and CSS isolated from the parent DOM.
 - **Props**: `template?: EmailTemplate | null`, `onSuccess: () => void`, `onCancel: () => void`
 - **Used By**: `src/features/notifications/pages/EmailTemplateManagement.tsx`
-- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `EmailTemplateVariableHelper.tsx`
+
+### 46. `EmailTemplateVariableHelper`
+- **Location**: `src/features/notifications/components/EmailTemplateVariableHelper.tsx`
+- **Purpose**: Variable insertion toolbar for email templates offering quick-insert chips for `{{lessonTitle}}`, `{{dueDate}}`, `{{learnerName}}`, and `{{actionUrl}}` directly at the active textarea cursor position.
+- **Props**: `textareaRef: React.RefObject<HTMLTextAreaElement | null>`, `value: string`, `onChange: (newValue: string) => void`
+- **Used By**: `EmailTemplateForm.tsx`
+- **Dependencies**: React, `react-i18next`, `lucide-react`
 
 
 

@@ -186,7 +186,7 @@ export async function processPendingEmailDeliveries(): Promise<void> {
 
     try {
       if (customHtmlContent) {
-        const interpolatedHtml = interpolate(customHtmlContent, bodyParams);
+        const interpolatedHtml = interpolate(customHtmlContent, { ...bodyParams, actionUrl });
         await emailService.send(
           recipientEmail,
           'custom-html-notification',

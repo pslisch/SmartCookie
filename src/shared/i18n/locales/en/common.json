@@ -495,7 +495,9 @@
       "dueDate": "Due Date",
       "dueDateTypes": "Used by: DUE_SOON, OVERDUE, MANAGER_OVERDUE",
       "learnerName": "Learner Name",
-      "learnerNameTypes": "Used by: MANAGER_COMPLETION, MANAGER_OVERDUE"
+      "learnerNameTypes": "Used by: MANAGER_COMPLETION, MANAGER_OVERDUE",
+      "actionUrl": "Action URL",
+      "actionUrlTypes": "Available whenever an action link is configured"
     },
     "form": {
       "createTitle": "Create Email Template",

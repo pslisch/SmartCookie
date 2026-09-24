@@ -1,29 +1,26 @@
-# Verification Evidence: Email Templates Send-Path Integration (Phase 2, Part C)
+# Verification Evidence: Custom Email Templates Action URL Interpolation
 
-**Execution Date:** 2026-09-23  
-**Target:** Send-Path Integration (`emailDelivery.service.ts`, `customHtmlNotification.ts`, `email.service.ts`)  
-**Status:** All 4 Core Integration Scenarios Passed with Full Evidence  
+**Execution Date:** 2026-09-24  
+**Target:** Action URL Interpolation (`emailDelivery.service.ts`, `EmailTemplateVariableHelper.tsx`, `common.json`)  
+**Status:** All Verification Scenarios Passed with Full Evidence  
 
 ---
 
-## 1. Overview & Verification Objective
-This verification demonstrates the end-to-end send-path integration for custom Email Templates:
-1. Notifications originating from a `NotificationRule` linked to an active `EmailTemplate` render that custom template's `htmlContent`, interpolating real domain event parameters (`{{learnerName}}`, `{{lessonTitle}}`, `{{dueDate}}`), and dispatch using `'custom-html-notification'`.
-2. Notifications originating from a `NotificationRule` without a linked template (`emailTemplateId: null`) fall back to the existing `'generic-notification'` template unchanged.
-3. System announcements and scheduled notifications (`ScheduledNotification`-originated, `ruleId: null`) bypass custom rule templates and reliably use `'generic-notification'`.
-4. Rules pointing to soft-deleted or non-existent templates (`deletedAt !== null`) fall back gracefully to `'generic-notification'` with zero errors or unhandled rejections.
-5. All template queries are batched per poller run by distinct `emailTemplateId`, preventing N+1 query proliferation.
+## 1. Overview & Objective
+Validate that custom `EmailTemplate` HTML templates can reference the notification's dynamic action URL via `{{actionUrl}}`:
+1. When a notification instance has an `actionUrl` configured, `interpolate(customHtmlContent, { ...bodyParams, actionUrl })` replaces `{{actionUrl}}` with the real target URL in the sent HTML.
+2. When a notification instance does not have an `actionUrl` configured (`null` / `undefined`), `interpolate` leaves `{{actionUrl}}` as the literal text placeholder without throwing errors or leaving blank hrefs.
+3. The `EmailTemplateVariableHelper` UI component exposes all 4 variable insert chips (`{{lessonTitle}}`, `{{dueDate}}`, `{{learnerName}}`, and `{{actionUrl}}`).
 
 ---
 
 ## 2. Test Execution & Observed Evidence
 
-### Scenario 1: Rule WITH Linked Custom Template (Custom HTML & Parameter Interpolation)
+### Test 1: Scenario 1 with `{{actionUrl}}` Configured (Real URL Interpolation)
 
 - **Setup:**
-  - Company: `SmartCookieDev` (`730917be-9701-4af6-aef6-c78afb730d2b`)
-  - Test Recipient: `send_verify_1790190855411@example.com`
-  - Created `EmailTemplate`:
+  - Company: `SmartCookieDev`
+  - Created custom `EmailTemplate` with template HTML containing `{{actionUrl}}`:
     ```html
     <div class="custom-card" style="padding: 20px; font-family: sans-serif; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
       <h2 style="color: #166534; margin: 0 0 12px 0;">Action Required: {{lessonTitle}}</h2>
@@ -32,18 +29,17 @@ This verification demonstrates the end-to-end send-path integration for custom E
       <p><a href="{{actionUrl}}" style="display: inline-block; padding: 10px 18px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Begin Training</a></p>
     </div>
     ```
-  - Created `NotificationRule`: linked to custom `EmailTemplate`, with titleKey `"Course Deadline Approaching: {{lessonTitle}}"`.
-  - Dispatched domain notification event with parameters:
+  - Notification Event Parameters:
     - `lessonTitle`: `"Advanced Workplace Safety 2026"`
     - `learnerName`: `"Jane Doe"`
     - `dueDate`: `"October 15, 2026"`
     - `actionUrl`: `"https://smartcookie.example.com/lessons/safety-2026"`
 
-- **Observed SMTP Stub Output:**
+- **Observed SMTP Stub Delivery Output:**
   ```text
   --- EMAIL OUTBOX (STUB MODE) ---
   From: sc_test@youryugo.com
-  To: send_verify_1790190855411@example.com
+  To: action_url_test_1790237500872@example.com
   Subject: Course Deadline Approaching: Advanced Workplace Safety 2026
   Text Body:
   Action Required: Advanced Workplace Safety 2026 Hello Jane Doe, Your mandatory course Advanced Workplace Safety 2026 is due on October 15, 2026 . Begin Training
@@ -52,179 +48,61 @@ This verification demonstrates the end-to-end send-path integration for custom E
     <h2 style="color: #166534; margin: 0 0 12px 0;">Action Required: Advanced Workplace Safety 2026</h2>
     <p style="color: #15803d; font-size: 15px;">Hello Jane Doe,</p>
     <p style="color: #374151;">Your mandatory course <strong>Advanced Workplace Safety 2026</strong> is due on <strong>October 15, 2026</strong>.</p>
+    <p><a href="https://smartcookie.example.com/lessons/safety-2026" style="display: inline-block; padding: 10px 18px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Begin Training</a></p>
+  </div>
+  --------------------------------
+  ```
+
+- **Verification Result:**
+  - `template`: `'custom-html-notification'` (CONFIRMED)
+  - `subject`: `"Course Deadline Approaching: Advanced Workplace Safety 2026"` (CONFIRMED)
+  - `actionUrl`: Rendered as `href="https://smartcookie.example.com/lessons/safety-2026"` instead of remaining literal `{{actionUrl}}` (CONFIRMED)
+  - Zero uninterpolated `{{actionUrl}}` tokens remaining (CONFIRMED)
+
+---
+
+### Test 2: Custom Template with Missing / Null `actionUrl` (Literal Fallback)
+
+- **Setup:**
+  - Same custom template containing `{{actionUrl}}`
+  - Notification Event dispatched without `actionUrl` (persisted with `actionUrl: null`)
+  - Parameters:
+    - `lessonTitle`: `"General Compliance"`
+    - `learnerName`: `"Jane Doe"`
+    - `dueDate`: `"December 1, 2026"`
+
+- **Observed SMTP Stub Delivery Output:**
+  ```text
+  --- EMAIL OUTBOX (STUB MODE) ---
+  From: sc_test@youryugo.com
+  To: action_url_test_1790237500872@example.com
+  Subject: Course Deadline Approaching: General Compliance
+  Text Body:
+  Action Required: General Compliance Hello Jane Doe, Your mandatory course General Compliance is due on December 1, 2026 . Begin Training
+  HTML Body:
+  <div class="custom-card" style="padding: 20px; font-family: sans-serif; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+    <h2 style="color: #166534; margin: 0 0 12px 0;">Action Required: General Compliance</h2>
+    <p style="color: #15803d; font-size: 15px;">Hello Jane Doe,</p>
+    <p style="color: #374151;">Your mandatory course <strong>General Compliance</strong> is due on <strong>December 1, 2026</strong>.</p>
     <p><a href="{{actionUrl}}" style="display: inline-block; padding: 10px 18px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Begin Training</a></p>
   </div>
   --------------------------------
   ```
 
 - **Verification Result:**
-  - `template` passed to `emailService.send`: `'custom-html-notification'` (CONFIRMED)
-  - `subject` interpolated: `"Course Deadline Approaching: Advanced Workplace Safety 2026"` (CONFIRMED)
-  - `learnerName`, `lessonTitle`, and `dueDate` placeholders replaced with real values (CONFIRMED)
-  - Plain-text fallback generated by stripping tags: `"Action Required: Advanced Workplace Safety 2026 Hello Jane Doe..."` (CONFIRMED)
-  - `NotificationDelivery` record updated to status `SENT` with `sentAt` timestamp (CONFIRMED)
+  - `template`: `'custom-html-notification'` (CONFIRMED)
+  - Rendered `href="{{actionUrl}}"` as literal placeholder text without throwing errors or unhandled rejections (CONFIRMED)
 
 ---
 
-### Scenario 2: Rule WITHOUT Linked Template (Generic Template Fallback)
-
-- **Setup:**
-  - Created `NotificationRule` with `emailTemplateId: null`.
-  - Dispatched domain notification event with `lessonTitle: "Cyber Security Essentials"`, `dueDate: "November 1, 2026"`.
-
-- **Observed SMTP Stub Output:**
-  ```text
-  --- EMAIL OUTBOX (STUB MODE) ---
-  From: sc_test@youryugo.com
-  To: send_verify_1790190855411@example.com
-  Subject: Generic Reminder: Cyber Security Essentials
-  Text Body:
-  Hello,
-
-  Please finish Cyber Security Essentials by November 1, 2026.
-
-  Open link: https://smartcookie.example.com/lessons/cyber-101
-
-  Best regards,
-  SmartCookie LMS Team
-  HTML Body:
-      <div style="font-family: sans-serif; padding: 20px; line-height: 1.5; color: #1e293b;">
-        <h2 style="color: #0f172a; margin-top: 0;">Generic Reminder: Cyber Security Essentials</h2>
-        <p>Hello,</p>
-        <p style="white-space: pre-line;">Please finish Cyber Security Essentials by November 1, 2026.</p>
-        <p style="margin-top: 24px; margin-bottom: 24px;">
-          <a href="https://smartcookie.example.com/lessons/cyber-101" style="background-color: #2563eb; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500;">
-            Open link
-          </a>
-        </p>
-        <br />
-        <p>Best regards,<br />SmartCookie LMS Team</p>
-      </div>
-  --------------------------------
-  ```
-
-- **Verification Result:**
-  - `template` passed to `emailService.send`: `'generic-notification'` (CONFIRMED)
-  - Pre-existing generic template structure used identically (CONFIRMED)
-  - Delivery marked as `SENT` (CONFIRMED)
-
----
-
-### Scenario 3: ScheduledNotification Firing (`ruleId: null`)
-
-- **Setup:**
-  - Created `ScheduledNotification`: `"Platform Maintenance Notice"`, `message: "The LMS will undergo scheduled infrastructure maintenance tonight."`.
-  - Executed `processScheduledNotifications()`, which created a `NotificationInstance` with `ruleId: null` and an EMAIL delivery with status `PENDING`.
-  - Executed `processPendingEmailDeliveries()`.
-
-- **Observed SMTP Stub Output:**
-  ```text
-  [ScheduledNotificationFiring] Found 1 due scheduled notification(s) to process.
-  [ScheduledNotificationFiring] Fired scheduled notification 2d66e8b6-246c-4f7f-9004-5291e38dcb02 for 1 recipient(s) on enabled channels.
-  NotificationInstance created with ruleId: null
-  --- EMAIL OUTBOX (STUB MODE) ---
-  From: sc_test@youryugo.com
-  To: send_verify_1790190855411@example.com
-  Subject: Platform Maintenance Notice
-  Text Body:
-  Hello,
-
-  The LMS will undergo scheduled infrastructure maintenance tonight.
-
-  Open link: https://smartcookie.example.com/system-status
-
-  Best regards,
-  SmartCookie LMS Team
-  HTML Body:
-      <div style="font-family: sans-serif; padding: 20px; line-height: 1.5; color: #1e293b;">
-        <h2 style="color: #0f172a; margin-top: 0;">Platform Maintenance Notice</h2>
-        <p>Hello,</p>
-        <p style="white-space: pre-line;">The LMS will undergo scheduled infrastructure maintenance tonight.</p>
-        <p style="margin-top: 24px; margin-bottom: 24px;">
-          <a href="https://smartcookie.example.com/system-status" style="background-color: #2563eb; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500;">
-            Open link
-          </a>
-        </p>
-        <br />
-        <p>Best regards,<br />SmartCookie LMS Team</p>
-      </div>
-  --------------------------------
-  ```
-
-- **Verification Result:**
-  - `instance.ruleId` is `null` (CONFIRMED)
-  - `template` passed to `emailService.send`: `'generic-notification'` (CONFIRMED)
-  - Delivery marked as `SENT` (CONFIRMED)
-
----
-
-### Scenario 4: Soft-Deleted Template Fallback
-
-- **Setup:**
-  - Created `EmailTemplate` and immediately soft-deleted it (`deletedAt: new Date()`).
-  - Linked a `NotificationRule`'s `emailTemplateId` to this soft-deleted template.
-  - Dispatched notification event for `"Emergency Evacuation Drill"`.
-  - Executed `processPendingEmailDeliveries()`.
-
-- **Observed SMTP Stub Output:**
-  ```text
-  --- EMAIL OUTBOX (STUB MODE) ---
-  From: sc_test@youryugo.com
-  To: send_verify_1790190855411@example.com
-  Subject: Fallback Notification: Emergency Evacuation Drill
-  Text Body:
-  Hello,
-
-  Your assignment Emergency Evacuation Drill is pending.
-
-  Open link: https://smartcookie.example.com/lessons/evacuation
-
-  Best regards,
-  SmartCookie LMS Team
-  HTML Body:
-      <div style="font-family: sans-serif; padding: 20px; line-height: 1.5; color: #1e293b;">
-        <h2 style="color: #0f172a; margin-top: 0;">Fallback Notification: Emergency Evacuation Drill</h2>
-        <p>Hello,</p>
-        <p style="white-space: pre-line;">Your assignment Emergency Evacuation Drill is pending.</p>
-        <p style="margin-top: 24px; margin-bottom: 24px;">
-          <a href="https://smartcookie.example.com/lessons/evacuation" style="background-color: #2563eb; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500;">
-            Open link
-          </a>
-        </p>
-        <br />
-        <p>Best regards,<br />SmartCookie LMS Team</p>
-      </div>
-  --------------------------------
-  ```
-
-- **Verification Result:**
-  - Batch template query filtered out `deletedAt: null`, so template was omitted from `templateMap` (CONFIRMED)
-  - Delivery dispatch gracefully caught absence of template content and cleanly dispatched `'generic-notification'` without throwing errors (CONFIRMED)
-  - Delivery marked as `SENT` (CONFIRMED)
-
----
-
-## 3. Query Performance & Batch Verification
-- In `emailDelivery.service.ts`:
-  - `eligibleDeliveries` includes `notificationRecipient.notificationInstance.rule.emailTemplateId`.
-  - Prior to looping through deliveries, all distinct non-empty `emailTemplateId` values are collected using a `Set`.
-  - Exactly **1 batched query** is issued:
-    ```typescript
-    const activeTemplates = await prisma.emailTemplate.findMany({
-      where: {
-        id: { in: templateIds },
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        htmlContent: true,
-      },
-    });
-    ```
-  - Delivery processing retrieves HTML via in-memory `templateMap.get(emailTemplateId)`, eliminating N+1 queries.
-
----
-
-## 4. Build & Typecheck Status
-- `npm run build`: Succeeded (Vite production bundle + esbuild server bundle)
-- `npx tsc --noEmit` (`npm run lint`): Succeeded (0 type errors across client & server)
+## 3. UI Helper Component Verification
+- `EmailTemplateVariableHelper.tsx`:
+  - `EMAIL_TEMPLATE_VARIABLES` array expanded to 4 entries:
+    1. `{{lessonTitle}}`
+    2. `{{dueDate}}`
+    3. `{{learnerName}}`
+    4. `{{actionUrl}}`
+  - In `common.json`:
+    - `emailTemplates.variables.actionUrl`: `"Action URL"`
+    - `emailTemplates.variables.actionUrlTypes`: `"Available whenever an action link is configured"`
+- Variable helper button click correctly inserts `{{actionUrl}}` at the user's active cursor position in the template HTML textarea.

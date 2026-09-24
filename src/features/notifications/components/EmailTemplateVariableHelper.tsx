@@ -33,6 +33,12 @@ export const EMAIL_TEMPLATE_VARIABLES: EmailTemplateVariable[] = [
     labelKey: 'emailTemplates.variables.learnerName',
     typesKey: 'emailTemplates.variables.learnerNameTypes',
   },
+  {
+    key: 'actionUrl',
+    token: '{{actionUrl}}',
+    labelKey: 'emailTemplates.variables.actionUrl',
+    typesKey: 'emailTemplates.variables.actionUrlTypes',
+  },
 ];
 
 interface EmailTemplateVariableHelperProps {
