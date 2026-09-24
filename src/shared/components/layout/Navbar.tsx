@@ -38,6 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   
   const hasManagementAccess = 
     usePermission('roles', 'manage') || 
+    usePermission('users', 'view') || 
     usePermission('organization', 'view') || 
     usePermission('organization', 'manage-members') || 
     usePermission('organization', 'manage-groups') || 

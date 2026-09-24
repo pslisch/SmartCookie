@@ -6,8 +6,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { ShieldAlert, ArrowLeft, Users2, BookOpen } from 'lucide-react';
-import { RoleManagement } from '../../rbac/pages/RoleManagement';
+import { ArrowLeft, Users2, BookOpen } from 'lucide-react';
 import { UserGroupManagement } from '../../organization/pages/UserGroupManagement';
 import { AssignmentManagement } from '../../assignments/pages/AssignmentManagement';
 import { ContentManagement } from '../../assignments/pages/ContentManagement';
@@ -17,18 +16,19 @@ import { usePermission } from '../../../shared/hooks/usePermission';
 export const Management: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [view, setView] = useState<'hub' | 'roles' | 'organization' | 'assignments'>('hub');
+  const [view, setView] = useState<'hub' | 'organization' | 'assignments'>('hub');
   const [assignmentsSubTab, setAssignmentsSubTab] = useState<'dispatcher' | 'catalog'>('dispatcher');
 
   const hasRolesManage = usePermission('roles', 'manage');
-  
+  const hasUsersView = usePermission('users', 'view');
   const hasOrgView = usePermission('organization', 'view');
   const hasOrgCreate = usePermission('organization', 'create');
   const hasOrgEdit = usePermission('organization', 'edit');
   const hasOrgDelete = usePermission('organization', 'delete');
   const hasOrgManageMembers = usePermission('organization', 'manage-members');
   const hasOrgManageGroups = usePermission('organization', 'manage-groups');
-  const hasOrgAccess = hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups;
+  const hasOrgAccess = hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups || hasUsersView;
+  const hasPeopleAccess = hasRolesManage || hasOrgAccess;
 
   const hasAssignmentsAccess =
     usePermission('assignments', 'view') ||
@@ -65,8 +65,6 @@ export const Management: React.FC = () => {
             <h1 className="text-2xl font-bold tracking-tight text-text-heading sm:text-3xl font-sans">
               {view === 'hub'
                 ? t('management.titleHub')
-                : view === 'roles'
-                ? t('management.roles')
                 : view === 'organization'
                 ? t('management.userGroupManagement')
                 : t('management.assignments')}
@@ -74,8 +72,6 @@ export const Management: React.FC = () => {
             <p className="mt-1.5 text-sm text-text-muted max-w-2xl font-sans">
               {view === 'hub'
                 ? t('management.hubSubtitle')
-                : view === 'roles'
-                ? t('management.rolesSubtitle')
                 : view === 'organization'
                 ? t('management.userGroupManagementSubtitle')
                 : t('management.assignmentsSubtitle')}
@@ -99,32 +95,8 @@ export const Management: React.FC = () => {
 
       {/* Hub View: Grid of Navigation Cards */}
       {view === 'hub' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6" id="management-hub-grid">
-          {hasRolesManage && (
-            <motion.button
-              whileHover={{ y: -3, scale: 1.01 }}
-              whileTap={{ y: 0, scale: 0.99 }}
-              onClick={() => setView('roles')}
-              className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
-              id="card-role-mgmt"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
-                <ShieldAlert className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg font-bold text-text-heading font-sans">
-                {t('management.roles')}
-              </h3>
-              <p className="text-sm text-text-muted mt-2 font-sans">
-                {t('management.rolesDesc')}
-              </p>
-              <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
-                <span>{t('management.managePermissionsBtn')}</span>
-                <span>&rarr;</span>
-              </span>
-            </motion.button>
-          )}
-
-          {hasOrgAccess && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="management-hub-grid">
+          {hasPeopleAccess && (
             <motion.button
               whileHover={{ y: -3, scale: 1.01 }}
               whileTap={{ y: 0, scale: 0.99 }}
@@ -175,12 +147,6 @@ export const Management: React.FC = () => {
       )}
 
       {/* Sub-Views */}
-      {view === 'roles' && (
-        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm" id="roles-subview">
-          <RoleManagement />
-        </div>
-      )}
-
       {view === 'organization' && (
         <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm" id="org-subview">
           <UserGroupManagement />

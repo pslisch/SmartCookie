@@ -77,6 +77,7 @@ function AppContent({ appName }: { appName: string }) {
   
   const hasManagementAccess = 
     usePermission('roles', 'manage') || 
+    usePermission('users', 'view') || 
     usePermission('organization', 'view') || 
     usePermission('organization', 'manage-members') || 
     usePermission('organization', 'manage-groups') || 
