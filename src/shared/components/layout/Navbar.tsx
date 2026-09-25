@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Tab } from '../../types';
-import { User, Menu, X, BookOpen, Compass, Languages, Settings, LayoutDashboard, Eye, Sun, Moon } from 'lucide-react';
+import { User, Menu, X, BookOpen, Compass, Languages, LayoutDashboard, Eye, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -47,16 +47,13 @@ export const Navbar: React.FC<NavbarProps> = ({
     usePermission('assignments', 'assign-own-groups') || 
     usePermission('assignments', 'assign-globally') || 
     usePermission('assignments', 'view-reports') || 
-    usePermission('assignments', 'create-mandatory');
-
-  const canManageFields = usePermission('profile-fields', 'manage-fields');
-  const canViewThemes = usePermission('theme', 'view');
-  const hasNotificationAccess =
+    usePermission('assignments', 'create-mandatory') ||
+    usePermission('profile-fields', 'manage-fields') ||
+    usePermission('theme', 'view') ||
     usePermission('notifications', 'manage-rules') ||
     usePermission('notifications', 'view-delivery-failures') ||
     usePermission('notifications', 'manage-scheduled') ||
     usePermission('notifications', 'manage-templates');
-  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || hasNotificationAccess;
 
   const canPreview = usePermission('preview', 'use');
   const [eligibleRoles, setEligibleRoles] = useState<Array<{ id: string; name: string }>>([]);
@@ -124,10 +121,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       handleTabSelect(Tab.MyLessons);
     } else if (path === '/catalog' || path.startsWith('/catalog')) {
       handleTabSelect(Tab.Catalog);
-    } else if (path === '/management' || path.startsWith('/management')) {
+    } else if (path === '/management' || path.startsWith('/management') || path === '/settings' || path.startsWith('/settings')) {
       handleTabSelect(Tab.Management);
-    } else if (path === '/settings' || path.startsWith('/settings')) {
-      handleTabSelect(Tab.Settings);
     } else if (path === '/profile' || path.startsWith('/profile')) {
       handleTabSelect(Tab.Profile);
     } else if (path.startsWith('/')) {
@@ -235,26 +230,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <LayoutDashboard className="h-4 w-4" />
                 <span>{t('nav.management')}</span>
                 {currentTab === Tab.Management && (
-                  <motion.div
-                    layoutId="active-tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-nav-text-active rounded-full"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
-              </button>
-            )}
-
-            {hasSettingsAccess && (
-              <button
-                onClick={() => handleTabSelect(Tab.Settings)}
-                className={`relative flex items-center space-x-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-                  currentTab === Tab.Settings ? 'text-nav-text-active' : 'text-nav-text hover:text-text-heading'
-                }`}
-                id="tab-settings-desktop"
-              >
-                <Settings className="h-4 w-4" />
-                <span>{t('nav.settings')}</span>
-                {currentTab === Tab.Settings && (
                   <motion.div
                     layoutId="active-tab-indicator"
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-nav-text-active rounded-full"
@@ -415,19 +390,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               )}
 
-              {hasSettingsAccess && (
-                <button
-                  onClick={() => handleTabSelect(Tab.Settings)}
-                  className={`flex w-full items-center space-x-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
-                    currentTab === Tab.Settings ? 'bg-status-info-bg text-nav-text-active' : 'text-nav-text hover:bg-card-header-bg hover:text-text-heading'
-                  }`}
-                  id="tab-settings-mobile"
-                >
-                  <Settings className="h-5 w-5" />
-                  <span>{t('nav.settings')}</span>
-                </button>
-              )}
-
               <div className="border-t border-card-border my-2 pt-2 space-y-1">
                 {canPreview && eligibleRoles.length > 0 && (
                   <div className="px-4 py-2 space-y-1" id="mobile-preview-picker">
@@ -458,38 +420,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   <LanguageSwitcher variant="mobile" />
                 </div>
-
-                <div className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-base font-semibold text-nav-text hover:bg-card-header-bg transition-colors" id="mobile-theme-row">
-                  <div className="flex items-center space-x-2.5">
-                    {isDarkMode ? <Sun className="h-5 w-5 text-status-warning-text" /> : <Moon className="h-5 w-5 text-text-muted" />}
-                    <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-                  </div>
-                  <button
-                    onClick={toggleDisplayMode}
-                    className="px-3 py-1.5 bg-bg-subtle hover:bg-card-border text-xs font-semibold text-text-body rounded-lg transition duration-150 border border-card-border"
-                    id="mobile-theme-toggle-btn"
-                  >
-                    {isDarkMode ? 'Switch to Light' : 'Switch to Dark'}
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => handleTabSelect(Tab.Profile)}
-                  className={`flex w-full items-center space-x-2.5 rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
-                    currentTab === Tab.Profile ? 'bg-status-info-bg text-nav-text-active' : 'text-nav-text hover:bg-card-header-bg hover:text-text-heading'
-                  }`}
-                  id="tab-account-mobile"
-                >
-                  <User className="h-5 w-5" />
-                  <span>{t('nav.account')}</span>
-                </button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Paginated History Modal */}
       <NotificationHistoryModal
         isOpen={showNotificationHistory}
         onClose={() => setShowNotificationHistory(false)}

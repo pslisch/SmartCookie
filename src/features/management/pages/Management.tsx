@@ -6,19 +6,23 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { ArrowLeft, Users2, BookOpen } from 'lucide-react';
+import { ArrowLeft, Users2, BookOpen, Settings2, Palette, Bell } from 'lucide-react';
 import { UserGroupManagement } from '../../organization/pages/UserGroupManagement';
 import { AssignmentManagement } from '../../assignments/pages/AssignmentManagement';
 import { ContentManagement } from '../../assignments/pages/ContentManagement';
+import { FieldBuilder } from '../../profiles/pages/FieldBuilder';
+import { ThemeManagement } from '../../theme/pages/ThemeManagement';
+import { NotificationsHub } from '../../notifications/pages/NotificationsHub';
 import { useAuth } from '../../../shared/components/AppGate';
 import { usePermission } from '../../../shared/hooks/usePermission';
 
 export const Management: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [view, setView] = useState<'hub' | 'organization' | 'assignments'>('hub');
+  const [view, setView] = useState<'hub' | 'organization' | 'assignments' | 'fields' | 'theme' | 'notifications'>('hub');
   const [assignmentsSubTab, setAssignmentsSubTab] = useState<'dispatcher' | 'catalog'>('dispatcher');
 
+  // People & Access permissions
   const hasRolesManage = usePermission('roles', 'manage');
   const hasUsersView = usePermission('users', 'view');
   const hasOrgView = usePermission('organization', 'view');
@@ -30,6 +34,7 @@ export const Management: React.FC = () => {
   const hasOrgAccess = hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups || hasUsersView;
   const hasPeopleAccess = hasRolesManage || hasOrgAccess;
 
+  // Assignments & Content permissions
   const hasAssignmentsAccess =
     usePermission('assignments', 'view') ||
     usePermission('assignments', 'create') ||
@@ -39,6 +44,19 @@ export const Management: React.FC = () => {
     usePermission('assignments', 'assign-globally') ||
     usePermission('assignments', 'view-reports') ||
     usePermission('assignments', 'create-mandatory');
+
+  // Field Builder permissions
+  const canManageFields = usePermission('profile-fields', 'manage-fields');
+
+  // Theme Management permissions
+  const canViewThemes = usePermission('theme', 'view');
+
+  // Notifications permissions
+  const canManageNotificationRules = usePermission('notifications', 'manage-rules');
+  const canViewDeliveryFailures = usePermission('notifications', 'view-delivery-failures');
+  const canManageScheduledNotifications = usePermission('notifications', 'manage-scheduled');
+  const canManageEmailTemplates = usePermission('notifications', 'manage-templates');
+  const hasNotificationAccess = canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications || canManageEmailTemplates;
 
   return (
     <motion.div
@@ -67,14 +85,26 @@ export const Management: React.FC = () => {
                 ? t('management.titleHub')
                 : view === 'organization'
                 ? t('management.userGroupManagement')
-                : t('management.assignments')}
+                : view === 'assignments'
+                ? t('management.assignments')
+                : view === 'fields'
+                ? t('settings.fieldBuilder')
+                : view === 'theme'
+                ? t('settings.themeManagement')
+                : t('settings.notifications')}
             </h1>
             <p className="mt-1.5 text-sm text-text-muted max-w-2xl font-sans">
               {view === 'hub'
                 ? t('management.hubSubtitle')
                 : view === 'organization'
                 ? t('management.userGroupManagementSubtitle')
-                : t('management.assignmentsSubtitle')}
+                : view === 'assignments'
+                ? t('management.assignmentsSubtitle')
+                : view === 'fields'
+                ? t('settings.fieldBuilderSubtitle')
+                : view === 'theme'
+                ? t('settings.themeManagementSubtitle')
+                : t('settings.notificationsSubtitle')}
             </p>
           </div>
         </div>
@@ -95,7 +125,7 @@ export const Management: React.FC = () => {
 
       {/* Hub View: Grid of Navigation Cards */}
       {view === 'hub' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="management-hub-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="management-hub-grid">
           {hasPeopleAccess && (
             <motion.button
               whileHover={{ y: -3, scale: 1.01 }}
@@ -143,18 +173,90 @@ export const Management: React.FC = () => {
               </span>
             </motion.button>
           )}
+
+          {canManageFields && (
+            <motion.button
+              whileHover={{ y: -3, scale: 1.01 }}
+              whileTap={{ y: 0, scale: 0.99 }}
+              onClick={() => setView('fields')}
+              className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
+              id="card-field-builder"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
+                <Settings2 className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-text-heading font-sans">
+                {t('settings.fieldBuilder')}
+              </h3>
+              <p className="text-sm text-text-muted mt-2 font-sans">
+                {t('settings.fieldBuilderDesc')}
+              </p>
+              <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
+                <span>{t('settings.manageFieldsBtn')}</span>
+                <span>&rarr;</span>
+              </span>
+            </motion.button>
+          )}
+
+          {canViewThemes && (
+            <motion.button
+              whileHover={{ y: -3, scale: 1.01 }}
+              whileTap={{ y: 0, scale: 0.99 }}
+              onClick={() => setView('theme')}
+              className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
+              id="card-theme-management"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
+                <Palette className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-text-heading font-sans">
+                {t('settings.themeManagement')}
+              </h3>
+              <p className="text-sm text-text-muted mt-2 font-sans">
+                {t('settings.themeManagementDesc')}
+              </p>
+              <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
+                <span>{t('settings.manageThemesBtn')}</span>
+                <span>&rarr;</span>
+              </span>
+            </motion.button>
+          )}
+
+          {hasNotificationAccess && (
+            <motion.button
+              whileHover={{ y: -3, scale: 1.01 }}
+              whileTap={{ y: 0, scale: 0.99 }}
+              onClick={() => setView('notifications')}
+              className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
+              id="card-notifications"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
+                <Bell className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-text-heading font-sans">
+                {t('settings.notifications')}
+              </h3>
+              <p className="text-sm text-text-muted mt-2 font-sans">
+                {t('settings.notificationsDesc')}
+              </p>
+              <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
+                <span>{t('settings.manageNotificationsBtn')}</span>
+                <span>&rarr;</span>
+              </span>
+            </motion.button>
+          )}
         </div>
       )}
 
       {/* Sub-Views */}
-      {view === 'organization' && (
-        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm" id="org-subview">
+      {view === 'organization' && hasPeopleAccess && (
+        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="org-subview">
           <UserGroupManagement />
         </div>
       )}
 
-      {view === 'assignments' && (
-        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm" id="assignments-subview">
+      {view === 'assignments' && hasAssignmentsAccess && (
+        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="assignments-subview">
           {/* Sub-tabs for assignments module */}
           <div className="flex border-b border-card-border pb-2 mb-6 gap-6" id="assignments-subtabs">
             <button
@@ -186,6 +288,24 @@ export const Management: React.FC = () => {
           ) : (
             <ContentManagement />
           )}
+        </div>
+      )}
+
+      {view === 'fields' && canManageFields && (
+        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="fields-subview">
+          <FieldBuilder />
+        </div>
+      )}
+
+      {view === 'theme' && canViewThemes && (
+        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="theme-subview">
+          <ThemeManagement />
+        </div>
+      )}
+
+      {view === 'notifications' && hasNotificationAccess && (
+        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="notifications-subview">
+          <NotificationsHub />
         </div>
       )}
     </motion.div>

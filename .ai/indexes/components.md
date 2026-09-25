@@ -80,26 +80,19 @@ Every registered component should include:
 - **Used By**: `src/shared/components/AppGate.tsx`
 - **Dependencies**: React, `react-i18next`, `motion/react`, Lucide Icons
 
-### 8. `Settings`
-- **Location**: `src/features/rbac/pages/Settings.tsx`
-- **Purpose**: Superuser-only settings and configuration panel showing an empty state until further configurable system features are added. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-text-heading`, `text-text-muted`).
+### 8. `Management`
+- **Location**: `src/features/management/pages/Management.tsx`
+- **Purpose**: Consolidated centralized administration and oversight hub presenting gated cards for Users, Groups & Roles (`#card-org-mgmt`), Content Management (`#card-assignment-mgmt`), Field Builder (`#card-field-builder`), Theme Management (`#card-theme-management`), and Notifications (`#card-notifications`).
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx`
-- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, Lucide Icons
+- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `usePermission`, `UserGroupManagement`, `AssignmentManagement`, `ContentManagement`, `FieldBuilder`, `ThemeManagement`, `NotificationsHub`, Lucide Icons
 
 ### 9. `RoleManagement`
 - **Location**: `src/features/rbac/pages/RoleManagement.tsx`
-- **Purpose**: Full-featured interactive administrator interface to view roles, create/duplicate/delete custom roles, map parent inheritance options, and configure modular permission grids. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `card-header-bg`, `btn-primary-*`, `status-*`, `text-*`).
+- **Purpose**: Full-featured interactive administrator interface to view roles, create/duplicate/delete custom roles, map parent inheritance options, and configure modular permission grids. Rendered inside the 5th tab ("Roles") of `UserGroupManagement.tsx`.
 - **Props**: None (Self-contained).
-- **Used By**: `src/features/management/pages/Management.tsx`
+- **Used By**: `src/features/organization/pages/UserGroupManagement.tsx`
 - **Dependencies**: React, `react-i18next`, Lucide Icons, Fetch API, CSRF Token helper
-
-### 10. `Management`
-- **Location**: `src/features/management/pages/Management.tsx`
-- **Purpose**: Centralized administration and oversight hub presenting gated cards for Role Management, User & Group Management, and Content Management. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-text-heading`, `text-text-muted`).
-- **Props**: None (Self-contained).
-- **Used By**: `src/App.tsx`
-- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `usePermission`, `RoleManagement`, `UserGroupManagement`, `AssignmentManagement`, `ContentManagement`, Lucide Icons
 
 ### 11. `AssignmentManagement`
 - **Location**: `src/features/assignments/pages/AssignmentManagement.tsx`
@@ -181,7 +174,7 @@ Every registered component should include:
 - **Location**: `src/features/profiles/pages/FieldBuilder.tsx`
 - **Purpose**: Dynamic category and custom field management interface allowing administrator configuration of profile attribute mappings, orderings, types, regex validation rules, default values, and role-based editing authorizations.
 - **Props**: None (Self-contained panel).
-- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Used By**: `src/features/management/pages/Management.tsx` (Field Builder view)
 - **Dependencies**: React, Lucide Icons, `motion/react`, `react-i18next`
 
 ### 21. `RequiredFieldReminder`
@@ -239,7 +232,7 @@ Every registered component should include:
 - **Location**: `src/features/theme/pages/ThemeManagement.tsx`
 - **Purpose**: Administration dashboard listing tenant themes categorized by status (`ACTIVE`, `SCHEDULED`, `READY`, `DRAFT`), presenting status chips, template cloning modal, test mode launch/exit, lock collision warnings, deletion modals, and activation failure alert banners with dismiss actions.
 - **Props**: None.
-- **Used By**: `src/features/rbac/pages/Settings.tsx` (Theme tab)
+- **Used By**: `src/features/management/pages/Management.tsx` (Theme Management view)
 - **Dependencies**: React, `lucide-react`, `motion/react`, `useThemeRuntime`, `usePermission`
 
 ### 28. `ThemeEditor`
@@ -379,7 +372,7 @@ Every registered component should include:
 - **Location**: `src/features/notifications/pages/NotificationsHub.tsx`
 - **Purpose**: Consolidated administration hub for all notification capabilities (replacing the four separate Settings hub cards). Houses sub-tabs for Notification Rules, Delivery Failures, Scheduled Notifications, and Email Templates. Features individually permission-gated tab buttons (`notifications:manage-rules`, `notifications:view-delivery-failures`, `notifications:manage-scheduled`, `notifications:manage-templates`) with automatic first-permitted tab selection, tab transition animation, and isolated sub-view component rendering (`NotificationRuleManagement`, `DeliveryFailures`, `ScheduledNotificationManagement`, `EmailTemplateManagement`).
 - **Props**: None (page component)
-- **Used By**: `src/features/rbac/pages/Settings.tsx`
+- **Used By**: `src/features/management/pages/Management.tsx` (Notifications view)
 - **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `usePermission.ts`, `NotificationRuleManagement.tsx`, `DeliveryFailures.tsx`, `ScheduledNotificationManagement.tsx`, `EmailTemplateManagement.tsx`
 
 

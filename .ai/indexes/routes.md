@@ -58,38 +58,37 @@ Every listed visual route should eventually document:
 - **Guards**: Public token verification hook in `AppGate`
 - **Permissions**: Public access with valid password-reset token
 
-### 8. System Settings
-- **Path**: Local State Tab & Hash URL (`#settings`)
-- **Component**: `src/features/rbac/pages/Settings.tsx`
-- **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend check for admin permissions (`roles:manage`, `profile-fields:manage-fields`, `identity-providers:view-config`, `theme:view`)
-- **Permissions**: Requires active session with relevant administrative permissions (`roles:manage`, `profile-fields:manage-fields`, `identity-providers:view-config`, `theme:view`) or Superuser status
-- **Tabs**: Roles, Fields, Notifications, Identity Providers, and Theme & Branding (`ThemeManagement.tsx`)
-
-### 9. Management Hub
-- **Path**: Local State Tab & Hash URL (`#management`)
+### 8. Management Hub (Consolidated Administrative Hub)
+- **Path**: Local State Tab & Hash URL (`#management`, legacy `#settings` redirects to `#management`)
 - **Component**: `src/features/management/pages/Management.tsx`
 - **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend permission check (bounces to `my-lessons` if no administrative permission)
-- **Permissions**: Requires active session with administrative permissions (e.g., `assignments:view`, `roles:manage`, etc., Superuser bypasses)
+- **Permissions**: Requires active session with any administrative permission (`roles:manage`, `users:view`, `organization:*`, `assignments:*`, `profile-fields:manage-fields`, `theme:view`, `notifications:*`, or Superuser)
+- **Hub Cards**:
+  - **Users, Groups & Roles** (`#card-org-mgmt`): 5-tab workspace (`Users`, `Organization Structure`, `Learning Groups`, `Expiring Groups`, `Roles`) with per-tab permission gating.
+  - **Content Management** (`#card-assignment-mgmt`): Course/lesson catalog and distribution dispatcher.
+  - **Field Builder** (`#card-field-builder`): Profile field categories and dynamic attribute builder (`FieldBuilder.tsx`).
+  - **Theme Management** (`#card-theme-management`): Theme and branding customization dashboard (`ThemeManagement.tsx`).
+  - **Notifications** (`#card-notifications`): Consolidated notifications hub with permission-gated sub-tabs for Rules, Delivery Failures, Scheduled Notifications, and Email Templates (`NotificationsHub.tsx`).
 
-### 10. Full User Profile
+### 9. Full User Profile
 - **Path**: Local State Tab & Hash URL (`#profile`)
 - **Component**: `src/features/profiles/pages/FullProfile.tsx`
 - **Guards**: `AppGate` session verification (bounces to login if no active session)
 - **Permissions**: Authenticated user (Status: `ACTIVE`)
 
-### 11. Confirm Email Change
+### 10. Confirm Email Change
 - **Path**: Custom action segment (`/confirm-email?token=...`)
 - **Component**: `src/features/auth/pages/ConfirmEmail.tsx`
 - **Guards**: Intercepted in `AppGate` as a public action
 - **Permissions**: Public access with valid email-change token
 
-### 12. SCORM Content Preview Player
+### 11. SCORM Content Preview Player
 - **Path**: Full-screen standalone URL (`/preview/content/:contentId`)
 - **Component**: `src/features/content/components/ScormPreviewPlayer.tsx`
 - **Guards**: Intercepted in `App.tsx` before main shell rendering; provides untracked in-memory preview
 - **Permissions**: Authenticated session with `content:view` permission
 
-### 13. Theme Test Mode Parameter Override
+### 12. Theme Test Mode Parameter Override
 - **Path**: Any application route with `?test=:themeId` URL query parameter
 - **Component**: Global application shell (`Shell.tsx`) with `ThemeTestBanner.tsx` and `ThemeRuntimeContext.tsx`
 - **Guards**: Intercepted by `ThemeRuntimeContext` and server `ThemeResolutionService`. Validates caller session and permissions; if the theme does not exist or user lacks permission, quietly falls back to active company theme.

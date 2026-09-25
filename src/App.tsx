@@ -11,7 +11,6 @@ import { PreviewBanner } from './shared/components/PreviewBanner';
 import { Footer } from './shared/components/layout/Footer';
 import { MyLessons } from './features/lessons/pages/MyLessons';
 import { Catalog } from './features/catalog/pages/Catalog';
-import { Settings } from './features/rbac/pages/Settings';
 import { Management } from './features/management/pages/Management';
 import { FullProfile } from './features/profiles/pages/FullProfile';
 import { AppGate, useAuth } from './shared/components/AppGate';
@@ -45,21 +44,31 @@ const getPreviewContentId = (): string | null => {
 const getInitialTab = (): Tab => {
   // 1. Check if there was an attempted tab saved before login
   const saved = localStorage.getItem('attemptedTab');
-  if (saved && (saved === 'catalog' || saved === 'my-lessons' || saved === 'settings' || saved === 'management' || saved === 'profile')) {
+  if (saved === 'settings') {
+    localStorage.removeItem('attemptedTab');
+    return Tab.Management;
+  }
+  if (saved && (saved === 'catalog' || saved === 'my-lessons' || saved === 'management' || saved === 'profile')) {
     localStorage.removeItem('attemptedTab');
     return saved as Tab;
   }
 
-  // 2. Check URL hash
+  // 2. Check URL hash (redirecting legacy #settings to #management)
   const hash = window.location.hash.replace('#', '');
-  if (hash && (hash === 'catalog' || hash === 'my-lessons' || hash === 'settings' || hash === 'management' || hash === 'profile')) {
+  if (hash === 'settings') {
+    return Tab.Management;
+  }
+  if (hash && (hash === 'catalog' || hash === 'my-lessons' || hash === 'management' || hash === 'profile')) {
     return hash as Tab;
   }
 
   // 3. Check query param
   const urlParams = new URLSearchParams(window.location.search);
   const tabParam = urlParams.get('tab');
-  if (tabParam && (tabParam === 'catalog' || tabParam === 'my-lessons' || tabParam === 'settings' || tabParam === 'management' || tabParam === 'profile')) {
+  if (tabParam === 'settings') {
+    return Tab.Management;
+  }
+  if (tabParam && (tabParam === 'catalog' || tabParam === 'my-lessons' || tabParam === 'management' || tabParam === 'profile')) {
     return tabParam as Tab;
   }
 
@@ -86,31 +95,25 @@ function AppContent({ appName }: { appName: string }) {
     usePermission('assignments', 'assign-own-groups') || 
     usePermission('assignments', 'assign-globally') || 
     usePermission('assignments', 'view-reports') || 
-    usePermission('assignments', 'create-mandatory');
-
-  const canManageFields = usePermission('profile-fields', 'manage-fields');
-  const canViewThemes = usePermission('theme', 'view');
-  const hasNotificationAccess =
+    usePermission('assignments', 'create-mandatory') ||
+    usePermission('profile-fields', 'manage-fields') ||
+    usePermission('theme', 'view') ||
     usePermission('notifications', 'manage-rules') ||
     usePermission('notifications', 'view-delivery-failures') ||
     usePermission('notifications', 'manage-scheduled') ||
     usePermission('notifications', 'manage-templates');
-  const hasSettingsAccess = !!user?.isSuperuser || canManageFields || canViewThemes || hasNotificationAccess;
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {
     window.location.hash = currentTab;
   }, [currentTab]);
 
-  // Fallback if settings or management tab is selected but user has no permission
+  // Fallback if management tab is selected but user has no permission
   useEffect(() => {
-    if (currentTab === Tab.Settings && !hasSettingsAccess) {
-      setCurrentTab(Tab.MyLessons);
-    }
     if (currentTab === Tab.Management && !hasManagementAccess) {
       setCurrentTab(Tab.MyLessons);
     }
-  }, [currentTab, hasSettingsAccess, hasManagementAccess]);
+  }, [currentTab, hasManagementAccess]);
 
   return (
     <Shell>
@@ -134,8 +137,6 @@ function AppContent({ appName }: { appName: string }) {
           <Catalog />
         ) : currentTab === Tab.Management && hasManagementAccess ? (
           <Management />
-        ) : currentTab === Tab.Settings && hasSettingsAccess ? (
-          <Settings />
         ) : currentTab === Tab.Profile ? (
           <FullProfile />
         ) : (
