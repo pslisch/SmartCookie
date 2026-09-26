@@ -952,7 +952,12 @@
       "titleLabel": "Title",
       "lessonPlaceholder": "Enter lesson title...",
       "coursePlaceholder": "Enter course title...",
-      "createBtn": "Create"
+      "createBtn": "Create",
+      "modeBlank": "Blank Lesson",
+      "modeImport": "Import Package",
+      "selectPackageType": "Select a package format to upload and convert into a lesson:",
+      "packageScormTitle": "SCORM Package (.zip)",
+      "packageScormDesc": "Upload a SCORM 1.2 package archive containing imsmanifest.xml."
     },
     "messages": {
       "fetchLessonsError": "Failed to load lessons.",

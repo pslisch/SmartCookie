@@ -129,6 +129,30 @@ export const ContentManagement: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportWizard, setShowImportWizard] = useState(false);
   const [titleInput, setTitleInput] = useState('');
+  const [lessonCreationMode, setLessonCreationMode] = useState<'blank' | 'import'>('blank');
+
+  interface PackageImportOption {
+    id: string;
+    name: string;
+    description: string;
+    badge?: string;
+    icon: React.ElementType;
+    onSelect: () => void;
+  }
+
+  const packageImportOptions: PackageImportOption[] = [
+    {
+      id: 'scorm',
+      name: t('content.createModal.packageScormTitle', 'SCORM Package (.zip)'),
+      description: t('content.createModal.packageScormDesc', 'Upload a SCORM 1.2 package archive containing imsmanifest.xml.'),
+      badge: 'SCORM 1.2',
+      icon: Upload,
+      onSelect: () => {
+        setShowCreateModal(false);
+        setShowImportWizard(true);
+      },
+    },
+  ];
 
   // Version History Modal
   const [historyGroupId, setHistoryGroupId] = useState<string | null>(null);
@@ -570,6 +594,8 @@ export const ContentManagement: React.FC = () => {
             onClick={() => {
               setError('');
               setSuccess('');
+              setLessonCreationMode('blank');
+              setTitleInput('');
               setShowCreateModal(true);
             }}
             className="flex items-center justify-center space-x-1.5 rounded-xl bg-link-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-link-primary-hover"
@@ -1174,52 +1200,136 @@ export const ContentManagement: React.FC = () => {
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="text-text-muted hover:text-text-heading"
+                id="btn-close-create-modal"
               >
                 {t('content.createModal.cancelBtn')}
               </button>
             </div>
 
-            <form
-              onSubmit={activeTab === 'lessons' ? handleCreateLesson : handleCreateCourse}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
-                  {t('content.createModal.titleLabel')}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={titleInput}
-                  onChange={(e) => setTitleInput(e.target.value)}
-                  placeholder={
-                    activeTab === 'lessons' ? t('content.createModal.lessonPlaceholder') : t('content.createModal.coursePlaceholder')
-                  }
-                  className="w-full rounded-xl border border-card-border bg-card-bg px-3.5 py-2.5 text-sm font-bold text-text-heading placeholder-text-muted shadow-sm focus:border-link-primary focus:outline-none"
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-2">
+            {/* Mode selection for Lessons: Blank Lesson vs Import Package */}
+            {activeTab === 'lessons' && (
+              <div className="flex rounded-xl bg-card-header-bg p-1 border border-card-border mb-4" id="lesson-creation-mode-tabs">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 rounded-xl border border-card-border px-4 py-2.5 text-sm font-bold text-text-muted hover:bg-card-header-bg transition-colors"
+                  onClick={() => setLessonCreationMode('blank')}
+                  className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    lessonCreationMode === 'blank'
+                      ? 'bg-card-bg text-text-heading shadow-xs'
+                      : 'text-text-muted hover:text-text-body'
+                  }`}
+                  id="btn-mode-blank"
                 >
-                  {t('content.createModal.cancelBtn')}
+                  {t('content.createModal.modeBlank', 'Blank Lesson')}
                 </button>
                 <button
-                  type="submit"
-                  disabled={isActionLoading || !titleInput.trim()}
-                  className="flex-1 rounded-xl bg-link-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-link-primary-hover transition-colors disabled:opacity-50 flex items-center justify-center space-x-1.5"
+                  type="button"
+                  onClick={() => setLessonCreationMode('import')}
+                  className={`flex-1 py-1.5 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    lessonCreationMode === 'import'
+                      ? 'bg-card-bg text-text-heading shadow-xs'
+                      : 'text-text-muted hover:text-text-body'
+                  }`}
+                  id="btn-mode-import"
                 >
-                  {isActionLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <span>{t('content.createModal.createBtn')}</span>
-                  )}
+                  {t('content.createModal.modeImport', 'Import Package')}
                 </button>
               </div>
-            </form>
+            )}
+
+            {activeTab === 'lessons' && lessonCreationMode === 'import' ? (
+              <div className="space-y-4" id="import-package-options-view">
+                <p className="text-xs text-text-muted">
+                  {t('content.createModal.selectPackageType', 'Select a package format to upload and convert into a lesson:')}
+                </p>
+                <div className="space-y-2">
+                  {packageImportOptions.map((pkg) => (
+                    <button
+                      key={pkg.id}
+                      type="button"
+                      onClick={pkg.onSelect}
+                      className="w-full flex items-center justify-between p-3.5 rounded-xl border border-card-border bg-card-bg hover:bg-card-header-bg hover:border-link-primary transition-all text-left group shadow-xs cursor-pointer"
+                      id={`btn-import-package-${pkg.id}`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-status-info-bg text-link-primary group-hover:scale-105 transition-transform">
+                          <pkg.icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-bold text-text-heading group-hover:text-link-primary transition-colors">
+                              {pkg.name}
+                            </span>
+                            {pkg.badge && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-card-header-bg text-text-muted border border-card-border">
+                                {pkg.badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-text-muted mt-0.5">
+                            {pkg.description}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-link-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-end pt-2 border-t border-card-border">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="rounded-xl border border-card-border px-4 py-2 text-xs font-bold text-text-muted hover:bg-card-header-bg transition-colors cursor-pointer"
+                    id="btn-cancel-package-import"
+                  >
+                    {t('content.createModal.cancelBtn')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form
+                onSubmit={activeTab === 'lessons' ? handleCreateLesson : handleCreateCourse}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5">
+                    {t('content.createModal.titleLabel')}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={titleInput}
+                    onChange={(e) => setTitleInput(e.target.value)}
+                    placeholder={
+                      activeTab === 'lessons' ? t('content.createModal.lessonPlaceholder') : t('content.createModal.coursePlaceholder')
+                    }
+                    className="w-full rounded-xl border border-card-border bg-card-bg px-3.5 py-2.5 text-sm font-bold text-text-heading placeholder-text-muted shadow-sm focus:border-link-primary focus:outline-none"
+                    id="input-create-title"
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 rounded-xl border border-card-border px-4 py-2.5 text-sm font-bold text-text-muted hover:bg-card-header-bg transition-colors cursor-pointer"
+                  >
+                    {t('content.createModal.cancelBtn')}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isActionLoading || !titleInput.trim()}
+                    className="flex-1 rounded-xl bg-link-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-link-primary-hover transition-colors disabled:opacity-50 flex items-center justify-center space-x-1.5 cursor-pointer"
+                    id="btn-submit-create"
+                  >
+                    {isActionLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <span>{t('content.createModal.createBtn')}</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </motion.div>
         </div>
       )}
