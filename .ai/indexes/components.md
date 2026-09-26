@@ -82,10 +82,10 @@ Every registered component should include:
 
 ### 8. `Management`
 - **Location**: `src/features/management/pages/Management.tsx`
-- **Purpose**: Consolidated centralized administration and oversight hub presenting gated cards for Users, Groups & Roles (`#card-org-mgmt`), Content Management (`#card-assignment-mgmt`), Field Builder (`#card-field-builder`), Theme Management (`#card-theme-management`), and Notifications (`#card-notifications`).
+- **Purpose**: Consolidated centralized administration and oversight hub presenting gated cards for Administration (`#card-org-mgmt`), Content Management (`#card-assignment-mgmt`), Theme Management (`#card-theme-management`), and Notifications (`#card-notifications`).
 - **Props**: None (Self-contained).
 - **Used By**: `src/App.tsx`
-- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `usePermission`, `UserGroupManagement`, `AssignmentManagement`, `ContentManagement`, `FieldBuilder`, `ThemeManagement`, `NotificationsHub`, Lucide Icons
+- **Dependencies**: React, `react-i18next`, `motion/react`, `useAuth`, `usePermission`, `UserGroupManagement`, `AssignmentManagement`, `ContentManagement`, `ThemeManagement`, `NotificationsHub`, Lucide Icons
 
 ### 9. `RoleManagement`
 - **Location**: `src/features/rbac/pages/RoleManagement.tsx`
@@ -174,7 +174,7 @@ Every registered component should include:
 - **Location**: `src/features/profiles/pages/FieldBuilder.tsx`
 - **Purpose**: Dynamic category and custom field management interface allowing administrator configuration of profile attribute mappings, orderings, types, regex validation rules, default values, and role-based editing authorizations.
 - **Props**: None (Self-contained panel).
-- **Used By**: `src/features/management/pages/Management.tsx` (Field Builder view)
+- **Used By**: `src/features/organization/pages/UserGroupManagement.tsx` (Profiles Data tab)
 - **Dependencies**: React, Lucide Icons, `motion/react`, `react-i18next`
 
 ### 21. `RequiredFieldReminder`
@@ -196,10 +196,10 @@ Every registered component should include:
 
 ### 23. `UserGroupManagement`
 - **Location**: `src/features/organization/pages/UserGroupManagement.tsx`
-- **Purpose**: Primary administration container page organizing Users, Learning Groups, Expiring Groups, and Organization Hierarchy tabs. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-*`, `link-primary`).
+- **Purpose**: Primary administration container page organizing Users, Organization Structure, Learning Groups, Expiring Groups, Roles, and Profiles Data tabs. Migrated to theme tokens (`bg-card-bg`, `border-card-border`, `text-*`, `link-primary`).
 - **Props**: None.
-- **Used By**: `src/features/management/pages/Management.tsx`
-- **Dependencies**: React, `lucide-react`, `react-i18next`
+- **Used By**: `src/features/management/pages/Management.tsx` (Administration card view)
+- **Dependencies**: React, `lucide-react`, `react-i18next`, `FieldBuilder`
 
 ### 24. `LearningGroupsTab`
 - **Location**: `src/features/organization/components/LearningGroupsTab.tsx`

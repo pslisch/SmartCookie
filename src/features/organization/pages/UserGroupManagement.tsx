@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { Layers, Users, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Layers, Users, AlertTriangle, ShieldCheck, Settings2 } from 'lucide-react';
 import { usePermission } from '../../../shared/hooks/usePermission';
 import { OrganizationStructureTab } from '../components/OrganizationStructureTab';
 import { LearningGroupsTab } from '../components/LearningGroupsTab';
 import { ExpiringGroupsTab } from '../components/ExpiringGroupsTab';
 import { UsersTab } from '../components/UsersTab';
 import { RoleManagement } from '../../rbac/pages/RoleManagement';
+import { FieldBuilder } from '../../profiles/pages/FieldBuilder';
 
-type TabType = 'users' | 'structure' | 'groups' | 'expiring' | 'roles';
+type TabType = 'users' | 'structure' | 'groups' | 'expiring' | 'roles' | 'profiles-data';
 
 export const UserGroupManagement: React.FC = () => {
   const { t } = useTranslation();
@@ -24,11 +25,13 @@ export const UserGroupManagement: React.FC = () => {
   const hasOrgManageMembers = usePermission('organization', 'manage-members');
   const hasOrgManageGroups = usePermission('organization', 'manage-groups');
   const hasOrgAccess = hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups;
+  const canManageFields = usePermission('profile-fields', 'manage-fields');
 
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     if (hasUsersView) return 'users';
     if (hasOrgAccess) return 'structure';
     if (hasRolesManage) return 'roles';
+    if (canManageFields) return 'profiles-data';
     return 'users';
   });
 
@@ -36,7 +39,8 @@ export const UserGroupManagement: React.FC = () => {
     const isCurrentTabAllowed = 
       (activeTab === 'users' && hasUsersView) ||
       (activeTab === 'roles' && hasRolesManage) ||
-      ((activeTab === 'structure' || activeTab === 'groups' || activeTab === 'expiring') && hasOrgAccess);
+      ((activeTab === 'structure' || activeTab === 'groups' || activeTab === 'expiring') && hasOrgAccess) ||
+      (activeTab === 'profiles-data' && canManageFields);
 
     if (!isCurrentTabAllowed) {
       if (hasUsersView) {
@@ -45,9 +49,11 @@ export const UserGroupManagement: React.FC = () => {
         setActiveTab('structure');
       } else if (hasRolesManage) {
         setActiveTab('roles');
+      } else if (canManageFields) {
+        setActiveTab('profiles-data');
       }
     }
-  }, [hasUsersView, hasOrgAccess, hasRolesManage, activeTab]);
+  }, [hasUsersView, hasOrgAccess, hasRolesManage, canManageFields, activeTab]);
 
   return (
     <div className="space-y-6" id="user-group-mgmt-container">
@@ -128,6 +134,21 @@ export const UserGroupManagement: React.FC = () => {
               <span>{t('organization.rolesTab', 'Roles')}</span>
             </button>
           )}
+
+          {canManageFields && (
+            <button
+              onClick={() => setActiveTab('profiles-data')}
+              className={`relative flex items-center space-x-2 py-4 px-1 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === 'profiles-data'
+                  ? 'border-link-primary text-link-primary'
+                  : 'border-transparent text-text-muted hover:text-text-body hover:border-card-border'
+              }`}
+              id="tab-btn-profiles-data"
+            >
+              <Settings2 className="h-4 w-4" />
+              <span>{t('organization.profilesDataTab', 'Profiles Data')}</span>
+            </button>
+          )}
         </nav>
       </div>
 
@@ -145,6 +166,7 @@ export const UserGroupManagement: React.FC = () => {
         {activeTab === 'groups' && hasOrgAccess && <LearningGroupsTab />}
         {activeTab === 'expiring' && hasOrgAccess && <ExpiringGroupsTab />}
         {activeTab === 'roles' && hasRolesManage && <RoleManagement />}
+        {activeTab === 'profiles-data' && canManageFields && <FieldBuilder />}
       </motion.div>
     </div>
   );

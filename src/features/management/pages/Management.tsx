@@ -6,11 +6,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { ArrowLeft, Users2, BookOpen, Settings2, Palette, Bell } from 'lucide-react';
+import { ArrowLeft, Users2, BookOpen, Palette, Bell } from 'lucide-react';
 import { UserGroupManagement } from '../../organization/pages/UserGroupManagement';
 import { AssignmentManagement } from '../../assignments/pages/AssignmentManagement';
 import { ContentManagement } from '../../assignments/pages/ContentManagement';
-import { FieldBuilder } from '../../profiles/pages/FieldBuilder';
 import { ThemeManagement } from '../../theme/pages/ThemeManagement';
 import { NotificationsHub } from '../../notifications/pages/NotificationsHub';
 import { useAuth } from '../../../shared/components/AppGate';
@@ -19,10 +18,10 @@ import { usePermission } from '../../../shared/hooks/usePermission';
 export const Management: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [view, setView] = useState<'hub' | 'organization' | 'assignments' | 'fields' | 'theme' | 'notifications'>('hub');
+  const [view, setView] = useState<'hub' | 'organization' | 'assignments' | 'theme' | 'notifications'>('hub');
   const [assignmentsSubTab, setAssignmentsSubTab] = useState<'dispatcher' | 'catalog'>('dispatcher');
 
-  // People & Access permissions
+  // Administration (Users, Groups, Roles & Profile Fields) permissions
   const hasRolesManage = usePermission('roles', 'manage');
   const hasUsersView = usePermission('users', 'view');
   const hasOrgView = usePermission('organization', 'view');
@@ -32,7 +31,8 @@ export const Management: React.FC = () => {
   const hasOrgManageMembers = usePermission('organization', 'manage-members');
   const hasOrgManageGroups = usePermission('organization', 'manage-groups');
   const hasOrgAccess = hasOrgView || hasOrgCreate || hasOrgEdit || hasOrgDelete || hasOrgManageMembers || hasOrgManageGroups || hasUsersView;
-  const hasPeopleAccess = hasRolesManage || hasOrgAccess;
+  const canManageFields = usePermission('profile-fields', 'manage-fields');
+  const hasAdministrationAccess = hasRolesManage || hasOrgAccess || canManageFields;
 
   // Assignments & Content permissions
   const hasAssignmentsAccess =
@@ -44,9 +44,6 @@ export const Management: React.FC = () => {
     usePermission('assignments', 'assign-globally') ||
     usePermission('assignments', 'view-reports') ||
     usePermission('assignments', 'create-mandatory');
-
-  // Field Builder permissions
-  const canManageFields = usePermission('profile-fields', 'manage-fields');
 
   // Theme Management permissions
   const canViewThemes = usePermission('theme', 'view');
@@ -84,11 +81,9 @@ export const Management: React.FC = () => {
               {view === 'hub'
                 ? t('management.titleHub')
                 : view === 'organization'
-                ? t('management.userGroupManagement')
+                ? t('management.administration')
                 : view === 'assignments'
                 ? t('management.assignments')
-                : view === 'fields'
-                ? t('settings.fieldBuilder')
                 : view === 'theme'
                 ? t('settings.themeManagement')
                 : t('settings.notifications')}
@@ -97,11 +92,9 @@ export const Management: React.FC = () => {
               {view === 'hub'
                 ? t('management.hubSubtitle')
                 : view === 'organization'
-                ? t('management.userGroupManagementSubtitle')
+                ? t('management.administrationSubtitle')
                 : view === 'assignments'
                 ? t('management.assignmentsSubtitle')
-                : view === 'fields'
-                ? t('settings.fieldBuilderSubtitle')
                 : view === 'theme'
                 ? t('settings.themeManagementSubtitle')
                 : t('settings.notificationsSubtitle')}
@@ -126,7 +119,7 @@ export const Management: React.FC = () => {
       {/* Hub View: Grid of Navigation Cards */}
       {view === 'hub' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="management-hub-grid">
-          {hasPeopleAccess && (
+          {hasAdministrationAccess && (
             <motion.button
               whileHover={{ y: -3, scale: 1.01 }}
               whileTap={{ y: 0, scale: 0.99 }}
@@ -138,13 +131,13 @@ export const Management: React.FC = () => {
                 <Users2 className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-text-heading font-sans">
-                {t('management.userGroupManagement')}
+                {t('management.administration')}
               </h3>
               <p className="text-sm text-text-muted mt-2 font-sans">
-                {t('management.userGroupManagementDesc')}
+                {t('management.administrationDesc')}
               </p>
               <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
-                <span>{t('management.manageDirectoryBtn')}</span>
+                <span>{t('management.manageAdministrationBtn')}</span>
                 <span>&rarr;</span>
               </span>
             </motion.button>
@@ -169,30 +162,6 @@ export const Management: React.FC = () => {
               </p>
               <span className="text-xs text-status-success-text font-semibold mt-4 inline-flex items-center space-x-1">
                 <span>{t('management.manageAssignmentsBtn')}</span>
-                <span>&rarr;</span>
-              </span>
-            </motion.button>
-          )}
-
-          {canManageFields && (
-            <motion.button
-              whileHover={{ y: -3, scale: 1.01 }}
-              whileTap={{ y: 0, scale: 0.99 }}
-              onClick={() => setView('fields')}
-              className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
-              id="card-field-builder"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
-                <Settings2 className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg font-bold text-text-heading font-sans">
-                {t('settings.fieldBuilder')}
-              </h3>
-              <p className="text-sm text-text-muted mt-2 font-sans">
-                {t('settings.fieldBuilderDesc')}
-              </p>
-              <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
-                <span>{t('settings.manageFieldsBtn')}</span>
                 <span>&rarr;</span>
               </span>
             </motion.button>
@@ -249,7 +218,7 @@ export const Management: React.FC = () => {
       )}
 
       {/* Sub-Views */}
-      {view === 'organization' && hasPeopleAccess && (
+      {view === 'organization' && hasAdministrationAccess && (
         <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="org-subview">
           <UserGroupManagement />
         </div>
@@ -288,12 +257,6 @@ export const Management: React.FC = () => {
           ) : (
             <ContentManagement />
           )}
-        </div>
-      )}
-
-      {view === 'fields' && canManageFields && (
-        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="fields-subview">
-          <FieldBuilder />
         </div>
       )}
 
