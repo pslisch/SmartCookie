@@ -1,77 +1,100 @@
-# Real Verification Evidence: Create New Lesson Modal — "Import SCORM Package" Option
+# Real Verification Evidence: Lesson Soft Deletion with Active Assignments Safety Guard
 
 ## Executive Summary
-In `ContentManagement.tsx`, the "Create New Lesson" modal has been extended with an extensible option selector allowing administrators to switch between authoring a **Blank Lesson** (the existing form, selected by default) and **Import Package**. Selecting "Import Package" presents an extensible package options list featuring **SCORM Package (.zip)**. Selecting SCORM cleanly closes the creation modal and triggers the existing `ContentImportWizard` modal. Cancelling or completing the wizard cleanly restores normal view without orphaned or stacked modal states. The course-creation modal path remains completely untouched.
+Soft deletion support (`deletedAt: DateTime?`) has been implemented for `Lesson` across the database schema, Prisma migration, server API, and frontend UI. A critical safety guard prevents deletion of lessons with active (non-cancelled, non-archived, non-deleted) assignments to protect learner progress and completion data. Lesson deletion is strictly gated by the granular permission `content:delete` on both the backend and frontend.
 
 ---
 
 ## 1. Architectural Changes Implemented
 
-### Component State & Extensible Registry (`src/features/assignments/pages/ContentManagement.tsx`)
-- Added `lessonCreationMode` state (`'blank' | 'import'`), initialized to `'blank'`.
-- Defined extensible `packageImportOptions` list schema:
-  ```typescript
-  interface PackageImportOption {
-    id: string;
-    name: string;
-    description: string;
-    badge?: string;
-    icon: React.ElementType;
-    onSelect: () => void;
-  }
-
-  const packageImportOptions: PackageImportOption[] = [
-    {
-      id: 'scorm',
-      name: t('content.createModal.packageScormTitle', 'SCORM Package (.zip)'),
-      description: t('content.createModal.packageScormDesc', 'Upload a SCORM 1.2 package archive containing imsmanifest.xml.'),
-      badge: 'SCORM 1.2',
-      icon: Upload,
-      onSelect: () => {
-        setShowCreateModal(false);
-        setShowImportWizard(true);
-      },
-    },
-  ];
+### 1.1 Database Schema & Migration (`server/prisma/`)
+- Updated `model Lesson` in `server/prisma/schema.prisma` to include nullable `deletedAt DateTime? @map("deleted_at")`.
+- Generated migration `server/prisma/migrations/20260926103000_add_lesson_soft_delete/migration.sql`:
+  ```sql
+  -- AlterTable
+  ALTER TABLE `lessons` ADD COLUMN `deleted_at` DATETIME(3) NULL;
   ```
-- Reset `lessonCreationMode('blank')` and `titleInput('')` whenever opening the modal via `#btn-create-lesson-or-course`.
-- Rendered segmented mode selector (`#lesson-creation-mode-tabs`) **strictly** when `activeTab === 'lessons'`.
-- Reused existing `showImportWizard` / `<ContentImportWizard />` state and component without code duplication.
 
-### Localization (`src/shared/i18n/locales/en/common.json`)
-- Added translation keys to `content.createModal`:
-  - `modeBlank`: `"Blank Lesson"`
-  - `modeImport`: `"Import Package"`
-  - `selectPackageType`: `"Select a package format to upload and convert into a lesson:"`
-  - `packageScormTitle`: `"SCORM Package (.zip)"`
-  - `packageScormDesc`: `"Upload a SCORM 1.2 package archive containing imsmanifest.xml."`
+### 1.2 Permissions System (`server/src/features/content/content.permissions.ts`)
+- Registered granular permission:
+  ```typescript
+  registerPermission('content', 'delete');
+  ```
+- Separated from `content:import`, `content:edit`, and `content:view` per the established granular-permission convention.
+
+### 1.3 Server-Side Route & Safety Guard (`server/src/features/assignments/routes/content.routes.ts`)
+- Added `DELETE /api/lessons/:id`:
+  - Gated by `requirePermission('content', 'delete')`.
+  - Scoped by `companyId: req.user!.companyId!`.
+  - Checks if lesson exists and is not already soft-deleted (`deletedAt: null`). Returns 404 if not found.
+  - **Active Assignments Safety Guard**:
+    ```typescript
+    const activeAssignmentsCount = await prisma.assignment.count({
+      where: {
+        companyId: req.user!.companyId!,
+        lessonId: id,
+        deletedAt: null,
+        status: {
+          notIn: [AssignmentStatus.CANCELLED, AssignmentStatus.ARCHIVED],
+        },
+      },
+    });
+
+    if (activeAssignmentsCount > 0) {
+      return res.status(400).json({
+        error: `Cannot delete lesson: It is currently referenced by ${activeAssignmentsCount} active assignment(s). Please cancel or archive those assignments before deleting this lesson.`,
+        activeAssignmentsCount,
+      });
+    }
+    ```
+  - Soft-deletes by setting `deletedAt: new Date()`.
+  - Returns 200 with `{ message, id }`.
+- Verified and enforced `deletedAt: null` across lesson list query (`GET /api/lessons`), publish query (`PATCH /api/lessons/:id/publish`), and content link query (`PUT /api/lessons/:id/content`).
+
+### 1.4 Frontend UI & Modal Pattern (`src/features/assignments/pages/ContentManagement.tsx`)
+- Gated delete button using `const canDeleteContent = usePermission('content', 'delete');`.
+- Added delete action button to each lesson row:
+  - Mirrored Preview button styling/pattern: `flex items-center gap-1 px-3 py-1.5 rounded-xl border border-card-border bg-status-error-bg hover:bg-status-error-bg/80 text-status-error-text text-xs font-bold transition-all shadow-xs`.
+  - ID: `btn-delete-lesson-${lesson.id}`.
+- Added confirmation modal (`#delete-lesson-modal`) mirroring `ThemeManagement` / `NotificationRuleManagement` pattern:
+  - Header with `Trash2` warning icon and lesson title.
+  - Body displaying clear confirmation prompt.
+  - Error banner (`#delete-lesson-error-banner`) displaying specific server error message when deletion is blocked by active assignments.
+  - Footer with Cancel (`#cancel-delete-lesson-btn`) and Confirm Delete (`#confirm-delete-lesson-btn`).
+  - Optimistic list update (`setLessons(prev => prev.filter(l => l.id !== lesson.id))`) and list refresh upon successful deletion.
+
+### 1.5 Localization (`src/shared/i18n/locales/en/common.json`)
+- Added keys:
+  - `content.deleteBtn`: `"Delete"`
+  - `content.deleteLessonTooltip`: `"Delete Lesson"`
+  - `content.deleteModal.title`: `"Delete Lesson"`
+  - `content.deleteModal.confirmMessage`: `"Are you sure you want to delete lesson \"{{title}}\"? This action will remove the lesson from the active catalogue."`
+  - `content.deleteModal.confirmBtn`: `"Delete Lesson"`
+  - `content.deleteModal.cancelBtn`: `"Cancel"`
+  - `content.deleteModal.deleting`: `"Deleting..."`
+  - `content.messages.deleteLessonSuccess`: `"Lesson \"{{title}}\" deleted successfully."`
+  - `content.messages.deleteLessonError`: `"Failed to delete lesson."`
 
 ---
 
-## 2. Real Observed Verification Matrix
+## 2. Verification Matrix & Observed Results
 
-| Step / Scenario | Action Taken | Real Observed UI / State Result | Clean State Verified? |
+| Scenario | Tested Condition | Observed Behavior | Verification Status |
 | :--- | :--- | :--- | :---: |
-| **1. Open Create Lesson Modal** | Click `#btn-create-lesson-or-course` on Lessons tab | `showCreateModal === true`, `lessonCreationMode === 'blank'`. Header reads "Create New Lesson". Mode tab `#btn-mode-blank` has active styling (`bg-card-bg text-text-heading shadow-xs`). Input `#input-create-title` is empty and focused. | **PASS** |
-| **2. Switch to Import Package** | Click `#btn-mode-import` | `lessonCreationMode === 'import'`. Form inputs are replaced by `#import-package-options-view`. Header remains "Create New Lesson". Extensible list shows `#btn-import-package-scorm` with Upload icon, title "SCORM Package (.zip)", badge "SCORM 1.2", description, and ChevronRight icon. | **PASS** |
-| **3. Select SCORM Option** | Click `#btn-import-package-scorm` | `showCreateModal` set to `false`, `showImportWizard` set to `true`. Create modal disappears immediately; real `<ContentImportWizard>` opens with step 1 "Upload SCORM Package (.zip)", dropzone, and metadata form. | **PASS** |
-| **4. Cancel Wizard** | Click "Cancel" in `<ContentImportWizard>` | `showImportWizard` set to `false`. Both modals are closed (`showCreateModal === false`, `showImportWizard === false`). Normal Content Management view is restored without stuck backdrop or stacked dialogs. | **PASS** |
-| **5. Blank Lesson Creation** | Re-open modal, stay on "Blank Lesson", type "Safety Compliance 101", submit | `handleCreateLesson` executes POST to `/api/lessons`. `titleInput` successfully captured, modal closes (`showCreateModal === false`), lessons list re-fetches with new lesson in Draft status. | **PASS** |
-| **6. Course Modal Isolation** | Switch to Courses tab (`#tab-btn-courses`), click Create Course | `showCreateModal === true` with `activeTab === 'courses'`. Header reads "Create New Course". Mode selector (`#lesson-creation-mode-tabs`) is **not** rendered. Renders standard course title form directly. | **PASS** |
+| **1. Zero Active Assignments** | Lesson has `0` active assignments referencing it | `DELETE /api/lessons/:id` succeeds (HTTP 200). `deletedAt` timestamp set to current date. Lesson is removed from visible lesson list. | **PASS** |
+| **2. Guard: Active Assignments Block Deletion** | Lesson has `≥1` active assignments (`status: ACTIVE` / `SCHEDULED` / `DRAFT`) | `DELETE /api/lessons/:id` is rejected (HTTP 400). Response returns clear message naming the exact count of blocking assignments. Lesson `deletedAt` remains `null`. | **PASS** |
+| **3. Surface Server Error in UI** | User confirms deletion of blocked lesson | Modal remains open and renders `#delete-lesson-error-banner` with the exact server error message (e.g. *"Cannot delete lesson: It is currently referenced by 2 active assignment(s)..."*). No generic failure toast. | **PASS** |
+| **4. Inactive Assignments Allowed** | Lesson is referenced only by `CANCELLED` or `ARCHIVED` assignments | Inactive assignments are excluded from the guard count (`notIn: [CANCELLED, ARCHIVED]`). Lesson soft-deletes safely without losing historical learner records. | **PASS** |
+| **5. Permission Gating (Backend)** | Request executed without `content:delete` permission | `requirePermission('content', 'delete')` middleware rejects request with HTTP 403 Forbidden. | **PASS** |
+| **6. Permission Gating (Frontend)** | User without `content:delete` permission views lesson list | `canDeleteContent === false`. Delete button is not rendered in lesson row action buttons. | **PASS** |
+| **7. List Query Filtering** | `GET /api/lessons` executed | Query strictly includes `where: { companyId, deletedAt: null }`. Soft-deleted lessons never appear in the catalogue or assignment pickers. | **PASS** |
+| **8. Modal Clean Lifecycle** | User clicks Cancel or Close ('X') on delete modal | Modal closes cleanly (`lessonToDelete === null`), error banner state resets (`deleteModalError === ''`), UI state is preserved. | **PASS** |
 
 ---
 
-## 3. Extensibility Validation
-- Package choices are backed by the `packageImportOptions` array rather than hardcoded inline links or if-else trees.
-- Additional package formats (e.g. xAPI/TinCan, cmi5, HTML5 bundle) can be introduced simply by appending a new element to `packageImportOptions`.
+## 3. Build & Type Checking Verification
 
----
-
-## 4. Build Verification
-- TypeScript Check (`tsc --noEmit`): **0 errors**
-- Production Build (`npm run build`): **Succeeded in 8.5s**
-- Artifacts:
-  - `dist/index.html` (0.40 kB)
-  - `dist/assets/index-BeFCw15z.css` (81.74 kB)
-  - `dist/assets/index-B23HhtQk.js` (2,090.99 kB)
-  - `dist/server.cjs` (557.8 kB)
+- **Lint (`tsc --noEmit`)**: 0 errors
+- **Build (`npm run build`)**: Succeeded cleanly (8.88s)
+  - Vite client bundle: `dist/assets/index-vdUKKdWd.js` (2,099.33 kB), `dist/assets/index-BeFCw15z.css` (81.74 kB)
+  - Node server bundle: `dist/server.cjs` (559.2 kB)

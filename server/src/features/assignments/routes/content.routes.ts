@@ -5,9 +5,10 @@
 
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../../../shared/middleware/session.middleware';
+import { requirePermission } from '../../../shared/middleware/permission.middleware';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 import { prisma } from '../../../shared/db/prisma';
-import { LessonStatus, CourseStatus } from '@prisma/client';
+import { LessonStatus, CourseStatus, AssignmentStatus } from '@prisma/client';
 
 const router = Router();
 
@@ -33,7 +34,7 @@ async function checkPermission(req: Request, res: Response, action: 'create' | '
 
 /**
  * GET /api/lessons
- * List all lessons for the company
+ * List all non-deleted lessons for the company
  */
 router.get('/lessons', async (req: Request, res: Response) => {
   try {
@@ -46,6 +47,7 @@ router.get('/lessons', async (req: Request, res: Response) => {
     const lessons = await prisma.lesson.findMany({
       where: {
         companyId: req.user!.companyId!,
+        deletedAt: null,
       },
       include: {
         content: {
@@ -116,6 +118,7 @@ router.patch('/lessons/:id/publish', async (req: Request, res: Response) => {
       where: {
         id,
         companyId: req.user!.companyId!,
+        deletedAt: null,
       },
     });
 
@@ -146,6 +149,64 @@ router.patch('/lessons/:id/publish', async (req: Request, res: Response) => {
     return res.json(updated);
   } catch (error: any) {
     return res.status(400).json({ error: error.message || 'Failed to publish/unpublish lesson.' });
+  }
+});
+
+/**
+ * DELETE /api/lessons/:id
+ * Soft delete a lesson (sets deletedAt to now) with safety guard
+ * Gated by: requirePermission('content', 'delete')
+ */
+router.delete('/lessons/:id', requirePermission('content', 'delete'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Verify lesson exists for the user's company and is not already deleted
+    const lesson = await prisma.lesson.findFirst({
+      where: {
+        id,
+        companyId: req.user!.companyId!,
+        deletedAt: null,
+      },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({ error: 'Lesson not found.' });
+    }
+
+    // Safety Guard: Check for any active (non-cancelled, non-archived, non-deleted) Assignment referencing this lesson
+    const activeAssignmentsCount = await prisma.assignment.count({
+      where: {
+        companyId: req.user!.companyId!,
+        lessonId: id,
+        deletedAt: null,
+        status: {
+          notIn: [AssignmentStatus.CANCELLED, AssignmentStatus.ARCHIVED],
+        },
+      },
+    });
+
+    if (activeAssignmentsCount > 0) {
+      return res.status(400).json({
+        error: `Cannot delete lesson: It is currently referenced by ${activeAssignmentsCount} active assignment(s). Please cancel or archive those assignments before deleting this lesson.`,
+        activeAssignmentsCount,
+      });
+    }
+
+    // Perform soft delete
+    const deletedLesson = await prisma.lesson.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    return res.json({
+      message: `Lesson "${deletedLesson.title}" deleted successfully.`,
+      id: deletedLesson.id,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to delete lesson.' });
   }
 });
 
@@ -330,6 +391,7 @@ router.put('/lessons/:id/content', async (req: Request, res: Response) => {
       where: {
         id,
         companyId: req.user!.companyId!,
+        deletedAt: null,
       }
     });
 

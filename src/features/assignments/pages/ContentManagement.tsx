@@ -160,7 +160,13 @@ export const ContentManagement: React.FC = () => {
   const [historyVersions, setHistoryVersions] = useState<ContentPackage[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
+  // Lesson Deletion State
+  const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
+  const [isDeletingLesson, setIsDeletingLesson] = useState(false);
+  const [deleteModalError, setDeleteModalError] = useState('');
+
   const hasImportPermission = usePermission('content', 'import');
+  const canDeleteContent = usePermission('content', 'delete');
 
   const fetchLessons = async () => {
     try {
@@ -314,6 +320,45 @@ export const ContentManagement: React.FC = () => {
       await fetchCourses();
     } catch (err: any) {
       setError(err.message || t('content.messages.togglePublishErr'));
+    }
+  };
+
+  // Delete Lesson (Soft Delete)
+  const handleDeleteLesson = async (lesson: Lesson) => {
+    setIsDeletingLesson(true);
+    setDeleteModalError('');
+    try {
+      const res = await fetch(`/api/lessons/${lesson.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCookie('csrfToken'),
+        },
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        const errorMsg = data?.error || t('content.messages.deleteLessonError', 'Failed to delete lesson.');
+        setDeleteModalError(errorMsg);
+        return;
+      }
+
+      setLessonToDelete(null);
+      setDeleteModalError('');
+      setLessons((prev) => prev.filter((l) => l.id !== lesson.id));
+      setCourseLessons((prev) => prev.filter((l) => l.id !== lesson.id));
+      setExpandedLessonIds((prev) => {
+        const copy = { ...prev };
+        delete copy[lesson.id];
+        return copy;
+      });
+      setSuccess(data?.message || t('content.messages.deleteLessonSuccess', { title: lesson.title }));
+      await fetchCourses();
+    } catch (err: any) {
+      setDeleteModalError(err.message || t('content.messages.deleteLessonError', 'Failed to delete lesson.'));
+    } finally {
+      setIsDeletingLesson(false);
     }
   };
 
@@ -693,6 +738,22 @@ export const ContentManagement: React.FC = () => {
                             <Pencil className="h-3.5 w-3.5 text-text-muted" />
                             <span>{t('content.editBtn')}</span>
                           </button>
+
+                          {/* Delete Action: guarded by usePermission('content', 'delete') */}
+                          {canDeleteContent && (
+                            <button
+                              onClick={() => {
+                                setLessonToDelete(lesson);
+                                setDeleteModalError('');
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-card-border bg-status-error-bg hover:bg-status-error-bg/80 text-status-error-text text-xs font-bold transition-all shadow-xs cursor-pointer"
+                              title={t('content.deleteLessonTooltip', 'Delete Lesson')}
+                              id={`btn-delete-lesson-${lesson.id}`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-status-error-text" />
+                              <span>{t('content.deleteBtn', 'Delete')}</span>
+                            </button>
+                          )}
 
                           {/* Status indicator */}
                           <span
@@ -1348,6 +1409,100 @@ export const ContentManagement: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* DELETE LESSON CONFIRMATION MODAL */}
+      <AnimatePresence>
+        {lessonToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md rounded-2xl border border-card-border bg-card-bg shadow-xl overflow-hidden"
+              id="delete-lesson-modal"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-card-border">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-status-error-bg text-status-error-text">
+                    <Trash2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-text-heading font-sans">
+                      {t('content.deleteModal.title', 'Delete Lesson')}
+                    </h3>
+                    <p className="text-xs text-text-muted font-sans line-clamp-1">
+                      {lessonToDelete.title}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={isDeletingLesson}
+                  onClick={() => {
+                    setLessonToDelete(null);
+                    setDeleteModalError('');
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted hover:bg-card-header-bg transition-colors cursor-pointer"
+                  id="close-delete-lesson-modal-btn"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
+                {deleteModalError && (
+                  <div className="flex items-start space-x-2 p-3 rounded-xl bg-status-error-bg text-status-error-text text-xs border border-status-error-text/20" id="delete-lesson-error-banner">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span className="font-medium leading-relaxed">{deleteModalError}</span>
+                  </div>
+                )}
+
+                <p className="text-sm text-text-body font-sans leading-relaxed">
+                  {t('content.deleteModal.confirmMessage', { title: lessonToDelete.title })}
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end space-x-3 p-6 pt-4 border-t border-card-border">
+                <button
+                  type="button"
+                  disabled={isDeletingLesson}
+                  onClick={() => {
+                    setLessonToDelete(null);
+                    setDeleteModalError('');
+                  }}
+                  className="rounded-xl border border-card-border bg-card-bg px-4 py-2 text-sm font-semibold text-text-heading shadow-sm hover:bg-card-header-bg transition-colors cursor-pointer disabled:opacity-60"
+                  id="cancel-delete-lesson-btn"
+                >
+                  {t('content.deleteModal.cancelBtn', 'Cancel')}
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeletingLesson}
+                  onClick={() => handleDeleteLesson(lessonToDelete)}
+                  className="inline-flex items-center space-x-2 rounded-xl bg-status-error-text px-4 py-2 text-sm font-semibold text-btn-primary-text shadow-sm hover:bg-status-error-text/90 transition-colors cursor-pointer disabled:opacity-60"
+                  id="confirm-delete-lesson-btn"
+                >
+                  {isDeletingLesson ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{t('content.deleteModal.deleting', 'Deleting...')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      <span>{t('content.deleteModal.confirmBtn', 'Delete Lesson')}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -924,6 +924,15 @@
     "previewBtn": "Preview",
     "previewTooltip": "Preview SCORM package in a new tab",
     "previewDisabledTooltip": "No SCORM package linked to preview",
+    "deleteBtn": "Delete",
+    "deleteLessonTooltip": "Delete Lesson",
+    "deleteModal": {
+      "title": "Delete Lesson",
+      "confirmMessage": "Are you sure you want to delete lesson \"{{title}}\"? This action will remove the lesson from the active catalogue.",
+      "confirmBtn": "Delete Lesson",
+      "cancelBtn": "Cancel",
+      "deleting": "Deleting..."
+    },
     "editBtn": "Edit",
     "editTooltip": "Lesson Builder (Coming Soon)",
     "detailsBtn": "Details",
@@ -981,7 +990,9 @@
       "publishContentErr": "Error publishing content.",
       "archiveContentErr": "Error archiving content.",
       "restoreContentErr": "Error restoring content.",
-      "fetchVersionsErr": "Error fetching version history."
+      "fetchVersionsErr": "Error fetching version history.",
+      "deleteLessonSuccess": "Lesson \"{{title}}\" deleted successfully.",
+      "deleteLessonError": "Failed to delete lesson."
     }
   },
   "myLessons": {

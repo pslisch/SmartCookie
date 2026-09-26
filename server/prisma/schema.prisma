@@ -328,6 +328,7 @@ model Lesson {
   completionRule       CompletionRule   @default(MARKED_COMPLETE) @map("completion_rule")
   contentId            String?          @map("content_id")
   content              Content?         @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  deletedAt            DateTime?        @map("deleted_at")
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
   courseLessons        CourseLesson[]
