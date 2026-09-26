@@ -15,9 +15,11 @@ import {
   Eye,
   CheckCircle2,
   Info,
+  Sparkles,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { EmailTemplate } from '../types';
-import { EmailTemplateVariableHelper } from './EmailTemplateVariableHelper';
 
 export interface EmailTemplateFormProps {
   template: EmailTemplate | null; // null for create mode, existing template for edit mode
@@ -46,6 +48,25 @@ export const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({
   );
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
+
+  const handleCopyAiPrompt = () => {
+    const confirmationLine = t(
+      'emailTemplates.aiPrompt.confirmationLine',
+      'Understood :) How do you want the email to look like?'
+    );
+    const promptText = t('emailTemplates.aiPrompt.promptTemplate', {
+      lessonTitleVar: '{{lessonTitle}}',
+      dueDateVar: '{{dueDate}}',
+      learnerNameVar: '{{learnerName}}',
+      actionUrlVar: '{{actionUrl}}',
+      confirmationLine,
+    });
+
+    navigator.clipboard.writeText(promptText);
+    setCopiedPrompt(true);
+    setTimeout(() => setCopiedPrompt(false), 2000);
+  };
 
   // Form submission & validation states
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -245,7 +266,7 @@ export const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({
                 {t('emailTemplates.form.htmlSourceTitle', 'HTML Source Content')} <span className="text-status-error-text">*</span>
               </h3>
               <p className="text-xs text-text-muted mt-0.5 font-sans">
-                {t('emailTemplates.form.htmlSourceDesc', 'Author raw HTML for your notification emails. Use the variable buttons below to insert placeholders at your cursor position.')}
+                {t('emailTemplates.form.htmlSourceDesc', 'Author raw HTML for your notification emails. Use the AI prompt helper below or compose your custom HTML markup directly.')}
               </p>
             </div>
             <div className="text-xs text-text-muted font-mono self-start sm:self-auto">
@@ -253,17 +274,44 @@ export const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({
             </div>
           </div>
 
-          {/* Variable Helper Button Group */}
-          <EmailTemplateVariableHelper
-            textareaRef={textareaRef}
-            value={htmlContent}
-            onChange={(val) => {
-              setHtmlContent(val);
-              if (fieldErrors.htmlContent) {
-                setFieldErrors((prev) => ({ ...prev, htmlContent: '' }));
-              }
-            }}
-          />
+          {/* AI Co-Writing Prompt Assistant */}
+          <div className="rounded-xl border border-card-border bg-card-header-bg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-start sm:items-center space-x-2.5">
+              <div className="p-1.5 rounded-lg bg-btn-primary-bg/10 text-btn-primary-bg shrink-0">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="font-semibold text-text-heading block">
+                  {t('emailTemplates.aiPrompt.title', 'AI Co-Writing Assistant')}
+                </span>
+                <p className="text-text-muted mt-0.5 leading-relaxed">
+                  {t(
+                    'emailTemplates.aiPrompt.description',
+                    'Copy a pre-written prompt to paste into an external AI assistant (ChatGPT, Claude, Gemini). It establishes our strict variable rules before you ask it to design your email layout.'
+                  )}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              id="copy-ai-prompt-btn"
+              onClick={handleCopyAiPrompt}
+              className="inline-flex items-center justify-center rounded-lg border border-btn-secondary-border bg-btn-secondary-bg px-3.5 py-2 text-xs font-semibold text-btn-secondary-text hover:bg-btn-secondary-hover transition-colors shadow-xs shrink-0 self-start sm:self-center"
+              title={t('emailTemplates.aiPrompt.buttonLabel', 'Copy AI Prompt')}
+            >
+              {copiedPrompt ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-status-success-text mr-1.5" />
+                  <span>{t('emailTemplates.aiPrompt.copiedLabel', 'Prompt Copied!')}</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5 text-text-muted mr-1.5" />
+                  <span>{t('emailTemplates.aiPrompt.buttonLabel', 'Copy AI Prompt')}</span>
+                </>
+              )}
+            </button>
+          </div>
 
           {/* Raw HTML Textarea */}
           <div>

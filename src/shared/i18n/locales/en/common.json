@@ -509,6 +509,14 @@
       "actionUrl": "Action URL",
       "actionUrlTypes": "Available whenever an action link is configured"
     },
+    "aiPrompt": {
+      "title": "AI Co-Writing Assistant",
+      "description": "Copy a pre-written prompt to paste into an external AI assistant (ChatGPT, Claude, Gemini). It establishes our strict variable rules before you ask it to design your email layout.",
+      "buttonLabel": "Copy AI Prompt",
+      "copiedLabel": "Prompt Copied!",
+      "confirmationLine": "Understood :) How do you want the email to look like?",
+      "promptTemplate": "You are an expert HTML email designer. I want you to help me design an HTML email template for our learning management system notifications.\n\nStrict Rules & Supported Variables:\n1. The system supports ONLY these 4 variable placeholders. These are the ONLY ones supported — do NOT invent or assume any others:\n- {{lessonTitleVar}}: The title of the lesson or course\n- {{dueDateVar}}: The assignment deadline (note: this is only populated for deadline-related notifications)\n- {{learnerNameVar}}: The name of the learner (note: this is only populated for manager notifications)\n- {{actionUrlVar}}: The action link/URL button to open the lesson\n\n2. HTML Requirements:\n- Write valid, email-client-friendly HTML markup\n- Use inline styles for all formatting to ensure maximum compatibility across email clients (Outlook, Gmail, Apple Mail, etc.)\n- Ensure the layout is responsive and cleanly formatted for desktop and mobile\n\n3. Required First Response:\nBefore generating any email code or asking questions, acknowledge these rules by replying with EXACTLY this single confirmation line and nothing else:\n\"{{confirmationLine}}\""
+    },
     "form": {
       "createTitle": "Create Email Template",
       "createSubtitle": "Author raw HTML layout for branded email notifications.",
@@ -522,7 +530,7 @@
       "setAsDefaultLabel": "Set as Default Template",
       "setAsDefaultHelp": "Designating this template as default will automatically unset any other company default template.",
       "htmlSourceTitle": "HTML Source Content",
-      "htmlSourceDesc": "Author raw HTML for your notification emails. Use the variable buttons below to insert placeholders at your cursor position.",
+      "htmlSourceDesc": "Author raw HTML for your notification emails. Use the AI prompt helper below or compose your custom HTML markup directly.",
       "charactersCount": "chars",
       "htmlPlaceholder": "Write or paste standard email HTML markup here...",
       "htmlRequired": "Template HTML content is required.",

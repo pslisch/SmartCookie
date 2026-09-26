@@ -356,19 +356,12 @@ Every registered component should include:
 
 ### 45. `EmailTemplateForm`
 - **Location**: `src/features/notifications/components/EmailTemplateForm.tsx`
-- **Purpose**: Creation and editing form for rich HTML email templates. Features template name input, default toggle, live cursor-position variable insertion toolbar buttons (`{{learnerName}}`, `{{lessonTitle}}`, `{{dueDate}}`, `{{actionUrl}}`, etc.), textarea HTML editor, and a sandboxed live preview pane (`<iframe sandbox="...">`) that safely renders markup and CSS isolated from the parent DOM.
+- **Purpose**: Creation and editing form for rich HTML email templates. Features template name input, default toggle, AI co-writing prompt assistant with one-click clipboard copying for external AI chatbots (ChatGPT, Claude, Gemini), textarea HTML editor, and a sandboxed live preview pane (`<iframe sandbox="...">`) that safely renders markup and CSS isolated from the parent DOM.
 - **Props**: `template?: EmailTemplate | null`, `onSuccess: () => void`, `onCancel: () => void`
 - **Used By**: `src/features/notifications/pages/EmailTemplateManagement.tsx`
-- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `EmailTemplateVariableHelper.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`
 
-### 46. `EmailTemplateVariableHelper`
-- **Location**: `src/features/notifications/components/EmailTemplateVariableHelper.tsx`
-- **Purpose**: Variable insertion toolbar for email templates offering quick-insert chips for `{{lessonTitle}}`, `{{dueDate}}`, `{{learnerName}}`, and `{{actionUrl}}` directly at the active textarea cursor position.
-- **Props**: `textareaRef: React.RefObject<HTMLTextAreaElement | null>`, `value: string`, `onChange: (newValue: string) => void`
-- **Used By**: `EmailTemplateForm.tsx`
-- **Dependencies**: React, `react-i18next`, `lucide-react`
-
-### 47. `NotificationsHub`
+### 46. `NotificationsHub`
 - **Location**: `src/features/notifications/pages/NotificationsHub.tsx`
 - **Purpose**: Consolidated administration hub for all notification capabilities (replacing the four separate Settings hub cards). Houses sub-tabs for Notification Rules, Delivery Failures, Scheduled Notifications, and Email Templates. Features individually permission-gated tab buttons (`notifications:manage-rules`, `notifications:view-delivery-failures`, `notifications:manage-scheduled`, `notifications:manage-templates`) with automatic first-permitted tab selection, tab transition animation, and isolated sub-view component rendering (`NotificationRuleManagement`, `DeliveryFailures`, `ScheduledNotificationManagement`, `EmailTemplateManagement`).
 - **Props**: None (page component)
