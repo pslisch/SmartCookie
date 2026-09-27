@@ -135,3 +135,56 @@ Before generating any email code or asking questions, acknowledge these rules by
     3. `#card-theme-management` (*"Theme Management"*)
     4. `#card-notifications` (*"Notifications"*)
   - **Standalone Card Check**: `#card-field-builder` is completely removed from `src/features/management/pages/Management.tsx` (0 occurrences in codebase).
+
+---
+
+## 3. Audit Log Schema Migration & ADR-0020 Verification
+
+### 3.1 ADR Number Selection & Rationale
+- **Highest Existing ADR**: `[ADR-0019] Notification System Architecture (Phase 1)`
+- **ADR Number Chosen**: `[ADR-0020] Audit Log Schema Extension and Rich Event Model`
+- **Relationship**: Explicitly supersedes `[ADR-0013] Generic Reusable Audit Log and Dynamic Overdue Reminder Engine`.
+- **Rationale**: ADR-0013 provided the initial generic polymorphic foundation (`id`, `companyId`, `entityType`, `entityId`, `action`, `actorId`, `metadata`, `createdAt`). ADR-0020 supersedes this decision by extending the single-table model in place to add structured categories (`AuditCategory`), outcome tracking (`AuditOutcome`), human-readable entity snapshot name preservation (`affectedObjectName`), composite entity tracking (`additionalAffectedObjects`), structured before/after diffs (`changes`), authentication failure aggregation (`authFailureCount`, `resolvedAt`), and `updatedAt`, while renaming `metadata` to `details` and leveraging `Company.settings.auditLogRetentionDays` for retention configuration.
+
+### 3.2 Exact Migration SQL Generated
+File: `server/prisma/migrations/20260927090000_extend_audit_log_schema/migration.sql`
+
+```sql
+-- AlterTable
+ALTER TABLE `audit_logs`
+    ADD COLUMN `category` ENUM('AUTHENTICATION_SECURITY', 'PERMISSIONS_ORGANIZATION', 'LEARNING_CONTENT_ASSIGNMENTS', 'LEARNING_RESULTS', 'DELETION', 'FAILURES') NOT NULL,
+    ADD COLUMN `outcome` ENUM('SUCCESS', 'FAILURE', 'RESOLVED') NOT NULL,
+    ADD COLUMN `affected_object_name` VARCHAR(191) NULL,
+    ADD COLUMN `additional_affected_objects` JSON NULL,
+    ADD COLUMN `changes` JSON NULL,
+    ADD COLUMN `auth_failure_count` INTEGER NULL,
+    ADD COLUMN `resolved_at` DATETIME(3) NULL,
+    ADD COLUMN `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    RENAME COLUMN `metadata` TO `details`;
+
+-- CreateIndex
+CREATE INDEX `audit_logs_company_id_created_at_idx` ON `audit_logs`(`company_id`, `created_at`);
+
+-- CreateIndex
+CREATE INDEX `audit_logs_company_id_category_created_at_idx` ON `audit_logs`(`company_id`, `category`, `created_at`);
+
+-- CreateIndex
+CREATE INDEX `audit_logs_company_id_outcome_created_at_idx` ON `audit_logs`(`company_id`, `outcome`, `created_at`);
+
+-- CreateIndex
+CREATE INDEX `audit_logs_company_id_actor_id_created_at_idx` ON `audit_logs`(`company_id`, `actor_id`, `created_at`);
+
+-- CreateIndex
+CREATE INDEX `audit_logs_company_id_actor_id_category_outcome_action_idx` ON `audit_logs`(`company_id`, `actor_id`, `category`, `outcome`, `action`);
+```
+
+### 3.3 TypeScript Verification (`tsc --noEmit`)
+Running `npx prisma generate` generated the updated Prisma client types reflecting `details` instead of `metadata`, as well as new required fields `category` and `outcome`.
+
+Executing `npx tsc --noEmit` yielded the expected single compile error in `server/src/shared/audit/auditLog.service.ts` due to `AuditLogCreateInput` expecting `details` instead of `metadata`:
+
+```text
+server/src/shared/audit/auditLog.service.ts(22,9): error TS2353: Object literal may only specify known properties, and 'metadata' does not exist in type '(Without<AuditLogCreateInput, AuditLogUncheckedCreateInput> & AuditLogUncheckedCreateInput) | (Without<...> & AuditLogCreateInput)'.
+```
+
+All other files and caller call sites remain structurally compatible with their existing function signatures, confirming that the schema rename is isolated and prepared for the subsequent `AuditLogService` rewrite task.

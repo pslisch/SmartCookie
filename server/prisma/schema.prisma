@@ -95,6 +95,7 @@ model Company {
   users                      User[]
   roles                      Role[]
   domain                     String                   @default("")
+  // Retention config is stored in settings.auditLogRetentionDays (Int, defaults to 365 days at application layer)
   settings                   Json?
   organizationUnits          OrganizationUnit[]
   learningGroups             LearningGroup[]
@@ -463,18 +464,51 @@ model UserAssignmentInstanceSource {
   @@map("user_assignment_instance_sources")
 }
 
-model AuditLog {
-  id         String   @id @default(uuid())
-  companyId  String   @map("company_id")
-  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  entityType String   @map("entity_type")
-  entityId   String   @map("entity_id")
-  action     String
-  actorId    String?  @map("actor_id")
-  actor      User?    @relation("UserAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
-  metadata   Json?
-  createdAt  DateTime @default(now()) @map("created_at")
+enum AuditCategory {
+  AUTHENTICATION_SECURITY
+  PERMISSIONS_ORGANIZATION
+  LEARNING_CONTENT_ASSIGNMENTS
+  LEARNING_RESULTS
+  DELETION
+  FAILURES
+}
 
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+  RESOLVED
+}
+
+model AuditLog {
+  id                        String         @id @default(uuid())
+  companyId                 String         @map("company_id")
+  company                   Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  entityType                String         @map("entity_type")
+  entityId                  String         @map("entity_id")
+  action                    String
+  actorId                   String?        @map("actor_id")
+  actor                     User?          @relation("UserAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  category                  AuditCategory
+  outcome                   AuditOutcome
+  affectedObjectName        String?        @map("affected_object_name")
+  additionalAffectedObjects Json?          @map("additional_affected_objects")
+  changes                   Json?
+  details                   Json?
+  authFailureCount          Int?           @map("auth_failure_count")
+  resolvedAt                DateTime?      @map("resolved_at")
+  createdAt                 DateTime       @default(now()) @map("created_at")
+  updatedAt                 DateTime       @updatedAt @map("updated_at")
+
+  // Supports newest-first pagination per company (WHERE companyId = ? ORDER BY createdAt DESC)
+  @@index([companyId, createdAt])
+  // Supports filtering audit logs by category within a company (WHERE companyId = ? AND category = ? ORDER BY createdAt DESC)
+  @@index([companyId, category, createdAt])
+  // Supports filtering audit logs by outcome within a company (WHERE companyId = ? AND outcome = ? ORDER BY createdAt DESC)
+  @@index([companyId, outcome, createdAt])
+  // Supports filtering audit logs by actor within a company (WHERE companyId = ? AND actorId = ? ORDER BY createdAt DESC)
+  @@index([companyId, actorId, createdAt])
+  // Supports lookup of actor's unresolved authentication failure event (WHERE companyId = ? AND actorId = ? AND category = ? AND outcome = ? AND action = ?)
+  @@index([companyId, actorId, category, outcome, action])
   @@map("audit_logs")
 }
 

@@ -377,6 +377,49 @@ This directory serves as the automated registry of Architecture Decision Records
 
 ---
 
+### [ADR-0020] Audit Log Schema Extension and Rich Event Model
+- **Status**: Approved (Supersedes [ADR-0013](#adr-0013-generic-reusable-audit-log-and-dynamic-overdue-reminder-engine))
+- **Date**: 2026-09-27
+- **Authors**: AI Coding Agent
+- **Context**: 
+  - **What ADR-0013 got right**: ADR-0013 established a generic, polymorphic `audit_logs` model (`id`, `companyId`, `entityType`, `entityId`, `action`, `actorId`, `metadata`, `createdAt`) with low operational risk and minimal overhead, enabling early compliance tracking across business domains.
+  - **Why ADR-0013 is now insufficient**: As SmartCookie advances toward a full enterprise compliance and security feature set, the flat, generic schema is insufficient for modern audit requirements:
+    1. Lack of event categorization (`AuditCategory`) for high-level filtering (Authentication/Security, Permissions/Org, Content/Assignments, Results, Deletions, Failures).
+    2. Lack of explicit outcome tracking (`AuditOutcome`: Success, Failure, Resolved).
+    3. Loss of human-readable object names when referenced entities are subsequently renamed or hard-deleted (`affectedObjectName`).
+    4. Inability to capture multi-entity impacts in a single event without ad-hoc unstructured JSON (`additionalAffectedObjects`).
+    5. Lack of a standardized before/after field change representation (`changes`).
+    6. Lack of support for authentication failure aggregation (where the 3rd consecutive failed login creates an initial event, subsequent failures increment `authFailureCount` on the same event, and a subsequent successful authentication transitions the event to `RESOLVED` with `resolvedAt`).
+    7. Need for configurable tenant-level retention policies (`settings.auditLogRetentionDays` in `Company.settings`).
+- **Decision**:
+  - **Extend Existing Model (Single Table)**: Extend the existing `AuditLog` table in place rather than creating a separate table or complex joined structure. Because an audit log entry remains fundamentally a single logical event concept, an in-place schema extension avoids expensive joins on high-volume compliance queries, keeps write paths simple and atomic, and preserves historical data integrity.
+  - **Column Renaming**: Rename the existing unstructured `metadata` column to `details` via migration to reflect its refined role as context-specific supplemental payload alongside dedicated structured columns (`changes`, `additionalAffectedObjects`).
+  - **New Columns & Enums**:
+    - Add enums `AuditCategory` (`AUTHENTICATION_SECURITY`, `PERMISSIONS_ORGANIZATION`, `LEARNING_CONTENT_ASSIGNMENTS`, `LEARNING_RESULTS`, `DELETION`, `FAILURES`) and `AuditOutcome` (`SUCCESS`, `FAILURE`, `RESOLVED`).
+    - Add `affectedObjectName` (`String?`) to preserve historical entity names.
+    - Add `additionalAffectedObjects` (`Json?`) for composite events affecting secondary resources.
+    - Add `changes` (`Json?`) for structured `{field, before, after}` differentials (sanitized at application level to exclude secrets/tokens).
+    - Add `authFailureCount` (`Int?`) and `resolvedAt` (`DateTime?`) for security failure aggregation.
+    - Add `updatedAt` (`DateTime @updatedAt`) while preserving `createdAt` as immutable creation timestamp.
+  - **Targeted Composite Indexing**: Add database indexes tailored specifically for tenant-scoped query patterns:
+    - Newest-first pagination: `@@index([companyId, createdAt])`
+    - Category filtering: `@@index([companyId, category, createdAt])`
+    - Outcome filtering: `@@index([companyId, outcome, createdAt])`
+    - Actor filtering: `@@index([companyId, actorId, createdAt])`
+    - Unresolved security failure aggregation lookup: `@@index([companyId, actorId, category, outcome, action])`
+  - **Company Retention Configuration**: Retention policy is configured per company inside `Company.settings` under the key `settings.auditLogRetentionDays` (integer, defaulting to 365 days at application layer), requiring no extra relational column on `Company`.
+- **Consequences**:
+  - **Positives**:
+    - Rich, queryable, enterprise-ready audit logging capabilities with zero table-join overhead.
+    - Preserved data lineage and historical names even after deletion of referenced entities.
+    - Clean state transitions and aggregation for security incident tracking.
+    - Full backward migration path that preserves existing `metadata` content as `details`.
+  - **Negatives**:
+    - Service layer and call sites require migration to the new schema shape and category/outcome typing in subsequent tasks.
+    - `audit_logs` table row size slightly increases to accommodate the new structured metadata columns.
+
+---
+
 ## 🔮 Planned ADRs
 
 _None currently pending. All foundational architecture decision records through v1.12.0 have been ratified, approved, or absorbed into implemented features._
