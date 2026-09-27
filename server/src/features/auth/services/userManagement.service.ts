@@ -1,5 +1,5 @@
 import { prisma } from '../../../shared/db/prisma';
-import { UserStatus, TokenPurpose } from '@prisma/client';
+import { UserStatus, TokenPurpose, AuditCategory, AuditOutcome } from '@prisma/client';
 import { TokenService } from '../../../shared/token/token.service';
 import { emailService } from '../../../shared/email/email.service';
 import { PASSWORD_RESET_TTL_SECONDS } from '../../../shared/constants';
@@ -8,6 +8,7 @@ import { organizationUnitService } from '../../organization/services/organizatio
 import { learningGroupService } from '../../organization/services/learningGroup.service';
 import { ProfileFieldValueService } from '../../profiles/services/profileFieldValue.service';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
+import { getUserDisplayName } from '../../../shared/audit/auditSanitizer';
 
 export interface ListUsersFilters {
   page?: number;
@@ -249,19 +250,25 @@ export class UserManagementService {
     if (!user) {
       throw new Error(`User with ID ${userId} not found.`);
     }
+    if (!user.companyId) {
+      throw new Error(`Cannot archive user ${userId} without a company.`);
+    }
 
     await prisma.user.update({
       where: { id: userId },
       data: { status: 'ARCHIVED' },
     });
 
-    await auditLogService.log(
-      user.companyId || 'SYSTEM',
-      'User',
-      userId,
-      'ARCHIVE',
-      requestingUserId
-    );
+    await auditLogService.log({
+      companyId: user.companyId,
+      category: AuditCategory.PERMISSIONS_ORGANIZATION,
+      outcome: AuditOutcome.SUCCESS,
+      action: 'ARCHIVE',
+      actorId: requestingUserId,
+      entityType: 'User',
+      entityId: userId,
+      affectedObjectName: getUserDisplayName(user),
+    });
 
     return { success: true };
   }

@@ -1,5 +1,5 @@
 import { prisma } from '../../../shared/db/prisma';
-import { UserAssignmentInstanceStatus } from '@prisma/client';
+import { UserAssignmentInstanceStatus, AuditCategory, AuditOutcome } from '@prisma/client';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
 import { triggerCompletionNotifications } from '../../notifications/services/lessonCompletionEvent.service';
@@ -47,17 +47,20 @@ export class CompletionService {
     });
 
     // Log the action in AuditLog
-    await auditLogService.log(
-      instance.assignment.companyId,
-      'UserAssignmentInstance',
-      instanceId,
-      'COMPLETED',
-      userId,
-      {
+    await auditLogService.log({
+      companyId: instance.assignment.companyId,
+      category: AuditCategory.LEARNING_RESULTS,
+      outcome: AuditOutcome.SUCCESS,
+      action: 'COMPLETED',
+      actorId: userId,
+      entityType: 'UserAssignmentInstance',
+      entityId: instanceId,
+      affectedObjectName: instance.assignment.lesson.title,
+      details: {
         assignmentId: instance.assignmentId,
         learnerId: instance.userId,
-      }
-    );
+      },
+    });
 
     // Trigger completion notifications (learner confirmation & manager completion notice)
     await triggerCompletionNotifications({

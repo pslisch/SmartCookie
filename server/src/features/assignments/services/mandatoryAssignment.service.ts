@@ -1,5 +1,11 @@
 import { prisma } from '../../../shared/db/prisma';
-import { UserAssignmentInstanceStatus, AssignmentSourceType, AssignmentStatus } from '@prisma/client';
+import {
+  UserAssignmentInstanceStatus,
+  AssignmentSourceType,
+  AssignmentStatus,
+  AuditCategory,
+  AuditOutcome,
+} from '@prisma/client';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
 
 export class MandatoryAssignmentService {
@@ -27,6 +33,13 @@ export class MandatoryAssignmentService {
         isMandatory: true,
         status: AssignmentStatus.ACTIVE,
         deletedAt: null,
+      },
+      include: {
+        lesson: {
+          select: {
+            title: true,
+          },
+        },
       },
     });
 
@@ -109,13 +122,20 @@ export class MandatoryAssignmentService {
       });
 
       if (isCreated && instanceId) {
-        await auditLogService.log(
+        await auditLogService.log({
           companyId,
-          'UserAssignmentInstance',
-          instanceId,
-          'CREATED',
-          assignment.createdById
-        );
+          category: AuditCategory.LEARNING_CONTENT_ASSIGNMENTS,
+          outcome: AuditOutcome.SUCCESS,
+          action: 'CREATED',
+          actorId: assignment.createdById,
+          entityType: 'UserAssignmentInstance',
+          entityId: instanceId,
+          affectedObjectName: assignment.lesson.title,
+          details: {
+            assignmentId: assignment.id,
+            userId,
+          },
+        });
       }
     }
   }

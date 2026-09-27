@@ -1,5 +1,11 @@
 import { prisma } from '../../../shared/db/prisma';
-import { UserAssignmentInstanceStatus, AssignmentSourceType, MembershipStatus } from '@prisma/client';
+import {
+  UserAssignmentInstanceStatus,
+  AssignmentSourceType,
+  MembershipStatus,
+  AuditCategory,
+  AuditOutcome,
+} from '@prisma/client';
 import { targetResolutionService } from './targetResolution.service';
 import { organizationUnitService } from '../../organization/services/organizationUnit.service';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
@@ -160,13 +166,20 @@ export class MaterializationService {
 
         // Logs one audit entry per instance created (entityType "UserAssignmentInstance", action "CREATED")
         if (isCreated && instanceId) {
-          await auditLogService.log(
-            assignment.companyId,
-            'UserAssignmentInstance',
-            instanceId,
-            'CREATED',
-            assignment.createdById
-          );
+          await auditLogService.log({
+            companyId: assignment.companyId,
+            category: AuditCategory.LEARNING_CONTENT_ASSIGNMENTS,
+            outcome: AuditOutcome.SUCCESS,
+            action: 'CREATED',
+            actorId: assignment.createdById,
+            entityType: 'UserAssignmentInstance',
+            entityId: instanceId,
+            affectedObjectName: assignment.lesson.title,
+            details: {
+              assignmentId: assignment.id,
+              userId,
+            },
+          });
 
           if (instanceStatus === UserAssignmentInstanceStatus.ACTIVE) {
             await triggerLessonAssignedNotification({

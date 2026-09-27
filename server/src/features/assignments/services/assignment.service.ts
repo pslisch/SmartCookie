@@ -1,5 +1,14 @@
 import { prisma } from '../../../shared/db/prisma';
-import { AssignmentType, AssignmentStatus, Assignment, LessonStatus, CourseStatus, UserAssignmentInstanceStatus } from '@prisma/client';
+import {
+  AssignmentType,
+  AssignmentStatus,
+  Assignment,
+  LessonStatus,
+  CourseStatus,
+  UserAssignmentInstanceStatus,
+  AuditCategory,
+  AuditOutcome,
+} from '@prisma/client';
 import crypto from 'crypto';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
 import { materializationService } from './materialization.service';
@@ -83,20 +92,23 @@ export class AssignmentService {
     });
 
     // Log the mutation to AuditLog
-    await auditLogService.log(
-      lesson.companyId,
-      'Assignment',
-      assignment.id,
-      'CREATE_LESSON_ASSIGNMENT',
-      createdById,
-      {
+    await auditLogService.log({
+      companyId: lesson.companyId,
+      category: AuditCategory.LEARNING_CONTENT_ASSIGNMENTS,
+      outcome: AuditOutcome.SUCCESS,
+      action: 'CREATE_LESSON_ASSIGNMENT',
+      actorId: createdById,
+      entityType: 'Assignment',
+      entityId: assignment.id,
+      affectedObjectName: lesson.title,
+      details: {
         lessonId,
         type,
         isMandatory,
         targetsCount: targets?.length ?? 0,
         courseAssignmentBatchId,
-      }
-    );
+      },
+    });
 
     // Trigger async materialization (does not block caller)
     setTimeout(() => {
@@ -180,17 +192,20 @@ export class AssignmentService {
     }
 
     // Log the Course Assignment mutation
-    await auditLogService.log(
-      course.companyId,
-      'Course',
-      courseId,
-      'CREATE_COURSE_ASSIGNMENT',
-      createdById,
-      {
+    await auditLogService.log({
+      companyId: course.companyId,
+      category: AuditCategory.LEARNING_CONTENT_ASSIGNMENTS,
+      outcome: AuditOutcome.SUCCESS,
+      action: 'CREATE_COURSE_ASSIGNMENT',
+      actorId: createdById,
+      entityType: 'Course',
+      entityId: courseId,
+      affectedObjectName: course.title,
+      details: {
         courseAssignmentBatchId,
         assignmentsCreated: createdAssignments.map((a) => a.id),
-      }
-    );
+      },
+    });
 
     return createdAssignments;
   }
@@ -202,6 +217,7 @@ export class AssignmentService {
   async cancelAssignment(assignmentId: string, actorId?: string): Promise<Assignment> {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
+      include: { lesson: true },
     });
 
     if (!assignment) {
@@ -237,13 +253,16 @@ export class AssignmentService {
     });
 
     // Log the mutation to AuditLog
-    await auditLogService.log(
-      assignment.companyId,
-      'Assignment',
-      assignmentId,
-      'CANCEL_ASSIGNMENT',
-      actorId || null
-    );
+    await auditLogService.log({
+      companyId: assignment.companyId,
+      category: AuditCategory.LEARNING_CONTENT_ASSIGNMENTS,
+      outcome: AuditOutcome.SUCCESS,
+      action: 'CANCEL_ASSIGNMENT',
+      actorId: actorId || null,
+      entityType: 'Assignment',
+      entityId: assignmentId,
+      affectedObjectName: assignment.lesson.title,
+    });
 
     return updatedAssignment;
   }

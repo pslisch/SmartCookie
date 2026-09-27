@@ -1,6 +1,13 @@
 import { prisma } from '../../../shared/db/prisma';
-import { UserStatus, UserAssignmentInstanceStatus, MembershipStatus } from '@prisma/client';
+import {
+  UserStatus,
+  UserAssignmentInstanceStatus,
+  MembershipStatus,
+  AuditCategory,
+  AuditOutcome,
+} from '@prisma/client';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
+import { getUserDisplayName } from '../../../shared/audit/auditSanitizer';
 import { mandatoryAssignmentService } from '../../assignments/services/mandatoryAssignment.service';
 import { membershipAssignmentHooksService } from '../../assignments/services/membershipAssignmentHooks.service';
 
@@ -25,7 +32,11 @@ export class UserReactivationService {
       throw new Error('User not found.');
     }
 
-    const companyId = user.companyId || 'SYSTEM';
+    if (!user.companyId) {
+      throw new Error(`Cannot reactivate user ${userId} without a company.`);
+    }
+
+    const companyId = user.companyId;
 
     if (option === 'RESTORE') {
       // 1. Update user status back to ACTIVE
@@ -35,13 +46,16 @@ export class UserReactivationService {
       });
 
       // 2. Log an audit entry
-      await auditLogService.log(
+      await auditLogService.log({
         companyId,
-        'User',
-        userId,
-        'REACTIVATE_RESTORE',
-        actorId || userId
-      );
+        category: AuditCategory.PERMISSIONS_ORGANIZATION,
+        outcome: AuditOutcome.SUCCESS,
+        action: 'REACTIVATE_RESTORE',
+        actorId: actorId || userId,
+        entityType: 'User',
+        entityId: userId,
+        affectedObjectName: getUserDisplayName(user),
+      });
 
       return { success: true };
     } else if (option === 'FRESH_START') {
@@ -81,13 +95,16 @@ export class UserReactivationService {
       }
 
       // 5. Log an audit entry
-      await auditLogService.log(
+      await auditLogService.log({
         companyId,
-        'User',
-        userId,
-        'REACTIVATE_FRESH_START',
-        actorId || userId
-      );
+        category: AuditCategory.PERMISSIONS_ORGANIZATION,
+        outcome: AuditOutcome.SUCCESS,
+        action: 'REACTIVATE_FRESH_START',
+        actorId: actorId || userId,
+        entityType: 'User',
+        entityId: userId,
+        affectedObjectName: getUserDisplayName(user),
+      });
 
       return { success: true };
     } else {

@@ -1,9 +1,10 @@
 import { prisma } from '../../../shared/db/prisma';
-import { SyncStatus, SyncTriggerType, UserStatus } from '@prisma/client';
+import { SyncStatus, SyncTriggerType, UserStatus, AuditCategory, AuditOutcome } from '@prisma/client';
 import { EntraGraphClient } from '../providers/entraGraphClient';
 import { entraIdAuthProvider } from '../providers/entraId.provider';
 import { decrypt } from '../../../shared/crypto/encryption';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
+import { getUserDisplayName } from '../../../shared/audit/auditSanitizer';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 import { emailService } from '../../../shared/email/email.service';
 
@@ -307,7 +308,17 @@ export class EntraSyncService {
               }
             }
 
-            await auditLogService.log(companyId, 'User', user.id, 'PROVISION_ENTRA', triggeredByUserId || 'SYSTEM');
+            await auditLogService.log({
+              companyId,
+              category: AuditCategory.PERMISSIONS_ORGANIZATION,
+              outcome: AuditOutcome.SUCCESS,
+              action: 'PROVISION_ENTRA',
+              actorId: null,
+              entityType: 'User',
+              entityId: user.id,
+              affectedObjectName: getUserDisplayName(user),
+              details: triggeredByUserId ? { triggeredByUserId } : undefined,
+            });
           } else {
             // User already exists locally.
             // Determine active/disabled status based on Entra ID
@@ -401,13 +412,17 @@ export class EntraSyncService {
             data: { status: 'ARCHIVED' },
           });
 
-          await auditLogService.log(
+          await auditLogService.log({
             companyId,
-            'User',
-            missingUser.id,
-            'ARCHIVE_DELETED_ENTRA_USER',
-            triggeredByUserId || 'SYSTEM'
-          );
+            category: AuditCategory.DELETION,
+            outcome: AuditOutcome.SUCCESS,
+            action: 'ARCHIVE_DELETED_ENTRA_USER',
+            actorId: null,
+            entityType: 'User',
+            entityId: missingUser.id,
+            affectedObjectName: getUserDisplayName(missingUser),
+            details: triggeredByUserId ? { triggeredByUserId } : undefined,
+          });
           usersProcessed++;
         } catch (err: any) {
           console.error(`[EntraSyncService] Failed to soft-delete missing user ${missingUser.email}:`, err);

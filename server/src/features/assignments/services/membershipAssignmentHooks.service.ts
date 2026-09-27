@@ -1,5 +1,12 @@
 import { prisma } from '../../../shared/db/prisma';
-import { UserAssignmentInstanceStatus, AssignmentSourceType, MembershipStatus, AssignmentStatus } from '@prisma/client';
+import {
+  UserAssignmentInstanceStatus,
+  AssignmentSourceType,
+  MembershipStatus,
+  AssignmentStatus,
+  AuditCategory,
+  AuditOutcome,
+} from '@prisma/client';
 import { auditLogService } from '../../../shared/audit/auditLog.service';
 
 export class MembershipAssignmentHooksService {
@@ -35,7 +42,17 @@ export class MembershipAssignmentHooksService {
             deletedAt: null,
           },
         },
-        include: { assignment: true },
+        include: {
+          assignment: {
+            include: {
+              lesson: {
+                select: {
+                  title: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       for (const target of targets) {
@@ -118,13 +135,20 @@ export class MembershipAssignmentHooksService {
         });
 
         if (isCreated && instanceId) {
-          await auditLogService.log(
-            assignment.companyId,
-            'UserAssignmentInstance',
-            instanceId,
-            'CREATED',
-            assignment.createdById
-          );
+          await auditLogService.log({
+            companyId: assignment.companyId,
+            category: AuditCategory.LEARNING_CONTENT_ASSIGNMENTS,
+            outcome: AuditOutcome.SUCCESS,
+            action: 'CREATED',
+            actorId: assignment.createdById,
+            entityType: 'UserAssignmentInstance',
+            entityId: instanceId,
+            affectedObjectName: assignment.lesson.title,
+            details: {
+              assignmentId: assignment.id,
+              userId,
+            },
+          });
         }
       }
     } else if (learningGroupId) {
@@ -138,7 +162,17 @@ export class MembershipAssignmentHooksService {
             deletedAt: null,
           },
         },
-        include: { assignment: true },
+        include: {
+          assignment: {
+            include: {
+              lesson: {
+                select: {
+                  title: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       for (const target of targets) {
@@ -220,13 +254,20 @@ export class MembershipAssignmentHooksService {
         });
 
         if (isCreated && instanceId) {
-          await auditLogService.log(
-            assignment.companyId,
-            'UserAssignmentInstance',
-            instanceId,
-            'CREATED',
-            assignment.createdById
-          );
+          await auditLogService.log({
+            companyId: assignment.companyId,
+            category: AuditCategory.LEARNING_CONTENT_ASSIGNMENTS,
+            outcome: AuditOutcome.SUCCESS,
+            action: 'CREATED',
+            actorId: assignment.createdById,
+            entityType: 'UserAssignmentInstance',
+            entityId: instanceId,
+            affectedObjectName: assignment.lesson.title,
+            details: {
+              assignmentId: assignment.id,
+              userId,
+            },
+          });
         }
       }
     }
