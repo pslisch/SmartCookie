@@ -1,159 +1,27 @@
-# Real Verification Evidence: AI Email Prompt & Field Builder Relocation
+# Audit Log Schema Fix: Nullable Category/Outcome & Verification
 
-This document contains real observed verification data for two features:
-1. **AI Email Co-Writing Prompt Assistant** (`EmailTemplateForm.tsx`)
-2. **Field Builder Relocation into the Administration Card** (`Management.tsx` and `UserGroupManagement.tsx`)
-
----
-
-## 1. AI Email Co-Writing Prompt Verification
-
-### 1.1 Action & Execution
-In `src/features/notifications/components/EmailTemplateForm.tsx`, clicking the **"Copy AI Prompt"** button (`#copy-ai-prompt-btn`) invokes `handleCopyAiPrompt`:
-```typescript
-const confirmationLine = t(
-  'emailTemplates.aiPrompt.confirmationLine',
-  'Understood :) How do you want the email to look like?'
-);
-const promptText = t('emailTemplates.aiPrompt.promptTemplate', {
-  lessonTitleVar: '{{lessonTitle}}',
-  dueDateVar: '{{dueDate}}',
-  learnerNameVar: '{{learnerName}}',
-  actionUrlVar: '{{actionUrl}}',
-  confirmationLine,
-});
-
-navigator.clipboard.writeText(promptText);
-```
-
-### 1.2 Actual Verbatim Clipboard Contents
-The exact, unedited string copied to the clipboard is as follows:
-
-```text
-You are an expert HTML email designer. I want you to help me design an HTML email template for our learning management system notifications.
-
-Strict Rules & Supported Variables:
-1. The system supports ONLY these 4 variable placeholders. These are the ONLY ones supported — do NOT invent or assume any others:
-- {{lessonTitle}}: The title of the lesson or course
-- {{dueDate}}: The assignment deadline (note: this is only populated for deadline-related notifications)
-- {{learnerName}}: The name of the learner (note: this is only populated for manager notifications)
-- {{actionUrl}}: The action link/URL button to open the lesson
-
-2. HTML Requirements:
-- Write valid, email-client-friendly HTML markup
-- Use inline styles for all formatting to ensure maximum compatibility across email clients (Outlook, Gmail, Apple Mail, etc.)
-- Ensure the layout is responsive and cleanly formatted for desktop and mobile
-
-3. Required First Response:
-Before generating any email code or asking questions, acknowledge these rules by replying with EXACTLY this single confirmation line and nothing else:
-"Understood :) How do you want the email to look like?"
-```
-
-### 1.3 Token & Interpolation Validation
-- **Literal Tokens Confirmed**:
-  - `{{lessonTitle}}` appears verbatim (`promptText.includes('{{lessonTitle}}') === true`)
-  - `{{dueDate}}` appears verbatim (`promptText.includes('{{dueDate}}') === true`)
-  - `{{learnerName}}` appears verbatim (`promptText.includes('{{learnerName}}') === true`)
-  - `{{actionUrl}}` appears verbatim (`promptText.includes('{{actionUrl}}') === true`)
-- **i18n Interpolation Integrity**:
-  - In `common.json`, placeholders are defined as `{{lessonTitleVar}}`, `{{dueDateVar}}`, `{{learnerNameVar}}`, and `{{actionUrlVar}}`.
-  - Passing `{ lessonTitleVar: '{{lessonTitle}}', ... }` prevents i18next from consuming or stripping curly braces.
-  - Zero raw `{{...Var}}` tokens remain (`promptText.includes('{{lessonTitleVar}}') === false`).
-- **Confirmation Line Confirmed**:
-  - Exact literal string present in required quotes: `"Understood :) How do you want the email to look like?"` (`promptText.includes('"Understood :) How do you want the email to look like?"') === true`).
+## 1. Migration Strategy & Rationale
+- **Approach Taken**: Direct edit of `server/prisma/migrations/20260927090000_extend_audit_log_schema/migration.sql` alongside `server/prisma/schema.prisma`.
+- **Why**: The migration `20260927090000_extend_audit_log_schema` was created during the current schema extension cycle and had not yet been deployed or applied to any production environment. Correcting `category` and `outcome` in-place from `NOT NULL` to `NULL` prevents introducing migration debt and ensures a single atomic, clean schema upgrade.
+- **Migration Safety**: Historical audit log entries written prior to this classification feature do not possess category or outcome values. Making `category` and `outcome` nullable in the database (`AuditCategory?`, `AuditOutcome?`) prevents migration failure on populated tables and avoids arbitrary/guessed default backfills. All new writes will be strictly validated and required at the application layer (`AuditLogService`).
 
 ---
 
-## 2. Field Builder Relocation Verification
-
-### 2.1 Scenario A: Real User with ONLY `profile-fields:manage-fields`
-- **User Permissions**:
-  - `profile-fields:manage-fields`: `true`
-  - `roles:manage`: `false`
-  - `users:view`: `false`
-  - `organization:*`: `false` (`hasOrgAccess === false`)
-- **Management Hub Card Observed**:
-  - Access check: `hasAdministrationAccess = hasRolesManage || hasOrgAccess || canManageFields` evaluates to `true` (`false || false || true`).
-  - Card ID: `#card-org-mgmt`
-  - Observed Card Title: `"Administration"` (confirmed NOT `"Users, Groups & Roles"`).
-  - Observed Card Description: `"Manage users, organization units, learning cohorts, roles, permissions, and profile data schema."`
-  - Observed CTA Button Text: `"Manage Administration"`
-- **Observed Tab List Inside Administration Subview (`#user-group-tabs`)**:
-  - `#tab-btn-users` (`hasUsersView`): **Hidden**
-  - `#tab-btn-structure` (`hasOrgAccess`): **Hidden**
-  - `#tab-btn-groups` (`hasOrgAccess`): **Hidden**
-  - `#tab-btn-expiring` (`hasOrgAccess`): **Hidden**
-  - `#tab-btn-roles` (`hasRolesManage`): **Hidden**
-  - `#tab-btn-profiles-data` (`canManageFields`): **Visible** (`"Profiles Data"`)
-  - **Real Observed Tab List**:
-    ```json
-    ["Profiles Data"]
-    ```
-  - Total Tab Count: **1**
-  - Default Active Tab: `'profiles-data'` (fallback selector sets `'profiles-data'` directly).
-
-### 2.2 Scenario B: User with All Administration Permissions
-- **User Permissions**:
-  - `users:view`: `true`
-  - `organization:view`, `organization:create`, `organization:edit`, `organization:delete`, `organization:manage-members`, `organization:manage-groups`: `true` (`hasOrgAccess === true`)
-  - `roles:manage`: `true`
-  - `profile-fields:manage-fields`: `true`
-- **Observed Tab List Inside Administration Subview (`#user-group-tabs`)**:
-  1. `#tab-btn-users` -> `"Users"`
-  2. `#tab-btn-structure` -> `"Organization Structure"`
-  3. `#tab-btn-groups` -> `"Learning Groups"`
-  4. `#tab-btn-expiring` -> `"Expiring Groups"`
-  5. `#tab-btn-roles` -> `"Roles"`
-  6. `#tab-btn-profiles-data` -> `"Profiles Data"`
-  - **Real Observed Tab List**:
-    ```json
-    [
-      "Users",
-      "Organization Structure",
-      "Learning Groups",
-      "Expiring Groups",
-      "Roles",
-      "Profiles Data"
-    ]
-    ```
-  - Total Tab Count: **6**
-
-### 2.3 Scenario C: Standalone Field Builder Card Removal (Before vs After)
-- **Before Consolidation** (Commit `20a5375~1`):
-  - Total Hub Grid Cards: **5**
-  - Card IDs in `#management-hub-grid`:
-    1. `#card-org-mgmt` (*"Users, Groups & Roles"*)
-    2. `#card-assignment-mgmt` (*"Assignments"*)
-    3. `#card-field-builder` (*"Field Builder"*)
-    4. `#card-theme-management` (*"Theme Management"*)
-    5. `#card-notifications` (*"Notifications"*)
-- **After Consolidation** (Commit `20a5375` to Current):
-  - Total Hub Grid Cards: **4**
-  - Card IDs in `#management-hub-grid`:
-    1. `#card-org-mgmt` (*"Administration"*)
-    2. `#card-assignment-mgmt` (*"Content Management"*)
-    3. `#card-theme-management` (*"Theme Management"*)
-    4. `#card-notifications` (*"Notifications"*)
-  - **Standalone Card Check**: `#card-field-builder` is completely removed from `src/features/management/pages/Management.tsx` (0 occurrences in codebase).
+## 2. Pre-Migration Database State
+Before applying the migration, the database was inspected:
+- **Pre-existing `audit_logs` row count**: `5` rows
+- **Pre-existing columns**: `id`, `company_id`, `entity_type`, `entity_id`, `action`, `actor_id`, `metadata`, `created_at`
 
 ---
 
-## 3. Audit Log Schema Migration & ADR-0020 Verification
-
-### 3.1 ADR Number Selection & Rationale
-- **Highest Existing ADR**: `[ADR-0019] Notification System Architecture (Phase 1)`
-- **ADR Number Chosen**: `[ADR-0020] Audit Log Schema Extension and Rich Event Model`
-- **Relationship**: Explicitly supersedes `[ADR-0013] Generic Reusable Audit Log and Dynamic Overdue Reminder Engine`.
-- **Rationale**: ADR-0013 provided the initial generic polymorphic foundation (`id`, `companyId`, `entityType`, `entityId`, `action`, `actorId`, `metadata`, `createdAt`). ADR-0020 supersedes this decision by extending the single-table model in place to add structured categories (`AuditCategory`), outcome tracking (`AuditOutcome`), human-readable entity snapshot name preservation (`affectedObjectName`), composite entity tracking (`additionalAffectedObjects`), structured before/after diffs (`changes`), authentication failure aggregation (`authFailureCount`, `resolvedAt`), and `updatedAt`, while renaming `metadata` to `details` and leveraging `Company.settings.auditLogRetentionDays` for retention configuration.
-
-### 3.2 Exact Migration SQL Generated
+## 3. Exact Migration SQL Applied
 File: `server/prisma/migrations/20260927090000_extend_audit_log_schema/migration.sql`
 
 ```sql
 -- AlterTable
 ALTER TABLE `audit_logs`
-    ADD COLUMN `category` ENUM('AUTHENTICATION_SECURITY', 'PERMISSIONS_ORGANIZATION', 'LEARNING_CONTENT_ASSIGNMENTS', 'LEARNING_RESULTS', 'DELETION', 'FAILURES') NOT NULL,
-    ADD COLUMN `outcome` ENUM('SUCCESS', 'FAILURE', 'RESOLVED') NOT NULL,
+    ADD COLUMN `category` ENUM('AUTHENTICATION_SECURITY', 'PERMISSIONS_ORGANIZATION', 'LEARNING_CONTENT_ASSIGNMENTS', 'LEARNING_RESULTS', 'DELETION', 'FAILURES') NULL,
+    ADD COLUMN `outcome` ENUM('SUCCESS', 'FAILURE', 'RESOLVED') NULL,
     ADD COLUMN `affected_object_name` VARCHAR(191) NULL,
     ADD COLUMN `additional_affected_objects` JSON NULL,
     ADD COLUMN `changes` JSON NULL,
@@ -178,13 +46,50 @@ CREATE INDEX `audit_logs_company_id_actor_id_created_at_idx` ON `audit_logs`(`co
 CREATE INDEX `audit_logs_company_id_actor_id_category_outcome_action_idx` ON `audit_logs`(`company_id`, `actor_id`, `category`, `outcome`, `action`);
 ```
 
-### 3.3 TypeScript Verification (`tsc --noEmit`)
-Running `npx prisma generate` generated the updated Prisma client types reflecting `details` instead of `metadata`, as well as new required fields `category` and `outcome`.
+---
 
-Executing `npx tsc --noEmit` yielded the expected single compile error in `server/src/shared/audit/auditLog.service.ts` due to `AuditLogCreateInput` expecting `details` instead of `metadata`:
+## 4. Post-Migration Database Verification
+The migration script was executed directly against the database containing the 5 pre-existing rows.
+
+### 4.1 Row Count & Data Integrity
+- **Post-migration row count**: `5` rows (preserved without data loss)
+- **Sample historical records**:
+  - Row 1: `id`: `0d053493-f117-4199-bf1e-5a19beaa72f0`, `entity_type`: `UserAssignmentInstance`, `action`: `COMPLETED`, `category`: `null`, `outcome`: `null`, `details`: `{"assignmentId":"99109db6-0e25-4926-bd96-ebaa4b693c7c","learnerId":"bce278c3-49cd-40e7-a8d2-62bd222ccdf5"}`
+  - Row 2: `id`: `202ed40f-1432-4aef-86e2-a09e335fc45d`, `entity_type`: `UserAssignmentInstance`, `action`: `COMPLETED`, `category`: `null`, `outcome`: `null`, `details`: `{"assignmentId":"e66ff763-7bf5-40e2-825d-0ab7bb97578a","learnerId":"3fab7dfc-9852-4b41-ad77-93ae0dea761a"}`
+  - Row 3: `id`: `45f71e7c-57ed-4cc1-b8f4-8d77b1c5e1c6`, `entity_type`: `UserAssignmentInstance`, `action`: `CREATED`, `category`: `null`, `outcome`: `null`, `details`: `null`
+
+### 4.2 Column Schema Confirmation (DESCRIBE `audit_logs`)
+- `id`: `varchar(191)` (PRI)
+- `company_id`: `varchar(191)` (MUL)
+- `entity_type`: `varchar(191)`
+- `entity_id`: `varchar(191)`
+- `action`: `varchar(191)`
+- `actor_id`: `varchar(191)` (YES / NULL)
+- `details`: `longtext` (YES / NULL, successfully renamed from `metadata` with historical JSON intact)
+- `created_at`: `datetime(3)` (NOT NULL)
+- `category`: `enum('AUTHENTICATION_SECURITY','PERMISSIONS_ORGANIZATION','LEARNING_CONTENT_ASSIGNMENTS','LEARNING_RESULTS','DELETION','FAILURES')` (YES / NULL)
+- `outcome`: `enum('SUCCESS','FAILURE','RESOLVED')` (YES / NULL)
+- `affected_object_name`: `varchar(191)` (YES / NULL)
+- `additional_affected_objects`: `longtext` (YES / NULL)
+- `changes`: `longtext` (YES / NULL)
+- `auth_failure_count`: `int(11)` (YES / NULL)
+- `resolved_at`: `datetime(3)` (YES / NULL)
+- `updated_at`: `datetime(3)` (NOT NULL, default `current_timestamp(3)` on update `current_timestamp(3)`)
+
+---
+
+## 5. Verbatim TypeScript Compiler Output (`tsc --noEmit`)
+
+Prisma Client was regenerated via `npx prisma generate` to reflect `AuditCategory?` and `AuditOutcome?` as optional on `AuditLogCreateInput`.
+
+Executing `npx tsc --noEmit` yielded the following verbatim output:
 
 ```text
 server/src/shared/audit/auditLog.service.ts(22,9): error TS2353: Object literal may only specify known properties, and 'metadata' does not exist in type '(Without<AuditLogCreateInput, AuditLogUncheckedCreateInput> & AuditLogUncheckedCreateInput) | (Without<...> & AuditLogCreateInput)'.
 ```
 
-All other files and caller call sites remain structurally compatible with their existing function signatures, confirming that the schema rename is isolated and prepared for the subsequent `AuditLogService` rewrite task.
+### Analysis of Compile Error:
+- Only **1** compile error exists across the entire codebase.
+- The error is isolated to `server/src/shared/audit/auditLog.service.ts:22:9`, caused exclusively by the expected rename of the Prisma schema field `metadata` to `details`.
+- Because `category` and `outcome` are now nullable (`AuditCategory?`, `AuditOutcome?`), Prisma Client does not require them in `AuditLogCreateInput`, so no missing property errors are emitted for category/outcome.
+- Per task constraints, `auditLog.service.ts` is intentionally left untouched until the upcoming AuditLogService rewrite task.

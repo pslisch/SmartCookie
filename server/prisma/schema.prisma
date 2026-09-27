@@ -488,8 +488,8 @@ model AuditLog {
   action                    String
   actorId                   String?        @map("actor_id")
   actor                     User?          @relation("UserAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
-  category                  AuditCategory
-  outcome                   AuditOutcome
+  category                  AuditCategory?
+  outcome                   AuditOutcome?
   affectedObjectName        String?        @map("affected_object_name")
   additionalAffectedObjects Json?          @map("additional_affected_objects")
   changes                   Json?
