@@ -1,53 +1,19 @@
-# AuditLogService Contract Rewrite & Call Site Migration Verification
+# Audit Log — Changes Array Sensitive Field Redaction Verification
 
-## 1. Overview & Architectural Summary
-- **Contract Signature Updated**: Replaced `AuditLogService.log()` with `AuditLogInput` accepting required `companyId`, `category`, `outcome`, `action`, `actorId`, `entityType`, `entityId`, `affectedObjectName`, and optional `additionalAffectedObjects`, `changes`, `details`.
-- **Sanitizer Integration**: Created `server/src/shared/audit/auditSanitizer.ts`. All `details`, `changes`, and `additionalAffectedObjects` pass through `sanitizeAuditPayload()` prior to Prisma insertion. Case-insensitive sensitive keys matching `password`, `token`, `secret`, `apikey`, `api_key`, `accesstoken`, `refreshtoken`, `resettoken`, `mfasecret`, `hash`, `credential` are recursively omitted (deleted) entirely.
-- **Bug 1 Fixed**: `userManagement.service.ts` line ~259 formerly passed `user.companyId || 'SYSTEM'`. `user.companyId` is now passed directly (with an explicit check throwing an error if a user lacks a companyId), preventing foreign key violations against `companies(id)`.
-- **Bug 2 Fixed**: `entraSync.service.ts` lines ~310 & ~404 formerly passed `triggeredByUserId || 'SYSTEM'` as `actorId`. Per spec, `actorId` is set to `null` (System actor) and `triggeredByUserId` is recorded inside `details` under `{ triggeredByUserId }`.
-- **All Call Sites Migrated**: Updated all 9 call sites across 8 files to the new `AuditLogInput` shape.
-
----
-
-## 2. Summary of 9 Migrated Call Sites
-
-1. **`assignment.service.ts` (`CREATE_LESSON_ASSIGNMENT`)**:
-   - `category`: `LEARNING_CONTENT_ASSIGNMENTS`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `lesson.title`
-2. **`assignment.service.ts` (`CREATE_COURSE_ASSIGNMENT`)**:
-   - `category`: `LEARNING_CONTENT_ASSIGNMENTS`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `course.title`
-3. **`assignment.service.ts` (`CANCEL_ASSIGNMENT`)**:
-   - `category`: `LEARNING_CONTENT_ASSIGNMENTS`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `assignment.lesson.title` (included `lesson` relation in query)
-4. **`completion.service.ts` (`COMPLETED`)**:
-   - `category`: `LEARNING_RESULTS`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `instance.assignment.lesson.title`
-5. **`mandatoryAssignment.service.ts` (`CREATED`)**:
-   - `category`: `LEARNING_CONTENT_ASSIGNMENTS`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `assignment.lesson.title` (included `lesson` relation in query)
-6. **`materialization.service.ts` (`CREATED`)**:
-   - `category`: `LEARNING_CONTENT_ASSIGNMENTS`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `assignment.lesson.title`
-7. **`membershipAssignmentHooks.service.ts` (`CREATED` - OU & Learning Group branches)**:
-   - `category`: `LEARNING_CONTENT_ASSIGNMENTS`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `assignment.lesson.title` (included `lesson` relation in query)
-8. **`userManagement.service.ts` (`ARCHIVE`)**:
-   - `category`: `PERMISSIONS_ORGANIZATION`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `getUserDisplayName(user)`
-   - Bug fix applied: `user.companyId` validated and used directly without `'SYSTEM'` fallback string.
-9. **`userReactivation.service.ts` (`REACTIVATE_RESTORE`, `REACTIVATE_FRESH_START`)**:
-   - `category`: `PERMISSIONS_ORGANIZATION`, `outcome`: `SUCCESS`
-   - `affectedObjectName`: `getUserDisplayName(user)`
-10. **`entraSync.service.ts` (`PROVISION_ENTRA`, `ARCHIVE_DELETED_ENTRA_USER`)**:
-    - `PROVISION_ENTRA`: `category`: `PERMISSIONS_ORGANIZATION`, `outcome`: `SUCCESS`
-    - `ARCHIVE_DELETED_ENTRA_USER`: `category`: `DELETION`, `outcome`: `SUCCESS`
-    - `affectedObjectName`: `getUserDisplayName(user / missingUser)`
-    - Bug fix applied: `actorId = null` (System actor) with `triggeredByUserId` passed in `details`.
+## 1. Overview & Root Cause Analysis
+- **Problem**: `sanitizeAuditPayload()` previously only checked object keys. When passed an array of structured changes `{ field: "password", before: "oldPass", after: "newPass" }`, the object keys are `"field"`, `"before"`, and `"after"`—none of which match the sensitive-key deny-list. Consequently, sensitive field diffs (e.g. passwords, tokens, API keys) bypassed redaction and were stored in plaintext.
+- **Solution**:
+  - Exported `isSensitiveKey` from `server/src/shared/audit/auditSanitizer.ts`.
+  - Added dedicated function `sanitizeAuditChanges(changes: AuditLogChange[])` in `auditSanitizer.ts`.
+  - For each change entry, the function evaluates `entry.field` (the value of the property) against `isSensitiveKey()`.
+  - If sensitive, the entire entry is dropped from the array (deleted entirely, not masked).
+  - If safe, the entry is still passed through `sanitizeAuditPayload` defensively.
+  - When all entries in `changes` are sensitive, the function returns `[]`, persisting as an empty array `[]` (not `null`), ensuring "no changes were safe to log" is not conflated with "no changes occurred".
+  - Updated `AuditLogService.log()` in `server/src/shared/audit/auditLog.service.ts` to call `sanitizeAuditChanges(input.changes)` instead of the generic payload sanitizer.
 
 ---
 
-## 3. Verbatim TypeScript Compiler Output (`npx tsc --noEmit`)
+## 2. Verbatim TypeScript Compiler Output (`npx tsc --noEmit`)
 
 Execution command: `npx tsc --noEmit`
 Exit status: `0`
@@ -58,48 +24,53 @@ Exit status: `0`
 
 ---
 
-## 4. Live Database Secret Redaction Test
+## 3. Real Database Re-Verification Test
 
-A test record was inserted via `AuditLogService.log()` with secret keys (`password`, `userToken`, `apiKey`, `resetToken`, `nested.mfaSecret`, `nested.credentialHash`) and non-secret keys (`note`, `nested.safeField`).
+### 3.1 Mixed Sensitive and Safe Changes Array Test
+A test record was inserted with both sensitive (`field: "password"`) and safe (`field: "email"`) entries in `changes`, along with secrets in `details`.
 
-### Read-Back Database Payload:
+#### Real Read-Back Row From Database (`FETCHED_ROW`):
 ```json
 {
-  "id": "a64c12ef-2df4-46bb-86e0-ef925c4db2ff",
-  "companyId": "4ff77413-5777-44f3-b77a-ec4f67c30e20",
+  "id": "a3f889d1-8ee4-4c86-90c7-01053b925b30",
+  "companyId": "730917be-9701-4af6-aef6-c78afb730d2b",
   "entityType": "SecurityTest",
   "entityId": "test-id-123",
   "action": "TEST_SANITIZATION",
   "actorId": null,
-  "details": {
-    "note": "This note must survive sanitization",
-    "nested": {
-      "safeField": "keep this"
-    }
-  },
-  "createdAt": "2026-09-27T09:50:18.232Z",
   "category": "AUTHENTICATION_SECURITY",
   "outcome": "SUCCESS",
   "affectedObjectName": "Test User Security Object",
   "additionalAffectedObjects": null,
   "changes": [
     {
-      "after": "newPass",
-      "before": "oldPass",
-      "field": "password"
-    },
-    {
-      "after": "new@example.com",
+      "field": "email",
       "before": "old@example.com",
-      "field": "email"
+      "after": "new@example.com"
     }
   ],
+  "details": {
+    "note": "This note must survive sanitization",
+    "nested": {
+      "safeField": "keep this"
+    }
+  },
   "authFailureCount": null,
   "resolvedAt": null,
-  "updatedAt": "2026-09-27T09:50:18.232Z"
+  "createdAt": "2026-09-28T07:00:59.102Z",
+  "updatedAt": "2026-09-28T07:00:59.102Z"
 }
 ```
 
-### Result:
-- `password`, `userToken`, `apiKey`, `resetToken`, `mfaSecret`, `credentialHash` keys were **deleted entirely** from `details`.
-- `note` and `nested.safeField` were preserved intact.
+### 3.2 All-Sensitive Changes Array Test
+A test record was inserted with only sensitive entries (`password` and `apiKey`).
+
+#### Real Read-Back Row From Database (`ALL_SENSITIVE_ROW_CHANGES`):
+```json
+[]
+```
+- The empty result persists as `[]` (not `null`).
+
+### 3.3 Verification Confirmation
+- In `changes`: The `{ field: "password", before: "oldPass", after: "newPass" }` entry was **completely dropped**; the safe `{ field: "email", before: "old@example.com", after: "new@example.com" }` entry was **preserved intact**.
+- In `details`: Sensitive keys (`password`, `userToken`, `apiKey`, `resetToken`, `mfaSecret`, `credentialHash`) remain stripped, while non-sensitive fields (`note`, `nested.safeField`) are preserved.

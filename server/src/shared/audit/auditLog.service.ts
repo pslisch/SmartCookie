@@ -1,12 +1,8 @@
 import { AuditCategory, AuditOutcome, AuditLog, Prisma } from '@prisma/client';
 import { prisma } from '../db/prisma';
-import { sanitizeAuditPayload } from './auditSanitizer';
+import { sanitizeAuditPayload, sanitizeAuditChanges, AuditLogChange } from './auditSanitizer';
 
-export interface AuditLogChange {
-  field: string;
-  before: string;
-  after: string;
-}
+export type { AuditLogChange };
 
 export interface AdditionalAffectedObject {
   type: string;
@@ -34,7 +30,7 @@ export class AuditLogService {
    */
   async log(input: AuditLogInput): Promise<AuditLog> {
     const sanitizedDetails = input.details !== undefined ? sanitizeAuditPayload(input.details) : undefined;
-    const sanitizedChanges = input.changes !== undefined ? sanitizeAuditPayload(input.changes) : undefined;
+    const sanitizedChanges = input.changes !== undefined ? sanitizeAuditChanges(input.changes) : undefined;
     const sanitizedAdditionalObjects = input.additionalAffectedObjects !== undefined
       ? sanitizeAuditPayload(input.additionalAffectedObjects)
       : undefined;

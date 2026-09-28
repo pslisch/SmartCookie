@@ -1,3 +1,9 @@
+export interface AuditLogChange {
+  field: string;
+  before: string;
+  after: string;
+}
+
 /**
  * Deny-list patterns for redacting sensitive fields from audit log payloads.
  * 
@@ -6,7 +12,7 @@
  */
 const SENSITIVE_KEY_PATTERN = /password|token|secret|apikey|api_key|accesstoken|refreshtoken|resettoken|mfasecret|hash|credential/i;
 
-function isSensitiveKey(key: string): boolean {
+export function isSensitiveKey(key: string): boolean {
   return SENSITIVE_KEY_PATTERN.test(key);
 }
 
@@ -42,6 +48,28 @@ export function sanitizeAuditPayload<T>(value: T): T {
   }
 
   return sanitized as T;
+}
+
+/**
+ * Dedicated sanitizer for the AuditLog `changes` array ({ field, before, after }).
+ * Checks the entry's `field` VALUE against the sensitive-key deny-list.
+ * If sensitive, drops the entire entry from the array (delete entirely, don't mask).
+ * If safe, still passes the entry through generic sanitizeAuditPayload defensively.
+ * An empty result (all entries were sensitive) persists as an empty array, not null.
+ */
+export function sanitizeAuditChanges(changes: AuditLogChange[]): AuditLogChange[] {
+  const result: AuditLogChange[] = [];
+  for (const entry of changes) {
+    if (!entry || typeof entry !== 'object') {
+      continue;
+    }
+    if (typeof entry.field === 'string' && isSensitiveKey(entry.field)) {
+      // Drop the entire sensitive field change entry
+      continue;
+    }
+    result.push(sanitizeAuditPayload(entry));
+  }
+  return result;
 }
 
 /**
