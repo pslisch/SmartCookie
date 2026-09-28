@@ -197,17 +197,9 @@ class EmailServiceImpl implements EmailService {
         html,
       });
       console.log(`Email sent successfully to ${to} using template "${template}"`);
-    } catch (error: any) {
-      console.warn(`[EmailService] SMTP transport failed (${error.code || error.message}). Falling back to STUB OUTBOX for ${to}:`);
-      console.log('--- EMAIL OUTBOX (STUB FALLBACK) ---');
-      console.log(`From: ${from}`);
-      console.log(`To: ${to}`);
-      console.log(`Subject: ${subject}`);
-      console.log(`Text Body:\n${text}`);
-      if (html) {
-        console.log(`HTML Body:\n${html}`);
-      }
-      console.log('------------------------------------');
+    } catch (error) {
+      console.error(`Failed to send email to ${to} using template "${template}":`, error);
+      throw error;
     }
   }
 }
