@@ -421,10 +421,73 @@ The full-stack Express server runs as a systemd service (`smartcookie.service`) 
 ### 3. Database Layer (Host MariaDB)
 Persistent relational storage is managed via Prisma ORM connecting to the host's native MariaDB server on port `3306`. Connection credentials and secure variables are locked inside `.env` with restricted read permissions (`600`).
 
-### 4. Mail Subsystem (External SMTP Relay)
-To ensure reliable, high-volume transactional email delivery (invitations, password resets, profile security warnings), the self-hosted Postal mail server design has been **fully superseded** by an external SMTP relay model:
+### 4. Mail Subsystem (External SMTP Relay & Delivery Resilience)
+To ensure reliable, high-volume transactional email delivery (invitations, password resets, profile security warnings, and course notifications), the external SMTP relay model operates with built-in resilience:
 * **In-App Web Configuration**: Administrators configure and test their external SMTP service directly within the Setup Wizard or Settings dashboard, bypassing fragile configuration files.
 * **Encrypted Storage**: SMTP relay credentials are saved securely inside the host database in the `email_configs` table, with the password encrypted via AES-256-GCM.
 * **Reduced Host Overhead**: Eliminates the operational complexity, outbound Port 25 firewall blockades, Docker dependencies, and heavy system resource overhead of running containerized local mail servers.
+* **Asynchronous Queue & Delivery Lifecycle**: Notification dispatches pass through `NotificationDelivery` records processed periodically by `processPendingEmailDeliveries()`. It enforces retry limits (up to 2 attempts) and records delivery failures without blocking main request threads.
+* **Transport Fault Tolerance & Stub Fallback**: In restricted cloud sandbox or offline preview environments where outbound SMTP ports are blocked, the `EmailService` catches network connection errors (`ECONNREFUSED`, `ESOCKET`, `ETIMEDOUT`) and gracefully redirects output to the console stub outbox (`EMAIL OUTBOX (STUB FALLBACK)`). This prevents unhandled exceptions from terminating background scheduler tasks while preserving full message payload inspection in server logs.
+
+---
+
+## 🛡️ Audit Logging & Security Redaction Architecture
+
+SmartCookie features an enterprise audit logging subsystem (`server/src/shared/audit/`) that provides immutable, traceable compliance tracking for organizational, permission, authentication, and content operations.
+
+```
++-----------------------------------------------------------------------------------+
+|                              AUDIT LOG SUBSYSTEM                                  |
+|                                                                                   |
+|  Call Site Event Trigger                                                          |
+|  (e.g., Assignment, Role Change, User Reactivation, Entra Sync)                  |
+|                   |                                                               |
+|                   v                                                               |
+|    +-------------------------------------------------------------+                |
+|    |      AuditLogInput Contract (AuditLogService.log)           |                |
+|    |  - companyId, category, outcome, action                     |                |
+|    |  - actorId (UUID or null for SYSTEM)                        |                |
+|    |  - entityType, entityId, affectedObjectName                 |                |
+|    |  - changes (AuditLogChange[]), details (Record)             |                |
+|    +-------------------------------------------------------------+                |
+|                   |                                                               |
+|                   v                                                               |
+|    +-------------------------------------------------------------+                |
+|    |             Sanitization Engine (auditSanitizer.ts)         |                |
+|    |  - sanitizeAuditPayload: recursive key-based deny-list      |                |
+|    |    (password, token, secret, apikey, hash, credential, etc) |                |
+|    |  - sanitizeAuditChanges: field-value inspection             |                |
+|    |    (drops sensitive {field, before, after} entries)         |                |
+|    |  - Persists clean [] if all change entries were sensitive   |                |
+|    +-------------------------------------------------------------+                |
+|                   |                                                               |
+|                   v                                                               |
+|    +-------------------------------------------------------------+                |
+|    |               Prisma Relational Storage (AuditLog)          |                |
+|    +-------------------------------------------------------------+                |
++-----------------------------------------------------------------------------------+
+```
+
+### 1. Write Contract (`AuditLogInput`)
+All system mutations record audit logs through `auditLogService.log(input)` with strictly typed parameters:
+* **`companyId`**: Foreign-key reference to the target company (validated to prevent synthetic `'SYSTEM'` FK violations).
+* **`category`**: Enum classification (`AUTHENTICATION_SECURITY`, `PERMISSIONS_ORGANIZATION`, `LEARNING_CONTENT_ASSIGNMENTS`, `LEARNING_RESULTS`, `DELETION`).
+* **`outcome`**: Enum status (`SUCCESS`, `DENIED`, `ERROR`).
+* **`action`**: Verb identifying the event (e.g. `CREATE_LESSON_ASSIGNMENT`, `ARCHIVE_USER`, `PROVISION_ENTRA`).
+* **`actorId`**: UUID of the triggering user, or `null` for automated System background jobs (with manual trigger metadata placed in `details.triggeredByUserId`).
+* **`entityType` & `entityId`**: Target entity identifiers for point-in-time lookup.
+* **`affectedObjectName`**: Required human-readable snapshot (e.g. user full name, lesson title, group title) preserving historical context even if the entity is later deleted.
+
+### 2. Recursive Key Deny-List (`sanitizeAuditPayload`)
+Before persisting to the database, payload metadata (`details`, `additionalAffectedObjects`) is recursively sanitized against a sensitive-key pattern:
+* Matches any key matching `/password|token|secret|apikey|api_key|accesstoken|refreshtoken|resettoken|mfasecret|hash|credential/i`.
+* Sensitive attributes are **deleted entirely** rather than masked, ensuring secrets never enter database persistence.
+
+### 3. Structured Diff Redaction (`sanitizeAuditChanges`)
+For structured field modifications (`changes: [{ field, before, after }]`):
+* `sanitizeAuditChanges` inspects the `field` property value of each entry against `isSensitiveKey()`.
+* Sensitive field diffs (e.g., changes to passwords or API keys) are dropped entirely from the array.
+* If all entries in a diff are sensitive, the sanitized output persists as an empty JSON array (`[]`) rather than `null`, cleanly distinguishing "no safe changes to log" from "no changes occurred".
+
 
 

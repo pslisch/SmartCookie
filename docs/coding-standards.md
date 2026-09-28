@@ -50,7 +50,17 @@ This document establishes the coding conventions and standards for the **SmartCo
 2. **Class Order & Readability**
    - Group styles logically: Layout/Display (`flex block relative`), Sizing/Spacing (`w-full px-4 py-2`), Typography (`text-sm font-semibold`), Visuals (`bg-card-bg rounded-lg shadow-sm`), Interactions/Transitions (`hover:bg-bg-subtle transition-colors`).
 
-3. **Semantic Theme Tokens Over Raw Palette Colors**
-   - All new user-facing color and typography styling **MUST** use semantic theme token utility classes (`bg-card-bg`, `text-text-heading`, `border-card-border`, `bg-btn-primary-bg`, `text-link-primary`, `bg-status-success-bg`, `text-text-muted`, etc.) generated via the Tailwind v4 `@theme` directive in `src/index.css`.
-   - **Never** hardcode arbitrary raw Tailwind palette colors (such as `bg-blue-600`, `text-slate-900`, `border-gray-200`, `bg-gray-50`) in component templates.
-   - Using semantic tokens guarantees multi-tenant brand adaptability, client-side light/dark mode switching, and administrative test-mode previewing without visual regression.
+---
+
+## 🔒 Security & Data Integrity Standards
+
+1. **Audit Logging & Secret Redaction**
+   - All state-altering administrative, authorization, and assignment operations must be recorded via `auditLogService.log()`.
+   - Never log raw secrets, credentials, or tokens.
+   - All payload details and changes arrays must pass through `sanitizeAuditPayload()` and `sanitizeAuditChanges()`.
+   - For user-facing display names in audit logs, always format using `getUserDisplayName(user)`.
+
+2. **Transactional Communications**
+   - Always dispatch emails through `emailService.send()` or enqueue background deliveries via `notificationDelivery`.
+   - Never write direct unhandled SMTP socket invocations in business logic.
+
