@@ -17,7 +17,7 @@ import {
   AuditSearchResponse,
 } from '../types/audit.types';
 
-const AUDIT_LOG_LIST_SELECT = {
+export const AUDIT_LOG_LIST_SELECT = {
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -40,11 +40,11 @@ const AUDIT_LOG_LIST_SELECT = {
   },
 } as const;
 
-type AuditLogRowWithActor = Prisma.AuditLogGetPayload<{
+export type AuditLogRowWithActor = Prisma.AuditLogGetPayload<{
   select: typeof AUDIT_LOG_LIST_SELECT;
 }>;
 
-function mapRowToListItem(r: AuditLogRowWithActor): AuditListItem {
+export function mapRowToListItem(r: AuditLogRowWithActor): AuditListItem {
   return {
     id: r.id,
     createdAt: r.createdAt,
@@ -66,7 +66,7 @@ function mapRowToListItem(r: AuditLogRowWithActor): AuditListItem {
 }
 
 /**
- * Shared filter builder for audit log list and search endpoints.
+ * Shared filter builder for audit log list, search, and export endpoints.
  */
 export function buildAuditLogWhereClause(
   companyId: string,
