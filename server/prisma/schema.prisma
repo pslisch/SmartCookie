@@ -498,6 +498,7 @@ model AuditLog {
   resolvedAt                DateTime?      @map("resolved_at")
   createdAt                 DateTime       @default(now()) @map("created_at")
   updatedAt                 DateTime       @updatedAt @map("updated_at")
+  searchText                String?        @map("search_text") @db.Text
 
   // Supports newest-first pagination per company (WHERE companyId = ? ORDER BY createdAt DESC)
   @@index([companyId, createdAt])
@@ -509,6 +510,8 @@ model AuditLog {
   @@index([companyId, actorId, createdAt])
   // Supports lookup of actor's unresolved authentication failure event (WHERE companyId = ? AND actorId = ? AND category = ? AND outcome = ? AND action = ?)
   @@index([companyId, actorId, category, outcome, action])
+  // Supports fulltext search over denormalized human-readable and technical metadata
+  @@fulltext([searchText])
   @@map("audit_logs")
 }
 

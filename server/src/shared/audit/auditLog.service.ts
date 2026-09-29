@@ -1,6 +1,11 @@
 import { AuditCategory, AuditOutcome, AuditLog, Prisma } from '@prisma/client';
 import { prisma } from '../db/prisma';
-import { sanitizeAuditPayload, sanitizeAuditChanges, AuditLogChange } from './auditSanitizer';
+import {
+  sanitizeAuditPayload,
+  sanitizeAuditChanges,
+  getUserDisplayName,
+  AuditLogChange,
+} from './auditSanitizer';
 
 export type { AuditLogChange };
 
@@ -24,6 +29,32 @@ export interface AuditLogInput {
   details?: Record<string, unknown>;
 }
 
+/**
+ * Recursively extracts primitive values from an object or array.
+ * Joins primitive values; skips keys and structural wrappers.
+ */
+function extractPrimitiveValues(value: unknown): string[] {
+  if (value === null || value === undefined) {
+    return [];
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return [String(value)];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => extractPrimitiveValues(item));
+  }
+  if (typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>).flatMap((val) =>
+      extractPrimitiveValues(val)
+    );
+  }
+  return [];
+}
+
 export class AuditLogService {
   /**
    * Logs a single event to the audit log.
@@ -35,6 +66,41 @@ export class AuditLogService {
       ? sanitizeAuditPayload(input.additionalAffectedObjects)
       : undefined;
 
+    // Resolve actor display name for search text denormalization
+    let actorLabel = 'System';
+    if (input.actorId) {
+      try {
+        const actor = await prisma.user.findUnique({
+          where: { id: input.actorId },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            username: true,
+            email: true,
+          },
+        });
+        actorLabel = getUserDisplayName(actor);
+      } catch {
+        actorLabel = 'Unknown User';
+      }
+    }
+
+    // Extract primitive values from sanitizedDetails (never from raw input.details)
+    const detailValues = sanitizedDetails ? extractPrimitiveValues(sanitizedDetails) : [];
+
+    const searchParts: string[] = [
+      input.category,
+      input.outcome,
+      input.action,
+      input.affectedObjectName,
+      input.entityType,
+      actorLabel,
+      ...detailValues,
+    ].filter((val): val is string => typeof val === 'string' && val.trim().length > 0);
+
+    const searchText = searchParts.length > 0 ? searchParts.join(' ').trim() : null;
+
     return await prisma.auditLog.create({
       data: {
         companyId: input.companyId,
@@ -45,6 +111,7 @@ export class AuditLogService {
         entityType: input.entityType,
         entityId: input.entityId,
         affectedObjectName: input.affectedObjectName,
+        searchText,
         additionalAffectedObjects: sanitizedAdditionalObjects !== undefined
           ? (sanitizedAdditionalObjects as unknown as Prisma.InputJsonValue)
           : Prisma.JsonNull,

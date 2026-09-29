@@ -28,6 +28,18 @@ export interface AuditListResponse {
   totalPages: number;
 }
 
+export interface AuditSearchListItem extends AuditListItem {
+  matchType?: 'exact_id' | 'fulltext';
+}
+
+export interface AuditSearchResponse {
+  items: AuditSearchListItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export interface AuditDetailResponse {
   id: string;
   createdAt: Date;
