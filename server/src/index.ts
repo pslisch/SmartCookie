@@ -25,6 +25,7 @@ import profileRouter from './features/profiles/routes/profile.routes';
 import profileFieldRouter from './features/profiles/routes/profileField.routes';
 import identityProviderRouter from './features/identity/routes/identityProvider.routes';
 import emailConfigRouter from './features/profiles/routes/emailConfig.routes';
+import auditRouter from './features/audit/routes/audit.routes';
 import themeRouter from './features/theme/routes/theme.routes';
 import fontRouter from './features/theme/routes/font.routes';
 import { csrfProtection } from './shared/middleware/csrf.middleware';
@@ -38,6 +39,7 @@ import './features/profiles/profileFields.permissions';
 import './features/identity/identity.permissions';
 import './features/theme/theme.permissions';
 import './features/notifications/notifications.permissions';
+import './features/audit/audit.permissions';
 import { syncPermissions } from './shared/permissions/sync';
 import { seedSuperuserRoles } from '../prisma/seed/rbacSeed';
 import { seedProfileFields } from '../prisma/seed/profileFieldsSeed';
@@ -125,6 +127,7 @@ async function startServer() {
   app.use('/api/profile-fields', profileFieldRouter);
   app.use('/api/identity-providers', identityProviderRouter);
   app.use('/api/company/email-config', emailConfigRouter);
+  app.use('/api/audit-logs', auditRouter);
 
   // 404 catch-all for unmatched /api routes to prevent falling through to Vite SPA HTML middleware
   app.all('/api', (req, res) => {
