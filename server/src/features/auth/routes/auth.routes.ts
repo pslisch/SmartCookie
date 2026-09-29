@@ -7,11 +7,14 @@ import { loginRateLimiter, forgotPasswordRateLimiter } from '../../../shared/mid
 import { requireAuth } from '../../../shared/middleware/session.middleware';
 import { SESSION_DURATION_MS, PASSWORD_RESET_TTL_SECONDS } from '../../../shared/constants';
 import { TokenService } from '../../../shared/token/token.service';
-import { TokenPurpose } from '@prisma/client';
+import { TokenPurpose, AuditCategory, AuditOutcome } from '@prisma/client';
 import { permissionResolverService } from '../../rbac/services/permissionResolver.service';
 import { mandatoryAssignmentService } from '../../assignments/services/mandatoryAssignment.service';
 import { ProfileFieldValueService } from '../../profiles/services/profileFieldValue.service';
 import { issueSession } from '../services/sessionHelper';
+import { auditLogService } from '../../../shared/audit/auditLog.service';
+import { authFailureAggregationService } from '../../../shared/audit/authFailureAggregation.service';
+import { getUserDisplayName } from '../../../shared/audit/auditSanitizer';
 
 const router = Router();
 
@@ -69,6 +72,15 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
 
     const sessionResult = await issueSession(fullUser, req, res);
 
+    // Direct non-MFA login succeeded: resolve any open failure events for this actor
+    if (fullUser.companyId) {
+      try {
+        await authFailureAggregationService.resolveOpenFailures(fullUser.companyId, fullUser.id);
+      } catch (auditErr) {
+        console.error('Failed to resolve open failures on successful login:', auditErr);
+      }
+    }
+
     res.json({
       success: true,
       user: sessionResult.user,
@@ -77,6 +89,57 @@ router.post('/login', loginRateLimiter.middleware, async (req: Request, res: Res
     const err = error instanceof Error ? error : new Error(String(error));
     if (err.name === 'AuthenticationError') {
       loginRateLimiter.recordFailure(req);
+
+      // Audit login failure: internal-only lookup against User without changing HTTP response
+      try {
+        const { identifier, username } = req.body;
+        const rawLoginId = identifier || username;
+        const trimmed = typeof rawLoginId === 'string' ? rawLoginId.trim() : '';
+
+        const matchedUser = trimmed
+          ? await prisma.user.findFirst({
+              where: {
+                OR: [
+                  { username: trimmed },
+                  { email: trimmed.toLowerCase() },
+                ],
+              },
+              select: {
+                id: true,
+                companyId: true,
+                firstName: true,
+                lastName: true,
+                username: true,
+                email: true,
+              },
+            })
+          : null;
+
+        if (matchedUser && matchedUser.companyId) {
+          await authFailureAggregationService.recordAuthFailure(
+            matchedUser.companyId,
+            matchedUser.id,
+            'LOGIN_FAILURE',
+            getUserDisplayName(matchedUser),
+            { attemptedIdentifier: trimmed }
+          );
+        } else {
+          // Unresolvable identifier: individual FAILURE event with actorId: null
+          const defaultCompany = await prisma.company.findFirst();
+          if (defaultCompany) {
+            await authFailureAggregationService.recordAuthFailure(
+              defaultCompany.id,
+              null,
+              'LOGIN_FAILURE',
+              trimmed || 'unknown',
+              { attemptedIdentifier: trimmed }
+            );
+          }
+        }
+      } catch (auditErr) {
+        console.error('Failed to record login failure audit event:', auditErr);
+      }
+
       return res.status(401).json({ error: err.message });
     }
     res.status(500).json({ error: err.message || 'An internal error occurred.' });
@@ -147,6 +210,19 @@ router.post('/mfa/verify', loginRateLimiter.middleware, async (req: Request, res
     }
 
     if (!isValid) {
+      if (user.companyId) {
+        try {
+          await authFailureAggregationService.recordAuthFailure(
+            user.companyId,
+            user.id,
+            'MFA_FAILURE',
+            getUserDisplayName(user),
+            { failureReason: 'INVALID_CODE' }
+          );
+        } catch (auditErr) {
+          console.error('Failed to record MFA failure audit event:', auditErr);
+        }
+      }
       return res.status(400).json({ error: 'Invalid verification code.' });
     }
 
@@ -175,6 +251,15 @@ router.post('/mfa/verify', loginRateLimiter.middleware, async (req: Request, res
       expires: expiresAt,
       sameSite: 'none',
     });
+
+    // Resolve all open failure events for this actor across actions
+    if (user.companyId) {
+      try {
+        await authFailureAggregationService.resolveOpenFailures(user.companyId, user.id);
+      } catch (auditErr) {
+        console.error('Failed to resolve open failures on MFA success:', auditErr);
+      }
+    }
 
     let roleName: string | null = null;
     let effectivePermissions: string[] = [];
@@ -588,6 +673,15 @@ router.post('/forgot-password', forgotPasswordRateLimiter.middleware, async (req
  * and logs them in immediately with a fresh session.
  */
 router.post('/reset-password', async (req: Request, res: Response) => {
+  let resolvedUser: {
+    id: string;
+    companyId: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    username: string | null;
+    email: string | null;
+  } | null = null;
+
   try {
     const { token, newPassword } = req.body;
     if (!token) {
@@ -595,6 +689,37 @@ router.post('/reset-password', async (req: Request, res: Response) => {
     }
     if (!newPassword) {
       return res.status(400).json({ error: 'New password is required.' });
+    }
+
+    // Attempt internal lookup of the token to resolve the user if valid and active
+    if (typeof token === 'string' && token.trim()) {
+      try {
+        const tokenHash = TokenService.hashToken(token);
+        const existingToken = await prisma.token.findUnique({
+          where: { tokenHash },
+        });
+
+        if (
+          existingToken &&
+          existingToken.purpose === TokenPurpose.PASSWORD_RESET &&
+          existingToken.usedAt === null &&
+          existingToken.expiresAt >= new Date()
+        ) {
+          resolvedUser = await prisma.user.findUnique({
+            where: { id: existingToken.userId },
+            select: {
+              id: true,
+              companyId: true,
+              firstName: true,
+              lastName: true,
+              username: true,
+              email: true,
+            },
+          });
+        }
+      } catch {
+        // Ignore token pre-check errors; consume will handle formal validation
+      }
     }
 
     // Validate the password policy before consuming/burning the token
@@ -673,6 +798,35 @@ router.post('/reset-password', async (req: Request, res: Response) => {
     });
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
+
+    // Audit password reset failure without logging raw token credentials
+    try {
+      if (resolvedUser && resolvedUser.companyId) {
+        // Known user whose password policy validation failed
+        await authFailureAggregationService.recordAuthFailure(
+          resolvedUser.companyId,
+          resolvedUser.id,
+          'PASSWORD_RESET_FAILURE',
+          getUserDisplayName(resolvedUser),
+          { failureReason: 'PASSWORD_POLICY_VIOLATION' }
+        );
+      } else {
+        // Token consume failure with no resolved user (invalid or expired token)
+        const defaultCompany = await prisma.company.findFirst();
+        if (defaultCompany) {
+          await authFailureAggregationService.recordAuthFailure(
+            defaultCompany.id,
+            null,
+            'PASSWORD_RESET_FAILURE',
+            'Unresolved User',
+            { failureReason: 'INVALID_OR_EXPIRED_TOKEN' }
+          );
+        }
+      }
+    } catch (auditErr) {
+      console.error('Failed to record password reset failure audit event:', auditErr);
+    }
+
     const isValidationError =
       err.name === 'PasswordValidationError' ||
       err.message === 'Invalid token' ||
@@ -841,6 +995,25 @@ router.post('/change-password', requireAuth, async (req: Request, res: Response)
       where: { id: req.user!.id },
       data: { passwordHash: newPasswordHash },
     });
+
+    // Audit plain SUCCESS password change event
+    try {
+      const companyId = req.user!.companyId || (await prisma.company.findFirst())?.id;
+      if (companyId) {
+        await auditLogService.log({
+          companyId,
+          category: AuditCategory.AUTHENTICATION_SECURITY,
+          outcome: AuditOutcome.SUCCESS,
+          action: 'PASSWORD_CHANGE',
+          actorId: req.user!.id,
+          entityType: 'User',
+          entityId: req.user!.id,
+          affectedObjectName: getUserDisplayName(req.user),
+        });
+      }
+    } catch (auditErr) {
+      console.error('Failed to log password change audit event:', auditErr);
+    }
 
     return res.json({
       success: true,

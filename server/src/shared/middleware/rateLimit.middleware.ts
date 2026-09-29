@@ -1,8 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
+import { prisma } from '../db/prisma';
+import { AuditCategory, AuditOutcome } from '@prisma/client';
+import { auditLogService } from '../audit/auditLog.service';
+import { getUserDisplayName } from '../audit/auditSanitizer';
 
 interface RateLimitRecord {
   attempts: number;
   resetTime: number;
+  lockoutAudited?: boolean;
 }
 
 export class LoginRateLimiter {
@@ -20,7 +25,7 @@ export class LoginRateLimiter {
    * Prioritizes a trimmed, lowercased username. Fallbacks to client IP.
    */
   public getIdentifier(req: Request): string {
-    const username = req.body?.username;
+    const username = req.body?.username || req.body?.identifier;
     if (username && typeof username === 'string' && username.trim()) {
       return `usr:${username.trim().toLowerCase()}`;
     }
@@ -31,7 +36,7 @@ export class LoginRateLimiter {
    * Express middleware to check if the identifier has exceeded the failed attempt threshold.
    */
   public get middleware() {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
       const identifier = this.getIdentifier(req);
       const record = this.store.get(identifier);
       const now = Date.now();
@@ -45,6 +50,51 @@ export class LoginRateLimiter {
 
         // If threshold exceeded, reject request with 429
         if (record.attempts >= this.maxAttempts) {
+          // Audit lockout if the identifier resolves to a real user
+          if (!record.lockoutAudited) {
+            record.lockoutAudited = true;
+            if (identifier.startsWith('usr:')) {
+              const rawName = identifier.slice(4);
+              try {
+                const user = await prisma.user.findFirst({
+                  where: {
+                    OR: [
+                      { username: rawName },
+                      { email: rawName },
+                    ],
+                  },
+                  select: {
+                    id: true,
+                    companyId: true,
+                    firstName: true,
+                    lastName: true,
+                    username: true,
+                    email: true,
+                  },
+                });
+
+                if (user && user.companyId) {
+                  await auditLogService.log({
+                    companyId: user.companyId,
+                    category: AuditCategory.AUTHENTICATION_SECURITY,
+                    outcome: AuditOutcome.FAILURE,
+                    action: 'ACCOUNT_LOCKOUT',
+                    actorId: user.id,
+                    entityType: 'User',
+                    entityId: user.id,
+                    affectedObjectName: getUserDisplayName(user),
+                    details: {
+                      attemptThreshold: this.maxAttempts,
+                      windowMinutes: Math.round(this.windowMs / 60000),
+                    },
+                  });
+                }
+              } catch (auditErr) {
+                console.error('Failed to log account lockout audit event:', auditErr);
+              }
+            }
+          }
+
           const retryAfterSeconds = Math.ceil((record.resetTime - now) / 1000);
           res.setHeader('Retry-After', String(retryAfterSeconds));
           return res.status(429).json({
@@ -63,7 +113,7 @@ export class LoginRateLimiter {
    */
   public recordFailure(req: Request): void {
     const ipIdentifier = `ip:${req.ip || 'unknown'}`;
-    const username = req.body?.username;
+    const username = req.body?.username || req.body?.identifier;
     const userIdentifier = username && typeof username === 'string' && username.trim() ? `usr:${username.trim().toLowerCase()}` : null;
 
     this.incrementAttempt(ipIdentifier);

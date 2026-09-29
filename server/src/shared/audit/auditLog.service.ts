@@ -27,6 +27,8 @@ export interface AuditLogInput {
   additionalAffectedObjects?: AdditionalAffectedObject[];
   changes?: AuditLogChange[];
   details?: Record<string, unknown>;
+  authFailureCount?: number | null;
+  resolvedAt?: Date | null;
 }
 
 /**
@@ -112,6 +114,8 @@ export class AuditLogService {
         entityId: input.entityId,
         affectedObjectName: input.affectedObjectName,
         searchText,
+        authFailureCount: input.authFailureCount !== undefined ? input.authFailureCount : null,
+        resolvedAt: input.resolvedAt !== undefined ? input.resolvedAt : null,
         additionalAffectedObjects: sanitizedAdditionalObjects !== undefined
           ? (sanitizedAdditionalObjects as unknown as Prisma.InputJsonValue)
           : Prisma.JsonNull,
