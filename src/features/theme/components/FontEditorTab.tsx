@@ -129,7 +129,7 @@ export const FontEditorTab: React.FC<FontEditorTabProps> = ({
   const systemFont = useMemo(() => {
     return (
       availableFonts.find((f) => f.isSystem) ||
-      availableFonts.find((f) => f.familyName.toLowerCase() === 'inter') ||
+      availableFonts.find((f) => f.familyName?.toLowerCase() === 'inter') ||
       null
     );
   }, [availableFonts]);

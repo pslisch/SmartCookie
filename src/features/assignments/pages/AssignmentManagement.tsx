@@ -744,7 +744,7 @@ export const AssignmentManagement: React.FC = () => {
                     </div>
                     {ous
                       .filter((ou) =>
-                        ou.name.toLowerCase().includes(targetSearch.toLowerCase())
+                        (ou.name || '').toLowerCase().includes((targetSearch || '').toLowerCase())
                       )
                       .map((ou) => (
                         <label
@@ -773,7 +773,7 @@ export const AssignmentManagement: React.FC = () => {
                     </div>
                     {lgs
                       .filter((lg) =>
-                        lg.name.toLowerCase().includes(targetSearch.toLowerCase())
+                        (lg.name || '').toLowerCase().includes((targetSearch || '').toLowerCase())
                       )
                       .map((lg) => (
                         <label
@@ -801,10 +801,12 @@ export const AssignmentManagement: React.FC = () => {
                       <span className="text-xs font-bold text-text-heading">{t('assignments.management.createModal.individualMembers')}</span>
                     </div>
                     {users
-                      .filter((u) =>
-                        u.username.toLowerCase().includes(targetSearch.toLowerCase()) ||
-                        u.email.toLowerCase().includes(targetSearch.toLowerCase())
-                      )
+                      .filter((u) => {
+                        const search = (targetSearch || '').toLowerCase();
+                        const matchUsername = u.username ? u.username.toLowerCase().includes(search) : false;
+                        const matchEmail = u.email ? u.email.toLowerCase().includes(search) : false;
+                        return matchUsername || matchEmail;
+                      })
                       .map((u) => (
                         <label
                           key={u.id}
@@ -816,7 +818,7 @@ export const AssignmentManagement: React.FC = () => {
                             onChange={() => toggleUserSelection(u.id)}
                             className="rounded text-link-primary focus:ring-link-primary"
                           />
-                          <span className="truncate" title={u.email}>{u.username}</span>
+                          <span className="truncate" title={u.email}>{u.username || u.email}</span>
                         </label>
                       ))}
                     {users.length === 0 && (

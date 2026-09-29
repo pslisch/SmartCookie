@@ -190,7 +190,7 @@ export const ScormPlayer: React.FC<ScormPlayerProps> = ({
 
     // Build the initial CMI object
     const initialCmi: Record<string, string> = {
-      'cmi.core.lesson_status': attempt.lessonStatus.toLowerCase().replace('_', ' '),
+      'cmi.core.lesson_status': (attempt.lessonStatus || '').toLowerCase().replace('_', ' '),
       'cmi.core.lesson_location': attempt.lessonLocation || '',
       'cmi.core.score.raw': attempt.scoreRaw !== null ? String(attempt.scoreRaw) : '',
       'cmi.core.score.min': attempt.scoreMin !== null ? String(attempt.scoreMin) : '',

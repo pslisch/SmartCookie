@@ -232,12 +232,12 @@ export const Catalog: React.FC = () => {
 
   // Filter lessons based on search
   const filteredLessons = lessons.filter((lesson) =>
-    lesson.title.toLowerCase().includes(searchTerm.toLowerCase())
+    (lesson.title || '').toLowerCase().includes((searchTerm || '').toLowerCase())
   );
 
   // Filter courses based on search
   const filteredCourses = courses.filter((course) =>
-    course.title.toLowerCase().includes(searchTerm.toLowerCase())
+    (course.title || '').toLowerCase().includes((searchTerm || '').toLowerCase())
   );
 
   return (

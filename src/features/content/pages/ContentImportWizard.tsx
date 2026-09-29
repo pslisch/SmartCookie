@@ -56,7 +56,7 @@ export const ContentImportWizard: React.FC<ContentImportWizardProps> = ({
       fetch('/api/preview/eligible-roles')
         .then((res) => (res.ok ? res.json() : []))
         .then((roles: Array<{ id: string; name: string }>) => {
-          const found = roles.find((r) => r.name.toLowerCase() === 'learner');
+          const found = roles.find((r) => r.name?.toLowerCase() === 'learner');
           if (found) {
             setLearnerRole(found);
           }

@@ -747,7 +747,7 @@ export const ThemeEditor: React.FC<ThemeEditorProps> = ({ themeId, onBack }) => 
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
     const hasValidExtension = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
-    if (!allowedTypes.includes(file.type.toLowerCase()) && !hasValidExtension) {
+    if (!allowedTypes.includes((file.type || '').toLowerCase()) && !hasValidExtension) {
       setLogoError(t('theme.editor.branding.errorInvalidType'));
       return;
     }

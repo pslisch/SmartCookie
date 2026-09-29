@@ -24,6 +24,19 @@ This document establishes the coding conventions and standards for the **SmartCo
    }
    ```
 
+4. **Defensive Null-Safety on Strings & Entity Attributes**
+   - Entities across the system often have nullable fields by design (for example, `User.username` is nullable for invited/pending users whose registration is not yet finalized; `User.recoveryEmail` or `OrganizationUnit.name` can be null/undefined).
+   - When performing search filtering, string matching, or normalization (`.toLowerCase()`, `.trim()`, `.replace()`, `.includes()`), **never** invoke methods directly on un-guarded fields.
+   - Always use safe fallbacks or truthy checks:
+   ```typescript
+   // Correct patterns:
+   const match = (u.username || '').toLowerCase().includes(query.toLowerCase());
+   const usernameMatch = u.username ? u.username.toLowerCase().includes(query) : false;
+
+   // Anti-pattern (causes runtime TypeError: Cannot read properties of null):
+   const match = u.username.toLowerCase().includes(query);
+   ```
+
 ---
 
 ## ⚛️ React Best Practices

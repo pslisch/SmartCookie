@@ -488,5 +488,22 @@ For structured field modifications (`changes: [{ field, before, after }]`):
 * Sensitive field diffs (e.g., changes to passwords or API keys) are dropped entirely from the array.
 * If all entries in a diff are sensitive, the sanitized output persists as an empty JSON array (`[]`) rather than `null`, cleanly distinguishing "no safe changes to log" from "no changes occurred".
 
+### 4. Authentication Failure Aggregation, Lockout, and Password-Change Events
+SmartCookie employs an intelligent aggregation strategy for authentication failures to protect audit tables from brute-force flooding while preserving forensic visibility:
+* **3-Strikes In-Memory Aggregation (`AuthFailureAggregationService`)**:
+  - For identifiable users, failed attempts (`LOGIN_FAILURE`, `MFA_FAILURE`, `PASSWORD_RESET_FAILURE`) are initially counted in an in-memory map keyed by `(companyId, actorId, action)`.
+  - Attempts 1 and 2 create **no database rows**.
+  - On the 3rd failed attempt, an initial `AuditLog` row is created with `authFailureCount: 3`, `category: AUTHENTICATION_SECURITY`, `outcome: FAILURE`, and `resolvedAt: null`.
+  - Attempts 4+ increment `authFailureCount` on the existing open row without creating new rows and without mutating the original `createdAt` timestamp.
+* **Multi-Series Resolution**:
+  - Successful session issuance (via direct password login or subsequent TOTP/recovery code verification at `/api/auth/mfa/verify`) resolves **all** currently-open `AUTHENTICATION_SECURITY/FAILURE` events for that actor across all action types (`LOGIN_FAILURE`, `MFA_FAILURE`).
+  - Sets `outcome: RESOLVED` and `resolvedAt: now` while retaining historical `authFailureCount` (not reset to 0 or null).
+* **Unresolvable Identifiers**:
+  - Failed login or reset attempts matching no real user (or invalid reset tokens) are logged as individual, non-aggregated `FAILURE` rows with `actorId: null` and `details.attemptedIdentifier`. Raw secrets and tokens are strictly excluded.
+* **Rate-Limiter Lockout Auditing**:
+  - When the rate limiter returns HTTP 429 for a resolvable user, it synchronously logs a single `ACCOUNT_LOCKOUT` audit event (`attemptThreshold: 5`, `windowMinutes: 15`). Unresolvable or IP-only requests are blocked without audit clutter.
+* **Password Change Events**:
+  - Successful password changes (`/api/auth/change-password`) log a single `PASSWORD_CHANGE` `SUCCESS` audit event. Neither old nor new password values are recorded in `changes` or `details`.
+
 
 

@@ -59,9 +59,10 @@ export function QuickProfile({ onClose, onOpenFullProfile }: QuickProfileProps) 
   };
 
   const getCustomFieldValueByName = (nameMatch: string) => {
-    if (!profile) return null;
+    if (!profile || !nameMatch) return null;
+    const target = nameMatch.toLowerCase().replace(/\s+/g, '');
     const field = profile.find(
-      (f) => f.name.toLowerCase().replace(/\s+/g, '') === nameMatch.toLowerCase().replace(/\s+/g, '')
+      (f) => (f.name || '').toLowerCase().replace(/\s+/g, '') === target
     );
     return field?.value || null;
   };

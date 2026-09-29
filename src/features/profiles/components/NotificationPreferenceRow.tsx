@@ -62,7 +62,7 @@ export const NotificationPreferenceRow: React.FC<NotificationPreferenceRowProps>
   const isEmailSaving = savingChannel === 'email';
   const isInLmsActive = pref.mandatory || pref.inLmsEnabled;
   const isEmailActive = pref.mandatory || pref.emailEnabled;
-  const typeLower = pref.notificationType.toLowerCase();
+  const typeLower = (pref.notificationType || '').toLowerCase();
 
   return (
     <div
