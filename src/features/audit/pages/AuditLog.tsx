@@ -104,11 +104,7 @@ export const AuditLog: React.FC = () => {
       if (filters.actorId) params.set('actorId', filters.actorId);
       if (filters.action) params.set('action', filters.action);
       if (filters.entityType) params.set('entityType', filters.entityType);
-
-      // Outcome enum vs Unclassified client-side post-filter
-      if (filters.outcome && filters.outcome !== 'UNCLASSIFIED') {
-        params.set('outcome', filters.outcome);
-      }
+      if (filters.outcome) params.set('outcome', filters.outcome);
 
       return params.toString();
     },
@@ -144,17 +140,10 @@ export const AuditLog: React.FC = () => {
 
         const data: AuditListResponse | AuditSearchResponse = await res.json();
 
-        let fetchedItems = data.items || [];
-
-        // Client-side post filter for UNCLASSIFIED outcome
-        if (filters.outcome === 'UNCLASSIFIED') {
-          fetchedItems = fetchedItems.filter((item) => item.outcome === null);
-        }
-
-        setItems(fetchedItems);
-        setTotalCount(filters.outcome === 'UNCLASSIFIED' ? fetchedItems.length : data.totalCount || 0);
+        setItems(data.items || []);
+        setTotalCount(data.totalCount || 0);
         setPage(data.page || targetPage);
-        setTotalPages(filters.outcome === 'UNCLASSIFIED' ? 1 : data.totalPages || 1);
+        setTotalPages(data.totalPages || 1);
       } catch (err: unknown) {
         console.error('[AuditLog] Error fetching audit logs:', err);
         setError(err instanceof Error ? err.message : t('audit.loadError', 'Failed to load audit logs'));
@@ -162,7 +151,7 @@ export const AuditLog: React.FC = () => {
         setLoading(false);
       }
     },
-    [canViewAudit, debouncedSearch, buildQueryParams, filters.outcome, t]
+    [canViewAudit, debouncedSearch, buildQueryParams, t]
   );
 
   useEffect(() => {
@@ -197,9 +186,7 @@ export const AuditLog: React.FC = () => {
       if (filters.actorId) params.set('actorId', filters.actorId);
       if (filters.action) params.set('action', filters.action);
       if (filters.entityType) params.set('entityType', filters.entityType);
-      if (filters.outcome && filters.outcome !== 'UNCLASSIFIED') {
-        params.set('outcome', filters.outcome);
-      }
+      if (filters.outcome) params.set('outcome', filters.outcome);
 
       const res = await fetch(`/api/audit-logs/export?${params.toString()}`);
       if (!res.ok) throw new Error(`Export failed (${res.status})`);

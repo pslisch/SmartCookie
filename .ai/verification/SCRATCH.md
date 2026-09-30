@@ -1,120 +1,129 @@
-# Audit Log Retention Cleanup Job & Write-Failure Alerting Verification
+# Audit Log Frontend & Server-Side "Unclassified" Filter Verification
 
-## 1. Architectural Summary & Implementation
+## 1. Architectural & Implementation Summary
 
-- **Resilient Audit Log Writing (`AuditLogService.log`)**:
-  - `server/src/shared/audit/auditLog.service.ts`: Implemented retry-once execution with fallback alerting.
-  - On first database create error, waits 200ms and retries the insert once.
-  - If the second attempt succeeds, returns the created `AuditLog` row normally without alerting.
-  - If both attempts fail, calls `auditWriteFailureAlertService.sendAuditWriteFailureAlert` passing sanitized error metadata (no raw passwords, tokens, or secrets), and returns `null`.
-  - The entire method is safely trapped; it NEVER throws or propagates an exception to the caller.
-- **Recipient Resolution & Write-Failure Alerting (`AuditWriteFailureAlertService`)**:
-  - `server/src/shared/audit/auditWriteFailureAlert.service.ts`: Resolves recipients as:
-    `(permission holders of audit:receive-failure-alerts for that company)` UNION `(company.settings.auditLogFailureAlertRecipients)`, deduped by lowercase email.
-  - Sends the `audit-log-failure` email template containing human-readable description, affected action, affected object, timestamp, and technical error.
-  - If sending the failure alert throws, waits and retries once.
-  - If the retry also throws, sends the generic fallback template `audit-log-system-problem` (no payload details).
-  - If that also fails, logs to console and stops without retrying or attempting third templates.
-- **Retention & Alert Settings Endpoints**:
-  - `server/src/features/audit/routes/audit.routes.ts`: Added `GET /api/audit-logs/settings` and `PATCH /api/audit-logs/settings`.
-  - Gated strictly by `audit:manage-retention` (independent from `audit:view`).
-  - Reads and merges into `company.settings`: `{ auditLogRetentionDays, auditLogFailureAlertRecipients }`.
-  - Default values when unconfigured: `retentionDays: 365`, `failureAlertRecipients: []`.
-  - Validates positive integers for `retentionDays` and email formats for `failureAlertRecipients` (returns 400 on violations).
-- **Scheduled Retention Cleanup Job (`purgeExpiredAuditLogs`)**:
-  - `server/src/shared/scheduler/scheduledTasks.service.ts`: Registered `purgeExpiredAuditLogs()` in `runAllTasks()` alongside other periodic jobs.
-  - For each company, computes `cutoff = now - retentionDays` (default 365 days).
-  - Executes batched deletions in fixed chunks of 1000 IDs (`take: 1000` looping until 0 remain) to protect memory and transactions.
-  - When `purgedCount > 0`, logs a single System `AuditLog` event:
-    - category: `DELETION`
-    - outcome: `SUCCESS`
-    - action: `RETENTION_CLEANUP`
-    - actorId: `null`
-    - entityType: `'Company'`
-    - entityId: `companyId`
-    - affectedObjectName: `company.name`
-    - details: `{ purgedCount, retentionDays, cutoffDate }`
+- **Server-Side `outcome=UNCLASSIFIED` Sentinel Handling**:
+  - `server/src/features/audit/types/audit.types.ts`: Extended `AuditLogQueryFilters.outcome` to accept `AuditOutcome | 'UNCLASSIFIED'`.
+  - `server/src/features/audit/routes/audit.routes.ts`: Updated `parseAuditQueryFilters` to recognize `outcome === 'UNCLASSIFIED'` as a valid filter query parameter, avoiding rejection against the `AuditOutcome` enum while still strictly returning HTTP 400 for any unrecognized values (e.g. `NOT_A_REAL_VALUE`).
+  - `server/src/features/audit/services/auditQuery.service.ts`: Updated `buildAuditLogWhereClause` to translate `filters.outcome === 'UNCLASSIFIED'` to `{ outcome: null }` in the Prisma where clause.
+  - Because `buildAuditLogWhereClause` is universally used across list (`GET /api/audit-logs`), search (`GET /api/audit-logs/search`), and streaming CSV export (`GET /api/audit-logs/export`), the fix is consistently applied across all surfaces.
+
+- **Frontend Client-Side Filter Removal (`src/features/audit/pages/AuditLog.tsx`)**:
+  - Removed client-side array filtering (`fetchedItems.filter(item => item.outcome === null)`), which previously caused pagination misreporting and restricted results to only rows on the fetched page.
+  - Removed local `totalCount` and `totalPages` overrides in `fetchAuditLogs`.
+  - `outcome=UNCLASSIFIED` is now passed directly as a standard query parameter in `buildQueryParams` and `handleExportFiltered`.
+  - Pagination, counts, search, and CSV exports now accurately query the entire database dataset.
+
+- **Frontend Component Architecture & Polish**:
+  - `AuditLogTable.tsx`: Renders human-readable values, browser-local formatted dates, and dedicated icons supplementing text:
+    - Outcome `FAILURE`: `AlertTriangle` icon + "Failure" badge.
+    - Category `DELETION`: `Trash2` icon + Action label.
+    - Action `COMPLETED`: `CheckCircle2` icon + Action label.
+    - Outcome `null`: Italicized "Unclassified" indicator.
+  - `CopyableIdTooltip.tsx`: Reusable component displaying truncated IDs with hash icon, click-to-open popover, outside-click auto-dismiss, and one-click copy to clipboard.
+  - `AuditLogDetailModal.tsx`: Displays complete audit entry details, structured diff mini-table for field changes, metadata key-values, and technical IDs via `CopyableIdTooltip`. Safe for SSR and client rendering.
 
 ---
 
-## 2. Acceptance Criteria Verification Evidence
+## 2. Server-Side Multi-Page & Filter Evidence
 
-### 1. Simulated Audit Write Failure (Retry Once, Alert Sent, Never Throw)
-- **Execution**: Simulated database failure during audit log insertion (injected connection error).
-- **Results**:
-  - `auditLogService.log()` returned without throwing: `result === null: true`.
-  - Total database create attempts executed: `2` (initial attempt + exactly 1 retry).
-  - Both attempts failed; `audit-log-failure` email dispatched.
-  - Recipients resolved:
-    - User with `audit:receive-failure-alerts`: `alert_officer_1790726561146@test.com`
-    - Configured extra address from settings: `sec-ops@company-a.com`, `audit-lead@company-a.com`
-    - Resolved list: `["alert_officer_1790726561146@test.com", "sec-ops@company-a.com", "audit-lead@company-a.com"]`
-  - Template used: `audit-log-failure`
-  - Technical error passed: `Database connection timeout during audit insert (attempt 2)`
-  - Raw secret leaked in alert email: `false`
+### Multi-Page Dataset Setup
+- **Seeded Dataset**: 40 Unclassified rows (`outcome: null`, `category: null`) and 40 Classified rows (20 `SUCCESS` / 20 `FAILURE`), spanning 80 total records for `UnclassifiedTestCo`.
+- **Page Size**: 30 records per page.
 
-### 2. Alert Email Fails Twice -> Fallback to System Problem Template
-- **Execution**: Simulated SMTP failure for primary `audit-log-failure` template.
-- **Results**:
-  - Primary alert attempts made before fallback: `2` (try 1 + retry 1).
-  - Fallback emails dispatched: `1`.
-  - Fallback template used: `audit-log-system-problem`.
-  - No further retries attempted after fallback.
+### Execution Results
+1. **GET `/api/audit-logs?outcome=UNCLASSIFIED&page=1&pageSize=30`**:
+   - Status: `200 OK`
+   - `totalCount`: `40` (Accurately reflects full dataset across all pages)
+   - `totalPages`: `2`
+   - `items.length`: `30`
+   - Items validation: Every item returned on page 1 has `outcome === null`.
 
-### 3. Settings Endpoints & Independent Permission Gating
-- **User with `audit:view` only (lacking `audit:manage-retention`)**:
-  - `GET /api/audit-logs/settings` status: `403` Forbidden
-  - `PATCH /api/audit-logs/settings` status: `403` Forbidden
-  - Confirms `audit:manage-retention` is independent of `audit:view`.
-- **User with `audit:manage-retention`**:
-  - `GET /api/audit-logs/settings` on unconfigured company: returns `200` with defaults `{ retentionDays: 365, failureAlertRecipients: [] }`.
-  - `PATCH /api/audit-logs/settings` with negative `retentionDays: -10`: returns `400` Bad Request.
-  - `PATCH /api/audit-logs/settings` with zero `retentionDays: 0`: returns `400` Bad Request.
-  - `PATCH /api/audit-logs/settings` with invalid email: returns `400` Bad Request.
-  - `PATCH /api/audit-logs/settings` with valid payload `{ retentionDays: 90, failureAlertRecipients: ["sec-ops@company-a.com", "audit-lead@company-a.com"] }`: returns `200`.
-  - Subsequent `GET /api/audit-logs/settings` returns persisted values: `{ retentionDays: 90, failureAlertRecipients: ["sec-ops@company-a.com", "audit-lead@company-a.com"] }`.
-  - Unrelated keys in `Company.settings` (e.g. `customBrandingEnabled: true`) remained intact and un-clobbered.
+2. **GET `/api/audit-logs?outcome=UNCLASSIFIED&page=2&pageSize=30`**:
+   - Status: `200 OK`
+   - `totalCount`: `40`
+   - `totalPages`: `2`
+   - `items.length`: `10`
+   - Items validation: Total across page 1 and page 2 = 40 unclassified records.
 
-### 4. Retention Cleanup Job
-- **Setup**: Company configured with `retentionDays: 1` day.
-- **Seeded**: 10 expired logs (3 days old) + 5 active logs (1 hour old).
-  - Count before cleanup: `15`.
-- **Execution**: `scheduledTasksService.purgeExpiredAuditLogs()`.
-- **Results**:
-  - Expired rows remaining: `0`.
-  - Active rows remaining: `5`.
-  - Exactly 1 new System `AuditLog` row created:
-    - category: `DELETION`
-    - outcome: `SUCCESS`
-    - action: `RETENTION_CLEANUP`
-    - actorId: `null`
-    - entityType: `'Company'`
-    - entityId: `c6079d38-fe6c-4b53-a7fa-53da56ec1fe7`
-    - affectedObjectName: `TestCo_A_1790726561146`
-    - details: `{"cutoffDate":"2026-09-29T05:22:45.340Z", "purgedCount": 10, "retentionDays": 1}`
+3. **GET `/api/audit-logs/search?q=Legacy&outcome=UNCLASSIFIED&page=1&pageSize=50`**:
+   - Status: `200 OK`
+   - `totalCount`: `40`
+   - `items.length`: `40`
+   - Fulltext search combined with `UNCLASSIFIED` outcome accurately returns all matching unclassified records.
 
-### 5. Batch-Safety (2,500 Expired Rows in 1,000-Row Batches)
-- **Setup**: Seeded 2,500 expired rows in `audit_logs` table for Company A.
-- **Execution**: `scheduledTasksService.purgeExpiredAuditLogs()`.
-- **Results**:
-  - Batch iterations executed: `3` (Batch 1: 1000 rows, Batch 2: 1000 rows, Batch 3: 500 rows).
-  - Expired bulk rows remaining: `0`.
-  - Resulting `RETENTION_CLEANUP` event `purgedCount`: `2500`.
+4. **GET `/api/audit-logs/export?outcome=UNCLASSIFIED` (CSV Export)**:
+   - Status: `200 OK`
+   - Total CSV lines: `41` (1 RFC4180 header row + 40 unclassified data rows).
+   - Export contains all 40 unclassified rows across the whole dataset without page truncation.
 
-### 6. Company Isolation
-- **Setup**: Company B configured with `retentionDays: 365` days; seeded with 7 rows dated 30 days ago.
-- **Execution**: `scheduledTasksService.purgeExpiredAuditLogs()`.
-- **Results**:
-  - Company B logs before purge: `7`.
-  - Company B logs after purge: `7` (unaffected by Company A's 1-day retention purge).
+5. **Invalid Outcome Validation**:
+   - Query: `GET /api/audit-logs?outcome=NOT_A_REAL_VALUE`
+   - Status: `400 Bad Request` (`{ error: 'Invalid outcome filter value.' }`)
+   - Rejection of invalid outcome values preserved while accepting `'UNCLASSIFIED'`.
 
 ---
 
-## 3. TypeScript Compiler Output (`npx tsc --noEmit`)
+## 3. Real React Component Rendering & Behavioral Verification
 
-Command: `npx tsc --noEmit`
-Exit status: `0`
+Verified directly through React component tree rendering (`scripts/verify_audit_frontend.ts`):
+
+1. **`AuditLogTable` Rendering**:
+   - **Failure Outcome**: Renders `AlertTriangle` failure icon with "Failure" badge.
+   - **Deletion Category**: Renders `Trash2` deletion icon with action text.
+   - **Completed Action**: Renders `CheckCircle2` icon with action text.
+   - **Unclassified Outcome**: Renders italicized "Unclassified" label.
+
+2. **`CopyableIdTooltip` Rendering**:
+   - Renders trigger with hash icon and truncated text (`c6079d38…`).
+   - Popover contains full technical ID and "Copy" action button.
+   - Event listener cleans up and dismisses popover on outside click.
+
+3. **`AuditLogFilters` Rendering**:
+   - Renders search input, date range filters (`Date From`, `Date To`), `Actor`, `Action`, `Object Type`, and `Outcome` dropdowns.
+   - Outcome dropdown contains `<option value="UNCLASSIFIED">Unclassified</option>`.
+   - Renders `Export Filtered` and `Export All` buttons.
+
+4. **`AuditLogDetailModal` Rendering**:
+   - Renders full action header, actor display name, category, outcome, structured field modification diffs table (`field`, `before`, `after`), metadata details, and technical identifiers.
+
+---
+
+## 4. TypeScript Compiler Output (`npx tsc --noEmit`)
+
+Command: `npx tsc --noEmit`  
+Exit Status: `0`
 
 ```text
 ```
 *(Zero compilation or type errors.)*
+
+---
+
+## 5. Build Verification Output (`npm run build`)
+
+Command: `npm run build`  
+Exit Status: `0`
+
+```text
+> smart-cookie@1.0.0 build
+> vite build && esbuild server/src/index.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs
+
+vite v6.4.3 building for production...
+transforming...
+✓ 2237 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.40 kB │ gzip:   0.27 kB
+dist/assets/index-CkKUDqgT.css     83.19 kB │ gzip:  13.10 kB
+dist/assets/index-CrrXgA-d.js   2,160.82 kB │ gzip: 408.85 kB
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.53s
+
+  dist/server.cjs      619.7kb
+  dist/server.cjs.map    1.1mb
+⚡ Done in 147ms
+```

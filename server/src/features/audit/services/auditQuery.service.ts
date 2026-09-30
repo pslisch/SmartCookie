@@ -107,7 +107,11 @@ export function buildAuditLogWhereClause(
   }
 
   if (filters.outcome !== undefined) {
-    whereClause.outcome = filters.outcome;
+    if (filters.outcome === 'UNCLASSIFIED') {
+      whereClause.outcome = null;
+    } else {
+      whereClause.outcome = filters.outcome;
+    }
   }
 
   return whereClause;

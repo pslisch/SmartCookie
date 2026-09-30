@@ -177,13 +177,16 @@ function parseAuditQueryFilters(req: Request): AuditLogQueryFilters & { error?: 
     dateTo = parsed;
   }
 
-  let outcome: AuditOutcome | undefined;
+  let outcome: AuditOutcome | 'UNCLASSIFIED' | undefined;
   if (req.query.outcome !== undefined && req.query.outcome !== '') {
     const rawOutcome = String(req.query.outcome).trim();
-    if (!Object.values(AuditOutcome).includes(rawOutcome as AuditOutcome)) {
+    if (rawOutcome === 'UNCLASSIFIED') {
+      outcome = 'UNCLASSIFIED';
+    } else if (Object.values(AuditOutcome).includes(rawOutcome as AuditOutcome)) {
+      outcome = rawOutcome as AuditOutcome;
+    } else {
       return { page, pageSize, error: 'Invalid outcome filter value.' };
     }
-    outcome = rawOutcome as AuditOutcome;
   }
 
   const actorId =

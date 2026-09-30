@@ -76,5 +76,5 @@ export interface AuditLogQueryFilters {
   action?: string;
   entityType?: string;
   entityId?: string;
-  outcome?: AuditOutcome;
+  outcome?: AuditOutcome | 'UNCLASSIFIED';
 }

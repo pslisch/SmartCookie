@@ -320,5 +320,9 @@ export const AuditLogDetailModal: React.FC<AuditLogDetailModalProps> = ({
     </AnimatePresence>
   );
 
+  if (typeof document === 'undefined') {
+    return modalContent;
+  }
+
   return createPortal(modalContent, document.body);
 };
