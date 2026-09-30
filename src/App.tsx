@@ -101,7 +101,8 @@ function AppContent({ appName }: { appName: string }) {
     usePermission('notifications', 'manage-rules') ||
     usePermission('notifications', 'view-delivery-failures') ||
     usePermission('notifications', 'manage-scheduled') ||
-    usePermission('notifications', 'manage-templates');
+    usePermission('notifications', 'manage-templates') ||
+    usePermission('audit', 'view');
 
   // Synchronize active tab with URL hash for persistent link sharing and cold-starts
   useEffect(() => {

@@ -53,7 +53,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     usePermission('notifications', 'manage-rules') ||
     usePermission('notifications', 'view-delivery-failures') ||
     usePermission('notifications', 'manage-scheduled') ||
-    usePermission('notifications', 'manage-templates');
+    usePermission('notifications', 'manage-templates') ||
+    usePermission('audit', 'view');
 
   const canPreview = usePermission('preview', 'use');
   const [eligibleRoles, setEligibleRoles] = useState<Array<{ id: string; name: string }>>([]);

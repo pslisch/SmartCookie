@@ -6,19 +6,20 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
-import { ArrowLeft, Users2, BookOpen, Palette, Bell } from 'lucide-react';
+import { ArrowLeft, Users2, BookOpen, Palette, Bell, ScrollText } from 'lucide-react';
 import { UserGroupManagement } from '../../organization/pages/UserGroupManagement';
 import { AssignmentManagement } from '../../assignments/pages/AssignmentManagement';
 import { ContentManagement } from '../../assignments/pages/ContentManagement';
 import { ThemeManagement } from '../../theme/pages/ThemeManagement';
 import { NotificationsHub } from '../../notifications/pages/NotificationsHub';
+import { AuditLog } from '../../audit/pages/AuditLog';
 import { useAuth } from '../../../shared/components/AppGate';
 import { usePermission } from '../../../shared/hooks/usePermission';
 
 export const Management: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [view, setView] = useState<'hub' | 'organization' | 'assignments' | 'theme' | 'notifications'>('hub');
+  const [view, setView] = useState<'hub' | 'organization' | 'assignments' | 'theme' | 'notifications' | 'audit'>('hub');
   const [assignmentsSubTab, setAssignmentsSubTab] = useState<'dispatcher' | 'catalog'>('dispatcher');
 
   // Administration (Users, Groups, Roles & Profile Fields) permissions
@@ -55,6 +56,9 @@ export const Management: React.FC = () => {
   const canManageEmailTemplates = usePermission('notifications', 'manage-templates');
   const hasNotificationAccess = canManageNotificationRules || canViewDeliveryFailures || canManageScheduledNotifications || canManageEmailTemplates;
 
+  // Audit Log permissions
+  const canViewAudit = usePermission('audit', 'view');
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -86,6 +90,8 @@ export const Management: React.FC = () => {
                 ? t('management.assignments')
                 : view === 'theme'
                 ? t('settings.themeManagement')
+                : view === 'audit'
+                ? t('management.auditLog')
                 : t('settings.notifications')}
             </h1>
             <p className="mt-1.5 text-sm text-text-muted max-w-2xl font-sans">
@@ -97,6 +103,8 @@ export const Management: React.FC = () => {
                 ? t('management.assignmentsSubtitle')
                 : view === 'theme'
                 ? t('settings.themeManagementSubtitle')
+                : view === 'audit'
+                ? t('management.auditLogSubtitle')
                 : t('settings.notificationsSubtitle')}
             </p>
           </div>
@@ -214,6 +222,30 @@ export const Management: React.FC = () => {
               </span>
             </motion.button>
           )}
+
+          {canViewAudit && (
+            <motion.button
+              whileHover={{ y: -3, scale: 1.01 }}
+              whileTap={{ y: 0, scale: 0.99 }}
+              onClick={() => setView('audit')}
+              className="flex flex-col text-left p-6 rounded-2xl border border-card-border bg-card-bg shadow-sm transition-all hover:shadow-md hover:border-link-primary"
+              id="card-audit-log"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-status-info-bg text-link-primary mb-4">
+                <ScrollText className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-text-heading font-sans">
+                {t('management.auditLog')}
+              </h3>
+              <p className="text-sm text-text-muted mt-2 font-sans">
+                {t('management.auditLogDesc')}
+              </p>
+              <span className="text-xs text-link-primary font-semibold mt-4 inline-flex items-center space-x-1">
+                <span>{t('management.manageAuditLogBtn')}</span>
+                <span>&rarr;</span>
+              </span>
+            </motion.button>
+          )}
         </div>
       )}
 
@@ -269,6 +301,12 @@ export const Management: React.FC = () => {
       {view === 'notifications' && hasNotificationAccess && (
         <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="notifications-subview">
           <NotificationsHub />
+        </div>
+      )}
+
+      {view === 'audit' && canViewAudit && (
+        <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="audit-subview">
+          <AuditLog />
         </div>
       )}
     </motion.div>
