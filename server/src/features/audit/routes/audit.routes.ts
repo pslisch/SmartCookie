@@ -1,14 +1,145 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { AuditOutcome } from '@prisma/client';
+import { AuditOutcome, Prisma } from '@prisma/client';
 import { prisma } from '../../../shared/db/prisma';
 import { requirePermission } from '../../../shared/middleware/permission.middleware';
 import { auditQueryService } from '../services/auditQuery.service';
 import { auditExportService } from '../services/auditExport.service';
 import { AuditLogQueryFilters } from '../types/audit.types';
+import '../audit.permissions';
 
 const router = Router();
 
-// Router-level permission gate: exports require no separate permission
+/**
+ * GET /api/audit-logs/settings
+ * Gated by audit:manage-retention (independent of audit:view).
+ * Returns { retentionDays, failureAlertRecipients } reading from company.settings.
+ */
+router.get(
+  '/settings',
+  requirePermission('audit', 'manage-retention'),
+  async (req: Request, res: Response) => {
+    try {
+      const companyId = req.user?.companyId;
+      if (!companyId) {
+        return res.status(400).json({ error: 'No company associated with current user.' });
+      }
+
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+        select: { settings: true },
+      });
+
+      const settings =
+        company?.settings && typeof company.settings === 'object' && !Array.isArray(company.settings)
+          ? (company.settings as Record<string, unknown>)
+          : {};
+
+      const retentionDays =
+        typeof settings.auditLogRetentionDays === 'number' && settings.auditLogRetentionDays > 0
+          ? settings.auditLogRetentionDays
+          : 365;
+
+      const failureAlertRecipients = Array.isArray(settings.auditLogFailureAlertRecipients)
+        ? (settings.auditLogFailureAlertRecipients as string[])
+        : [];
+
+      return res.json({
+        retentionDays,
+        failureAlertRecipients,
+      });
+    } catch (error: unknown) {
+      console.error('[Audit API] GET /settings error:', error);
+      return res.status(500).json({ error: 'Failed to retrieve audit log settings.' });
+    }
+  }
+);
+
+/**
+ * PATCH /api/audit-logs/settings
+ * Gated by audit:manage-retention (independent of audit:view).
+ * Body: { retentionDays?, failureAlertRecipients? }
+ */
+router.patch(
+  '/settings',
+  requirePermission('audit', 'manage-retention'),
+  async (req: Request, res: Response) => {
+    try {
+      const companyId = req.user?.companyId;
+      if (!companyId) {
+        return res.status(400).json({ error: 'No company associated with current user.' });
+      }
+
+      const { retentionDays, failureAlertRecipients } = req.body;
+
+      // Validate retentionDays if provided
+      if (retentionDays !== undefined) {
+        if (
+          typeof retentionDays !== 'number' ||
+          !Number.isInteger(retentionDays) ||
+          retentionDays <= 0
+        ) {
+          return res.status(400).json({ error: 'retentionDays must be a positive integer.' });
+        }
+      }
+
+      // Validate failureAlertRecipients if provided
+      let validatedRecipients: string[] | undefined = undefined;
+      if (failureAlertRecipients !== undefined) {
+        if (!Array.isArray(failureAlertRecipients)) {
+          return res
+            .status(400)
+            .json({ error: 'failureAlertRecipients must be an array of email strings.' });
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const cleaned: string[] = [];
+        for (const recipient of failureAlertRecipients) {
+          if (typeof recipient !== 'string' || !emailRegex.test(recipient.trim())) {
+            return res.status(400).json({
+              error: `Invalid email address in failureAlertRecipients: ${String(recipient)}`,
+            });
+          }
+          cleaned.push(recipient.trim().toLowerCase());
+        }
+        validatedRecipients = Array.from(new Set(cleaned));
+      }
+
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+        select: { settings: true },
+      });
+
+      const existingSettings =
+        company?.settings && typeof company.settings === 'object' && !Array.isArray(company.settings)
+          ? (company.settings as Record<string, unknown>)
+          : {};
+
+      const updatedSettings = {
+        ...existingSettings,
+        ...(retentionDays !== undefined ? { auditLogRetentionDays: retentionDays } : {}),
+        ...(validatedRecipients !== undefined
+          ? { auditLogFailureAlertRecipients: validatedRecipients }
+          : {}),
+      };
+
+      await prisma.company.update({
+        where: { id: companyId },
+        data: {
+          settings: updatedSettings as Prisma.InputJsonValue,
+        },
+      });
+
+      return res.json({
+        retentionDays: updatedSettings.auditLogRetentionDays ?? 365,
+        failureAlertRecipients: updatedSettings.auditLogFailureAlertRecipients ?? [],
+      });
+    } catch (error: unknown) {
+      console.error('[Audit API] PATCH /settings error:', error);
+      return res.status(500).json({ error: 'Failed to update audit log settings.' });
+    }
+  }
+);
+
+// Router-level permission gate for all remaining routes
 router.use(requirePermission('audit', 'view'));
 
 // Company-scoped gate: all endpoints require an associated companyId

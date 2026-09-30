@@ -6,6 +6,7 @@ import {
   getUserDisplayName,
   AuditLogChange,
 } from './auditSanitizer';
+import { auditWriteFailureAlertService } from './auditWriteFailureAlert.service';
 
 export type { AuditLogChange };
 
@@ -60,13 +61,38 @@ function extractPrimitiveValues(value: unknown): string[] {
 export class AuditLogService {
   /**
    * Logs a single event to the audit log.
+   *
+   * Resilient execution contract:
+   * - Tries the database create.
+   * - On failure, waits briefly and retries ONCE.
+   * - If retry succeeds, returns the row normally (no alert).
+   * - If retry also fails, dispatches an alert email via auditWriteFailureAlertService
+   *   with sanitized context and returns null.
+   * - NEVER throws an error past this method.
    */
-  async log(input: AuditLogInput): Promise<AuditLog> {
-    const sanitizedDetails = input.details !== undefined ? sanitizeAuditPayload(input.details) : undefined;
-    const sanitizedChanges = input.changes !== undefined ? sanitizeAuditChanges(input.changes) : undefined;
-    const sanitizedAdditionalObjects = input.additionalAffectedObjects !== undefined
-      ? sanitizeAuditPayload(input.additionalAffectedObjects)
-      : undefined;
+  async log(input: AuditLogInput): Promise<AuditLog | null> {
+    try {
+      return await this.executeCreateWithRetry(input);
+    } catch (unhandledErr) {
+      console.error('[AuditLogService] Catastrophic failure in log():', unhandledErr);
+      return null;
+    }
+  }
+
+  private async executeCreateWithRetry(input: AuditLogInput): Promise<AuditLog | null> {
+    let sanitizedDetails: Record<string, unknown> | undefined;
+    let sanitizedChanges: AuditLogChange[] | undefined;
+    let sanitizedAdditionalObjects: AdditionalAffectedObject[] | undefined;
+
+    try {
+      sanitizedDetails = input.details !== undefined ? sanitizeAuditPayload(input.details) : undefined;
+      sanitizedChanges = input.changes !== undefined ? sanitizeAuditChanges(input.changes) : undefined;
+      sanitizedAdditionalObjects = input.additionalAffectedObjects !== undefined
+        ? sanitizeAuditPayload(input.additionalAffectedObjects)
+        : undefined;
+    } catch (sanitizeErr) {
+      console.error('[AuditLogService] Error during payload sanitization, continuing with omitted details:', sanitizeErr);
+    }
 
     // Resolve actor display name for search text denormalization
     let actorLabel = 'System';
@@ -103,30 +129,80 @@ export class AuditLogService {
 
     const searchText = searchParts.length > 0 ? searchParts.join(' ').trim() : null;
 
-    return await prisma.auditLog.create({
-      data: {
-        companyId: input.companyId,
-        category: input.category,
-        outcome: input.outcome,
-        action: input.action,
-        actorId: input.actorId,
-        entityType: input.entityType,
-        entityId: input.entityId,
-        affectedObjectName: input.affectedObjectName,
-        searchText,
-        authFailureCount: input.authFailureCount !== undefined ? input.authFailureCount : null,
-        resolvedAt: input.resolvedAt !== undefined ? input.resolvedAt : null,
-        additionalAffectedObjects: sanitizedAdditionalObjects !== undefined
-          ? (sanitizedAdditionalObjects as unknown as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
-        changes: sanitizedChanges !== undefined
-          ? (sanitizedChanges as unknown as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
-        details: sanitizedDetails !== undefined
-          ? (sanitizedDetails as unknown as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
-      },
-    });
+    const createData = {
+      companyId: input.companyId,
+      category: input.category,
+      outcome: input.outcome,
+      action: input.action,
+      actorId: input.actorId,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      affectedObjectName: input.affectedObjectName,
+      searchText,
+      authFailureCount: input.authFailureCount !== undefined ? input.authFailureCount : null,
+      resolvedAt: input.resolvedAt !== undefined ? input.resolvedAt : null,
+      additionalAffectedObjects: sanitizedAdditionalObjects !== undefined
+        ? (sanitizedAdditionalObjects as unknown as Prisma.InputJsonValue)
+        : Prisma.JsonNull,
+      changes: sanitizedChanges !== undefined
+        ? (sanitizedChanges as unknown as Prisma.InputJsonValue)
+        : Prisma.JsonNull,
+      details: sanitizedDetails !== undefined
+        ? (sanitizedDetails as unknown as Prisma.InputJsonValue)
+        : Prisma.JsonNull,
+    };
+
+    // Attempt 1
+    try {
+      return await prisma.auditLog.create({
+        data: createData,
+      });
+    } catch (firstErr: any) {
+      console.warn(
+        `[AuditLogService] Audit log write failed on attempt 1 for action "${input.action}". Retrying once...`,
+        firstErr?.message
+      );
+
+      // Brief delay before single retry
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Attempt 2 (retry once)
+      try {
+        const result = await prisma.auditLog.create({
+          data: createData,
+        });
+        console.log(`[AuditLogService] Audit log write succeeded on retry attempt 2 for action "${input.action}".`);
+        return result;
+      } catch (secondErr: any) {
+        console.error(
+          `[AuditLogService] Audit log write failed on retry attempt 2 for action "${input.action}":`,
+          secondErr?.message
+        );
+
+        // Sanitize error message to ensure no secrets or tokens leak in alert
+        const rawMsg = secondErr instanceof Error ? secondErr.message : String(secondErr);
+        const cleanMsg = rawMsg.replace(
+          /(password|token|secret|key|hash)=[^&;\s]+/gi,
+          '$1=[REDACTED]'
+        );
+
+        try {
+          await auditWriteFailureAlertService.sendAuditWriteFailureAlert({
+            companyId: input.companyId,
+            action: input.action,
+            entityType: input.entityType,
+            entityId: input.entityId,
+            affectedObjectName: input.affectedObjectName,
+            errorMessage: cleanMsg,
+          });
+        } catch (alertErr) {
+          console.error('[AuditLogService] Failed to dispatch write failure alert email:', alertErr);
+        }
+
+        // Return null and NEVER rethrow past this point
+        return null;
+      }
+    }
   }
 
   /**

@@ -2,7 +2,14 @@ import { prisma } from '../db/prisma';
 import { emailService } from '../email/email.service';
 import { permissionResolverService } from '../../features/rbac/services/permissionResolver.service';
 import crypto from 'crypto';
-import { NotificationType, ThemeStatus, AssignmentStatus, UserAssignmentInstanceStatus } from '@prisma/client';
+import {
+  NotificationType,
+  ThemeStatus,
+  AssignmentStatus,
+  UserAssignmentInstanceStatus,
+  AuditCategory,
+  AuditOutcome,
+} from '@prisma/client';
 import { entraSyncService } from '../../features/identity/services/entraSync.service';
 import { processPendingEmailDeliveries } from '../../features/notifications/services/emailDelivery.service';
 import { processScheduledNotifications } from '../../features/notifications/services/scheduledNotificationFiring.service';
@@ -11,6 +18,7 @@ import {
   processDeadlineReminders,
   processOverdueReminders,
 } from '../../features/notifications/services/deadlineOverdueEvent.service';
+import { auditLogService } from '../audit/auditLog.service';
 
 async function shouldSendNotification(
   userId: string,
@@ -120,6 +128,7 @@ export class ScheduledTasksService {
     await this.purgeExpiredSoftDeletes();
     await this.activateScheduledAssignments();
     await this.purgeExpiredAssignments();
+    await this.purgeExpiredAuditLogs();
     await processDeadlineReminders();
     await processOverdueReminders();
     await this.runEntraSync();
@@ -665,6 +674,108 @@ export class ScheduledTasksService {
     }
 
     console.log(`[Scheduler] Activated ${activatedCount} scheduled assignment(s).`);
+  }
+
+  /**
+   * Purges expired AuditLog rows per company based on company.settings.auditLogRetentionDays (default 365).
+   * Deletes in fixed-size batches (1000 per iteration) looping until none remain.
+   * After cleanup (only if count > 0), logs ONE System AuditLog event:
+   * category DELETION, outcome SUCCESS, action 'RETENTION_CLEANUP', actorId null,
+   * entityType 'Company', entityId that companyId, affectedObjectName company's name,
+   * details: { purgedCount, retentionDays, cutoffDate }.
+   */
+  async purgeExpiredAuditLogs(): Promise<void> {
+    try {
+      console.log('[Scheduler] Running purgeExpiredAuditLogs job...');
+      const companies = await prisma.company.findMany({
+        select: {
+          id: true,
+          name: true,
+          settings: true,
+        },
+      });
+
+      const BATCH_SIZE = 1000;
+
+      for (const company of companies) {
+        try {
+          const settings =
+            company.settings && typeof company.settings === 'object' && !Array.isArray(company.settings)
+              ? (company.settings as Record<string, unknown>)
+              : {};
+
+          const retentionDays =
+            typeof settings.auditLogRetentionDays === 'number' && settings.auditLogRetentionDays > 0
+              ? settings.auditLogRetentionDays
+              : 365;
+
+          const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+
+          let totalPurgedForCompany = 0;
+          let batchIterations = 0;
+
+          while (true) {
+            const batch = await prisma.auditLog.findMany({
+              where: {
+                companyId: company.id,
+                createdAt: { lt: cutoff },
+              },
+              select: { id: true },
+              take: BATCH_SIZE,
+            });
+
+            if (batch.length === 0) {
+              break;
+            }
+
+            batchIterations++;
+            const idsToDelete = batch.map((r) => r.id);
+            const deleteResult = await prisma.auditLog.deleteMany({
+              where: {
+                id: { in: idsToDelete },
+              },
+            });
+
+            totalPurgedForCompany += deleteResult.count;
+
+            if (batch.length < BATCH_SIZE) {
+              break;
+            }
+          }
+
+          if (totalPurgedForCompany > 0) {
+            console.log(
+              `[Scheduler] Purged ${totalPurgedForCompany} expired audit log(s) for company "${company.name}" (ID: ${company.id}) in ${batchIterations} batch iteration(s).`
+            );
+
+            await auditLogService.log({
+              companyId: company.id,
+              category: AuditCategory.DELETION,
+              outcome: AuditOutcome.SUCCESS,
+              action: 'RETENTION_CLEANUP',
+              actorId: null,
+              entityType: 'Company',
+              entityId: company.id,
+              affectedObjectName: company.name,
+              details: {
+                purgedCount: totalPurgedForCompany,
+                retentionDays,
+                cutoffDate: cutoff.toISOString(),
+              },
+            });
+          }
+        } catch (companyError) {
+          console.error(
+            `[Scheduler] Error purging audit logs for company ${company.id}:`,
+            companyError
+          );
+        }
+      }
+
+      console.log('[Scheduler] purgeExpiredAuditLogs job finished.');
+    } catch (err) {
+      console.error('[Scheduler] Fatal error in purgeExpiredAuditLogs:', err);
+    }
   }
 }
 

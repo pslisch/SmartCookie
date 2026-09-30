@@ -8,12 +8,36 @@ import { emailChangeVerificationTemplate, EmailChangeVerificationData } from './
 import { entraSyncFailureTemplate, EntraSyncFailureData } from './templates/entraSyncFailure';
 import { genericNotificationTemplate, GenericNotificationData } from './templates/genericNotification';
 import { customHtmlNotificationTemplate, CustomHtmlNotificationData } from './templates/customHtmlNotification';
+import { auditLogFailureTemplate, AuditLogFailureData } from './templates/auditLogFailure';
+import { auditLogSystemProblemTemplate, AuditLogSystemProblemData } from './templates/auditLogSystemProblem';
 import { prisma } from '../db/prisma';
 import { decrypt } from '../crypto/encryption';
 
-export type EmailTemplateName = 'recovery-email-changed' | 'invitation' | 'password-reset' | 'group-expiration' | 'assignment-reminder' | 'email-change-verification' | 'entra-sync-failure' | 'generic-notification' | 'custom-html-notification';
+export type EmailTemplateName =
+  | 'recovery-email-changed'
+  | 'invitation'
+  | 'password-reset'
+  | 'group-expiration'
+  | 'assignment-reminder'
+  | 'email-change-verification'
+  | 'entra-sync-failure'
+  | 'generic-notification'
+  | 'custom-html-notification'
+  | 'audit-log-failure'
+  | 'audit-log-system-problem';
 
-export type EmailTemplateData = RecoveryEmailChangedData | InvitationData | PasswordResetData | GroupExpirationData | AssignmentReminderData | EmailChangeVerificationData | EntraSyncFailureData | GenericNotificationData | CustomHtmlNotificationData;
+export type EmailTemplateData =
+  | RecoveryEmailChangedData
+  | InvitationData
+  | PasswordResetData
+  | GroupExpirationData
+  | AssignmentReminderData
+  | EmailChangeVerificationData
+  | EntraSyncFailureData
+  | GenericNotificationData
+  | CustomHtmlNotificationData
+  | AuditLogFailureData
+  | AuditLogSystemProblemData;
 
 export interface EmailService {
   send(to: string, template: EmailTemplateName, data: EmailTemplateData, companyId?: string): Promise<void>;
@@ -114,6 +138,20 @@ class EmailServiceImpl implements EmailService {
       }
       case 'custom-html-notification': {
         const rendered = customHtmlNotificationTemplate(data as CustomHtmlNotificationData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
+      case 'audit-log-failure': {
+        const rendered = auditLogFailureTemplate(data as AuditLogFailureData);
+        subject = rendered.subject;
+        text = rendered.text;
+        html = rendered.html;
+        break;
+      }
+      case 'audit-log-system-problem': {
+        const rendered = auditLogSystemProblemTemplate(data as AuditLogSystemProblemData);
         subject = rendered.subject;
         text = rendered.text;
         html = rendered.html;

@@ -1,111 +1,118 @@
-# Authentication Failure Aggregation, Lockout, and Password-Change Audit Verification
+# Audit Log Retention Cleanup Job & Write-Failure Alerting Verification
 
-## 1. Overview & Architecture
-- **Auth Failure Aggregation Service (`server/src/shared/audit/authFailureAggregation.service.ts`)**:
-  - Implemented `recordAuthFailure` and `resolveOpenFailures`.
-  - **3-Strikes Failure Aggregation**: For identifiable users, failures 1 and 2 are tracked in an in-memory counter (`preFailureCounters`) per `(companyId, actorId, action)`. No AuditLog row is created for the 1st or 2nd failure.
-  - On the 3rd failure, an AuditLog row is created with `authFailureCount: 3`, `category: AUTHENTICATION_SECURITY`, `outcome: FAILURE`.
-  - On the 4th+ failure, the existing open row (`resolvedAt IS NULL`) is updated with `authFailureCount += 1`. Its ID and initial `createdAt` timestamp remain constant.
-  - **Unresolvable Identifiers**: Failures against nonexistent users or invalid tokens (actorId `null`) do not aggregate and create immediate individual rows with `actorId: null` and `details.attemptedIdentifier`.
-  - **Resolution on Session Issuance**: Successful login (direct non-MFA) and successful MFA verification resolve all currently open `AUTHENTICATION_SECURITY/FAILURE` events for that actor (`outcome: RESOLVED`, `resolvedAt: now`), retaining the historical `authFailureCount`.
-- **Lockout Auditing (`server/src/shared/middleware/rateLimit.middleware.ts`)**:
-  - At the point of returning HTTP 429 in `LoginRateLimiter.middleware`, an internal indexed lookup resolves the username/email to a real User.
-  - If a real user is resolved, exactly ONE `ACCOUNT_LOCKOUT` audit event is logged with `category: AUTHENTICATION_SECURITY`, `outcome: FAILURE`, `actorId: user.id`, `details: { attemptThreshold: 5, windowMinutes: 15 }`.
-  - Unresolvable / IP-only identifiers hitting 429 are blocked without creating an audit log.
-- **Password Change Auditing (`server/src/features/auth/routes/auth.routes.ts`)**:
-  - On successful `POST /api/auth/change-password`, logs a plain `SUCCESS` event with `action: 'PASSWORD_CHANGE'`. No `changes` or `details` containing plaintext or hashed passwords are recorded.
+## 1. Architectural Summary & Implementation
+
+- **Resilient Audit Log Writing (`AuditLogService.log`)**:
+  - `server/src/shared/audit/auditLog.service.ts`: Implemented retry-once execution with fallback alerting.
+  - On first database create error, waits 200ms and retries the insert once.
+  - If the second attempt succeeds, returns the created `AuditLog` row normally without alerting.
+  - If both attempts fail, calls `auditWriteFailureAlertService.sendAuditWriteFailureAlert` passing sanitized error metadata (no raw passwords, tokens, or secrets), and returns `null`.
+  - The entire method is safely trapped; it NEVER throws or propagates an exception to the caller.
+- **Recipient Resolution & Write-Failure Alerting (`AuditWriteFailureAlertService`)**:
+  - `server/src/shared/audit/auditWriteFailureAlert.service.ts`: Resolves recipients as:
+    `(permission holders of audit:receive-failure-alerts for that company)` UNION `(company.settings.auditLogFailureAlertRecipients)`, deduped by lowercase email.
+  - Sends the `audit-log-failure` email template containing human-readable description, affected action, affected object, timestamp, and technical error.
+  - If sending the failure alert throws, waits and retries once.
+  - If the retry also throws, sends the generic fallback template `audit-log-system-problem` (no payload details).
+  - If that also fails, logs to console and stops without retrying or attempting third templates.
+- **Retention & Alert Settings Endpoints**:
+  - `server/src/features/audit/routes/audit.routes.ts`: Added `GET /api/audit-logs/settings` and `PATCH /api/audit-logs/settings`.
+  - Gated strictly by `audit:manage-retention` (independent from `audit:view`).
+  - Reads and merges into `company.settings`: `{ auditLogRetentionDays, auditLogFailureAlertRecipients }`.
+  - Default values when unconfigured: `retentionDays: 365`, `failureAlertRecipients: []`.
+  - Validates positive integers for `retentionDays` and email formats for `failureAlertRecipients` (returns 400 on violations).
+- **Scheduled Retention Cleanup Job (`purgeExpiredAuditLogs`)**:
+  - `server/src/shared/scheduler/scheduledTasks.service.ts`: Registered `purgeExpiredAuditLogs()` in `runAllTasks()` alongside other periodic jobs.
+  - For each company, computes `cutoff = now - retentionDays` (default 365 days).
+  - Executes batched deletions in fixed chunks of 1000 IDs (`take: 1000` looping until 0 remain) to protect memory and transactions.
+  - When `purgedCount > 0`, logs a single System `AuditLog` event:
+    - category: `DELETION`
+    - outcome: `SUCCESS`
+    - action: `RETENTION_CLEANUP`
+    - actorId: `null`
+    - entityType: `'Company'`
+    - entityId: `companyId`
+    - affectedObjectName: `company.name`
+    - details: `{ purgedCount, retentionDays, cutoffDate }`
 
 ---
 
 ## 2. Acceptance Criteria Verification Evidence
 
-### 1. 1st and 2nd Failed Logins (Zero Audit Rows)
-- Executed 2 failed login attempts with invalid passwords for user `faillogin_1790672348512`.
-  - Attempt 1 Status: `401`
-  - Attempt 2 Status: `401`
-  - Database Query for `action: 'LOGIN_FAILURE'` and `actorId: testUser.id`:
-    - **Total rows found**: `0`
+### 1. Simulated Audit Write Failure (Retry Once, Alert Sent, Never Throw)
+- **Execution**: Simulated database failure during audit log insertion (injected connection error).
+- **Results**:
+  - `auditLogService.log()` returned without throwing: `result === null: true`.
+  - Total database create attempts executed: `2` (initial attempt + exactly 1 retry).
+  - Both attempts failed; `audit-log-failure` email dispatched.
+  - Recipients resolved:
+    - User with `audit:receive-failure-alerts`: `alert_officer_1790726561146@test.com`
+    - Configured extra address from settings: `sec-ops@company-a.com`, `audit-lead@company-a.com`
+    - Resolved list: `["alert_officer_1790726561146@test.com", "sec-ops@company-a.com", "audit-lead@company-a.com"]`
+  - Template used: `audit-log-failure`
+  - Technical error passed: `Database connection timeout during audit insert (attempt 2)`
+  - Raw secret leaked in alert email: `false`
 
-### 2. 3rd Failed Login (Initial Aggregated Row)
-- Executed 3rd failed login attempt:
-  - Attempt 3 Status: `401`
-  - **AuditLog rows count**: `1`
-  - Row ID: `fbc235cb-b6aa-4db3-ae4a-ee83ea1bfbfe`
-  - `authFailureCount`: `3`
-  - `outcome`: `FAILURE`
-  - `resolvedAt`: `null`
+### 2. Alert Email Fails Twice -> Fallback to System Problem Template
+- **Execution**: Simulated SMTP failure for primary `audit-log-failure` template.
+- **Results**:
+  - Primary alert attempts made before fallback: `2` (try 1 + retry 1).
+  - Fallback emails dispatched: `1`.
+  - Fallback template used: `audit-log-system-problem`.
+  - No further retries attempted after fallback.
 
-### 3. 4th and 5th Failed Logins (Same Row Updated, Counter Progressing)
-- Executed 4th and 5th failed login attempts:
-  - After 4th attempt:
-    - Same row ID preserved (`fbc235cb-b6aa-4db3-ae4a-ee83ea1bfbfe`): `true`
-    - `authFailureCount`: `4`
-  - After 5th attempt:
-    - Same row ID preserved (`fbc235cb-b6aa-4db3-ae4a-ee83ea1bfbfe`): `true`
-    - `authFailureCount`: `5`
-    - `createdAt` unchanged: `true`
+### 3. Settings Endpoints & Independent Permission Gating
+- **User with `audit:view` only (lacking `audit:manage-retention`)**:
+  - `GET /api/audit-logs/settings` status: `403` Forbidden
+  - `PATCH /api/audit-logs/settings` status: `403` Forbidden
+  - Confirms `audit:manage-retention` is independent of `audit:view`.
+- **User with `audit:manage-retention`**:
+  - `GET /api/audit-logs/settings` on unconfigured company: returns `200` with defaults `{ retentionDays: 365, failureAlertRecipients: [] }`.
+  - `PATCH /api/audit-logs/settings` with negative `retentionDays: -10`: returns `400` Bad Request.
+  - `PATCH /api/audit-logs/settings` with zero `retentionDays: 0`: returns `400` Bad Request.
+  - `PATCH /api/audit-logs/settings` with invalid email: returns `400` Bad Request.
+  - `PATCH /api/audit-logs/settings` with valid payload `{ retentionDays: 90, failureAlertRecipients: ["sec-ops@company-a.com", "audit-lead@company-a.com"] }`: returns `200`.
+  - Subsequent `GET /api/audit-logs/settings` returns persisted values: `{ retentionDays: 90, failureAlertRecipients: ["sec-ops@company-a.com", "audit-lead@company-a.com"] }`.
+  - Unrelated keys in `Company.settings` (e.g. `customBrandingEnabled: true`) remained intact and un-clobbered.
 
-### 4. Successful Login After Failures (Outcome RESOLVED, History Retained)
-- Executed successful login with correct password:
-  - Login Status: `200`
-  - Verified row `fbc235cb-b6aa-4db3-ae4a-ee83ea1bfbfe`:
-    - `outcome`: `RESOLVED`
-    - `resolvedAt`: `2026-09-29T09:39:13.916Z`
-    - Retained `authFailureCount`: `5` (retained, not reset to 0 or null)
+### 4. Retention Cleanup Job
+- **Setup**: Company configured with `retentionDays: 1` day.
+- **Seeded**: 10 expired logs (3 days old) + 5 active logs (1 hour old).
+  - Count before cleanup: `15`.
+- **Execution**: `scheduledTasksService.purgeExpiredAuditLogs()`.
+- **Results**:
+  - Expired rows remaining: `0`.
+  - Active rows remaining: `5`.
+  - Exactly 1 new System `AuditLog` row created:
+    - category: `DELETION`
+    - outcome: `SUCCESS`
+    - action: `RETENTION_CLEANUP`
+    - actorId: `null`
+    - entityType: `'Company'`
+    - entityId: `c6079d38-fe6c-4b53-a7fa-53da56ec1fe7`
+    - affectedObjectName: `TestCo_A_1790726561146`
+    - details: `{"cutoffDate":"2026-09-29T05:22:45.340Z", "purgedCount": 10, "retentionDays": 1}`
 
-### 5. Nonexistent User Logins (Separate Individual Rows, actorId: null)
-- Executed 3 failed login attempts using nonexistent username `unknown_actor_1790672351234`:
-  - Resulting AuditLog rows: `3` separate individual rows
-  - Each row has `actorId`: `null`
-  - Each row has `details.attemptedIdentifier`: `'unknown_actor_1790672351234'`
-  - Each row has a unique UUID (no aggregation counter used): `true`
+### 5. Batch-Safety (2,500 Expired Rows in 1,000-Row Batches)
+- **Setup**: Seeded 2,500 expired rows in `audit_logs` table for Company A.
+- **Execution**: `scheduledTasksService.purgeExpiredAuditLogs()`.
+- **Results**:
+  - Batch iterations executed: `3` (Batch 1: 1000 rows, Batch 2: 1000 rows, Batch 3: 500 rows).
+  - Expired bulk rows remaining: `0`.
+  - Resulting `RETENTION_CLEANUP` event `purgedCount`: `2500`.
 
-### 6. Independent MFA Failure Aggregation
-- User with MFA enabled failed login 3 times &rarr; open `LOGIN_FAILURE` event created (`authFailureCount: 3`, `resolvedAt: null`).
-- User authenticated password successfully &rarr; `mfaRequired: true`, challenge token issued.
-  - Verified `LOGIN_FAILURE` row remained open (`resolvedAt: null`).
-- User failed MFA verification 3 times via `POST /api/auth/mfa/verify`:
-  - A separate `MFA_FAILURE` row was created with `authFailureCount: 3`, `outcome: FAILURE`.
-  - The original `LOGIN_FAILURE` row was untouched and remained open.
-
-### 7. MFA Success Resolves Both Series
-- User provided valid recovery code to `POST /api/auth/mfa/verify`:
-  - Status: `200`
-  - Both rows verified in database:
-    - `LOGIN_FAILURE` row: `outcome: RESOLVED`, `resolvedAt: not null`
-    - `MFA_FAILURE` row: `outcome: RESOLVED`, `resolvedAt: not null`
-
-### 8. Password Reset Failures
-- **Unresolved User**: Submitted invalid token `completely-invalid-token-12345` to `POST /api/auth/reset-password`:
-  - Status: `400`
-  - Audit row created with `action: 'PASSWORD_RESET_FAILURE'`, `actorId: null`.
-  - `details` contains `{ failureReason: 'INVALID_OR_EXPIRED_TOKEN' }` (raw token omitted).
-- **Known User Policy Violation**: Valid token consumed, but new password violated length policy ("short") 3 times:
-  - 3rd attempt created an aggregated row with `action: 'PASSWORD_RESET_FAILURE'`, `actorId: testUser.id`, `authFailureCount: 3`.
-
-### 9. Rate-Limiter Lockout (`ACCOUNT_LOCKOUT`)
-- **Real User**: Submitted 5 failed attempts, triggering HTTP 429 on 6th and 7th requests:
-  - Status: `429`
-  - Exactly `1` row created in AuditLog for `action: 'ACCOUNT_LOCKOUT'` with `actorId: testUser.id`.
-  - `details`: `{"attemptThreshold":5,"windowMinutes":15}`.
-  - Subsequent 429 request did not duplicate the lockout audit log.
-- **Nonsense User**: Submitted 5 failed attempts with nonsense username, triggering HTTP 429:
-  - Status: `429`
-  - AuditLog rows created for nonsense user: `0` (unaudited per locked decision).
-
-### 10. Password Change Success (No Password Leaks)
-- Authenticated user executed `POST /api/auth/change-password`:
-  - Status: `200`
-  - Exactly `1` row created with `action: 'PASSWORD_CHANGE'`, `outcome: 'SUCCESS'`.
-  - `changes`: `null`
-  - `details`: `null`
-  - String search of raw database row for plaintext current and new password values: `false` (no credentials present).
+### 6. Company Isolation
+- **Setup**: Company B configured with `retentionDays: 365` days; seeded with 7 rows dated 30 days ago.
+- **Execution**: `scheduledTasksService.purgeExpiredAuditLogs()`.
+- **Results**:
+  - Company B logs before purge: `7`.
+  - Company B logs after purge: `7` (unaffected by Company A's 1-day retention purge).
 
 ---
 
 ## 3. TypeScript Compiler Output (`npx tsc --noEmit`)
 
-Execution command: `npx tsc --noEmit`
+Command: `npx tsc --noEmit`
 Exit status: `0`
 
 ```text
