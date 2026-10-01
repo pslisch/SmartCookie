@@ -25,10 +25,10 @@ export async function issueSession(user: User, req: Request, res: Response) {
   // Set HTTP-only session cookie
   res.cookie('sid', session.id, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     signed: true,
     expires: expiresAt,
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   });
 
   let roleName: string | null = null;

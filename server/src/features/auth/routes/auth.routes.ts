@@ -246,10 +246,10 @@ router.post('/mfa/verify', loginRateLimiter.middleware, async (req: Request, res
     // Set cookie
     res.cookie('sid', session.id, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       signed: true,
       expires: expiresAt,
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
     // Resolve all open failure events for this actor across actions
@@ -370,10 +370,10 @@ router.post('/mfa/enable-pending', async (req: Request, res: Response) => {
     // Set cookie
     res.cookie('sid', session.id, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       signed: true,
       expires: expiresAt,
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
     let roleName: string | null = null;
@@ -574,10 +574,10 @@ router.post('/activate', async (req: Request, res: Response) => {
     // Set HTTP-only session cookie
     res.cookie('sid', session.id, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       signed: true,
       expires: expiresAt,
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
     let roleName: string | null = null;
@@ -763,10 +763,10 @@ router.post('/reset-password', async (req: Request, res: Response) => {
     // Set the HTTP-only session cookie
     res.cookie('sid', session.id, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       signed: true,
       expires: expiresAt,
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
     let roleName: string | null = null;

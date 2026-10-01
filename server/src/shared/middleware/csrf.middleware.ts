@@ -22,14 +22,14 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
     // Set both cookie formats for cross-compatibility
     res.cookie('csrfToken', token, {
       httpOnly: false, // Must be readable by client-side JS to submit back
-      secure: true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
     });
     res.cookie('XSRF-TOKEN', token, {
       httpOnly: false, // Must be readable by client-side JS to submit back
-      secure: true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
     });
 
