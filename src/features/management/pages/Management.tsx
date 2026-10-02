@@ -58,6 +58,8 @@ export const Management: React.FC = () => {
 
   // Audit Log permissions
   const canViewAudit = usePermission('audit', 'view');
+  const canManageRetention = usePermission('audit', 'manage-retention');
+  const hasAuditAccess = canViewAudit || canManageRetention;
 
   return (
     <motion.div
@@ -223,7 +225,7 @@ export const Management: React.FC = () => {
             </motion.button>
           )}
 
-          {canViewAudit && (
+          {hasAuditAccess && (
             <motion.button
               whileHover={{ y: -3, scale: 1.01 }}
               whileTap={{ y: 0, scale: 0.99 }}
@@ -304,7 +306,7 @@ export const Management: React.FC = () => {
         </div>
       )}
 
-      {view === 'audit' && canViewAudit && (
+      {view === 'audit' && hasAuditAccess && (
         <div className="bg-card-bg p-6 rounded-2xl border border-card-border shadow-sm animate-fade-in" id="audit-subview">
           <AuditLog />
         </div>

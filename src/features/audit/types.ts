@@ -100,3 +100,13 @@ export interface AuditFilterState {
   entityType: string;
   outcome: string; // 'SUCCESS' | 'FAILURE' | 'RESOLVED' | 'UNCLASSIFIED' | ''
 }
+
+export interface AuditSettingsResponse {
+  retentionDays: number;
+  failureAlertRecipients: string[];
+}
+
+export interface AuditSettingsUpdateRequest {
+  retentionDays?: number;
+  failureAlertRecipients?: string[];
+}
