@@ -113,9 +113,8 @@ async function runAuditSettingsVerification() {
       previewRoleId: 'role_test',
       previewRoleName: 'Test Role',
       previewEffectivePermissions: permissions,
-      isApplying: false,
-      applyRole: async () => {},
-      clearPreview: () => {},
+      enterPreview: async () => {},
+      exitPreview: () => {},
     };
 
     return ReactDOMServer.renderToStaticMarkup(
@@ -186,9 +185,8 @@ async function runAuditSettingsVerification() {
     previewRoleId: 'role_test',
     previewRoleName: 'Test Role',
     previewEffectivePermissions: ['audit:manage-retention'],
-    isApplying: false,
-    applyRole: async () => {},
-    clearPreview: () => {},
+    enterPreview: async () => {},
+    exitPreview: () => {},
   };
   const htmlSettings = ReactDOMServer.renderToStaticMarkup(
     <AuthContext.Provider value={mockAuthValue}>
