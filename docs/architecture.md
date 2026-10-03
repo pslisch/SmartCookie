@@ -127,7 +127,7 @@ This restructuring guarantees administrators have single-click access to specifi
 ## 🔄 Data Flow Patterns
 
 - **Initialization Pipeline**: On load, `AppGate` triggers a non-blocking request to `GET /api/setup/status`. If status is `superuser` or `company`, the Setup Wizard takes over the layout. Once complete, users are guided through the secure credential form.
-- **Session & Identity**: After successful credentials validation, the server creates a unique `sessions` database entry and returns an HTTP-Only signed cookie (`sid`). Subsequent requests pass this cookie to authorize sensitive state changes.
+- **Session & Identity**: After successful credentials validation, the server creates a unique `sessions` database entry and returns an HTTP-Only signed cookie (`sid`). Subsequent requests pass this cookie to authorize sensitive state changes. Cookie security attributes (`secure`, `sameSite: 'lax'`) are environment-aware across session (`sid`) and CSRF (`csrfToken`) issuance, dynamically enforcing `secure: true` in production environments while permitting local HTTP development.
 - **Profile Integrity Notification (ADR-0005)**: When changing an administrator's `recoveryEmail` via `PATCH /api/auth/recovery-email`, the system locks the change in the database and fires a security alert immediately to the *old* recovery address, mitigating account hijacking vectors.
 - **Permission Verification & Path Resolution**: When accessing a protected page/route, the application checks permissions against the user's assigned role. If the company-wide global toggle `roleInheritanceEnabled` is active, the system's path resolver crawls recursively up the defined parent-role tree, accumulating permissions dynamically while actively shielding against cyclic loops. Superusers bypass all traversal logic entirely.
 
@@ -504,6 +504,19 @@ SmartCookie employs an intelligent aggregation strategy for authentication failu
   - When the rate limiter returns HTTP 429 for a resolvable user, it synchronously logs a single `ACCOUNT_LOCKOUT` audit event (`attemptThreshold: 5`, `windowMinutes: 15`). Unresolvable or IP-only requests are blocked without audit clutter.
 * **Password Change Events**:
   - Successful password changes (`/api/auth/change-password`) log a single `PASSWORD_CHANGE` `SUCCESS` audit event. Neither old nor new password values are recorded in `changes` or `details`.
+
+### 5. Resilient Write Execution & Alerting Pipeline
+The audit write pipeline follows an unbreakable execution contract (`AuditLogService.log`):
+* **Retry-Once Resilience**: Database write operations are attempted and, upon encountering any transient database error, retried once after a brief delay. The method catches all exceptions and never throws unhandled errors to calling services.
+* **Failure Alert Escalation (`AuditWriteFailureAlertService`)**: If the retry attempt also fails, alert recipients are resolved by uniting active company users holding the `audit:receive-failure-alerts` permission with custom email addresses configured in `Company.settings.auditLogFailureAlertRecipients`.
+* **Fallback Template Dispatch**: Failure alerts are dispatched via transactional email using the `audit-log-failure` template. If dispatching fails twice, a generic fallback template (`audit-log-system-problem`) containing no error payload details is delivered to ensure administrators are notified even during severe email rendering or transport faults.
+
+### 6. Query, Search & Streamed Export Pipeline
+Audit records are accessed and extracted through dedicated feature services (`server/src/features/audit/services/`):
+* **Company Scoping & Query Builder (`auditQuery.service.ts`)**: All query routes enforce tenant isolation using the authenticated user's `companyId`. The shared `buildAuditLogWhereClause` constructs type-safe Prisma filters for date ranges, actor IDs (`actorId: null` for System events), actions, entity types, and outcomes. Results are clamped to 1–100 items per page (default 30) ordered newest-first (`createdAt DESC, id DESC`).
+* **Hybrid Exact-ID and Fulltext Search**: When search queries (`GET /api/audit-logs/search?q=...`) contain a UUID, the query engine matches exact event IDs and entity IDs (`matchType: 'exact_id'`) alongside FULLTEXT search on remaining rows. For free-text queries, boolean mode FULLTEXT with trailing wildcards executes against the denormalized `searchText` column (`matchType: 'fulltext'`).
+* **Streamed RFC4180 CSV Export (`auditExport.service.ts`)**: Filtered (`/api/audit-logs/export`) and complete (`/api/audit-logs/export/all`) exports stream CRLF-delimited CSV attachments in 500-row chunks. Output includes 13 standardized columns with defense-in-depth sanitization of payload attributes and changes.
+* **Retention Policy (`AuditLogSettings.tsx`)**: Company audit retention windows are configured under `settings.auditLogRetentionDays` on the root `Company` record, defaulting to 365 days.
 
 
 

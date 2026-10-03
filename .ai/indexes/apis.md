@@ -1078,3 +1078,75 @@ Every documented endpoint logs:
 - **Permissions**: `requireAuth`, `notifications:manage-templates`
 - **Rules**: Soft-deletes a template by setting `deletedAt = now()`. Rejects deletion with 400 Bad Request if the template is currently marked as default (`isDefault: true`), requiring unsetting default status or designating another default first. Rejects deletion with 400 Bad Request if the template is currently referenced by any active `NotificationRule` (`deletedAt: null`), returning the count of referencing rules.
 
+### 130. Get Audit Log Settings
+- **Endpoint**: `/api/audit-logs/settings`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ retentionDays: number, failureAlertRecipients: string[] }` (200 OK)
+- **Used By**: `AuditLogSettings.tsx`
+- **Permissions**: `requireAuth`, `audit:manage-retention`
+- **Rules**: Gated by `audit:manage-retention` (independent of `audit:view`). Reads `auditLogRetentionDays` (defaults to 365 if absent or non-positive) and `auditLogFailureAlertRecipients` (defaults to `[]`) from `Company.settings`. Rejects with 400 if user has no associated company.
+
+### 131. Update Audit Log Settings
+- **Endpoint**: `/api/audit-logs/settings`
+- **Method**: `PATCH`
+- **Request**: `{ retentionDays?: number, failureAlertRecipients?: string[] }`
+- **Response**: `{ retentionDays: number, failureAlertRecipients: string[] }` (200 OK)
+- **Used By**: `AuditLogSettings.tsx`
+- **Permissions**: `requireAuth`, `audit:manage-retention`
+- **Rules**: Gated by `audit:manage-retention`. Validates `retentionDays` is a positive integer if provided. Validates `failureAlertRecipients` is an array of valid email strings, normalizes emails to lowercase, and deduplicates them. Atomically merges and updates `Company.settings`.
+
+### 132. List Audit Logs
+- **Endpoint**: `/api/audit-logs`
+- **Method**: `GET`
+- **Request**: Query parameters: `page?: number`, `pageSize?: number`, `dateFrom?: string` (ISO), `dateTo?: string` (ISO), `actorId?: string`, `action?: string`, `entityType?: string`, `entityId?: string`, `outcome?: "SUCCESS" | "FAILURE" | "RESOLVED" | "UNCLASSIFIED"`
+- **Response**: `{ items: AuditListItem[], page: number, pageSize: number, totalCount: number, totalPages: number }` (200 OK)
+- **Used By**: `AuditLogView.tsx`
+- **Permissions**: `requireAuth`, `audit:view`
+- **Rules**: Company-scoped paginated audit log listing. Clamps `pageSize` to 1–100 (default 30). Validates optional date boundaries and outcome filter. If `actorId === 'system'`, queries rows with `actorId: null`. Returns rows ordered by `createdAt DESC, id DESC`. Resolves and formats actor display names.
+
+### 133. Search Audit Logs
+- **Endpoint**: `/api/audit-logs/search`
+- **Method**: `GET`
+- **Request**: Query parameters: `q: string` (required), plus same query filters as list endpoint
+- **Response**: `{ items: AuditSearchListItem[], page: number, pageSize: number, totalCount: number, totalPages: number }` (200 OK)
+- **Used By**: `AuditLogView.tsx`
+- **Permissions**: `requireAuth`, `audit:view`
+- **Rules**: Fulltext and exact-ID search scoped to company. Rejects empty `q`. If `q` is a valid UUID, searches exact event `id` and `entityId` first (annotated with `matchType: 'exact_id'`), alongside FULLTEXT search on remaining rows (`matchType: 'fulltext'`). Non-UUID terms execute boolean mode FULLTEXT with trailing wildcards on `searchText`. Returns paginated results with `matchType`. Defined before `/:id` to prevent route collision.
+
+### 134. Export All Audit Logs (CSV)
+- **Endpoint**: `/api/audit-logs/export/all`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: Streamed RFC4180 CSV attachment (`Content-Type: text/csv; charset=utf-8`, filename `audit-log-<company-slug>-<YYYY-MM-DD>.csv`)
+- **Used By**: `AuditLogView.tsx` ("Export All" button)
+- **Permissions**: `requireAuth`, `audit:view`
+- **Rules**: Streams the company's entire audit log without pagination limits in batches of 500 rows. Output includes 13 RFC4180-compliant columns with CRLF line endings. Details and changes are sanitized on export as defense-in-depth. Defined before `/:id` to prevent route collision.
+
+### 135. Export Filtered Audit Logs (CSV)
+- **Endpoint**: `/api/audit-logs/export`
+- **Method**: `GET`
+- **Request**: Query parameters: `q?: string`, plus query filters matching list endpoint (`dateFrom`, `dateTo`, `actorId`, `action`, `entityType`, `entityId`, `outcome`)
+- **Response**: Streamed RFC4180 CSV attachment (`Content-Type: text/csv; charset=utf-8`, filename `audit-log-<company-slug>-<YYYY-MM-DD>.csv`)
+- **Used By**: `AuditLogView.tsx` ("Export Filtered" button)
+- **Permissions**: `requireAuth`, `audit:view`
+- **Rules**: Applies identical filtering and optional FULLTEXT search logic as list/search endpoints, bypassing pagination to stream all matching rows in chunks of 500 rows. Output follows identical RFC4180 format. Defined before `/:id` to prevent route collision.
+
+### 136. Get Audit Log Filter Options
+- **Endpoint**: `/api/audit-logs/filter-options`
+- **Method**: `GET`
+- **Request**: None
+- **Response**: `{ actions: string[], entityTypes: string[], actors: { id: string, displayName: string }[], hasSystemEvents: boolean, outcomes: string[] }` (200 OK)
+- **Used By**: `AuditLogView.tsx`
+- **Permissions**: `requireAuth`, `audit:view`
+- **Rules**: Retrieves distinct actions, entityTypes, and actors present in company audit logs. Resolves actor full display names, sorted alphabetically. Indicates presence of system-actor events (`actorId: null`). Defined before `/:id` to prevent route collision.
+
+### 137. Get Audit Log Detail by ID
+- **Endpoint**: `/api/audit-logs/:id`
+- **Method**: `GET`
+- **Request**: Path parameter `id: string` (UUID)
+- **Response**: `AuditDetailResponse` (200 OK)
+- **Used By**: `AuditLogDetailModal.tsx`
+- **Permissions**: `requireAuth`, `audit:view`
+- **Rules**: Retrieves full detail for a single audit log event scoped to user's `companyId`. Returns 404 if not found or belongs to another company (without revealing existence). Sanitizes `details`, `changes`, and `additionalAffectedObjects` on read as defense-in-depth. Resolves `triggeredBy` user display name if `details.triggeredByUserId` is present.
+

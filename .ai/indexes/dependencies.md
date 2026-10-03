@@ -154,6 +154,15 @@ Each feature should eventually map:
 - **Routes**: Client: Navbar Bell trigger, Settings/Profile Notifications tab; Backend: `/api/notifications/*`, `/api/notification-preferences`
 - **Events**: `scheduler:deadline-and-overdue-assignment-reminders`, `lesson:completed`, `lesson:assigned`, `notifications:email-delivery-permanently-failed`
 
+### 16. Audit Log Subsystem
+- **Uses**: `src/shared/types/index.ts`, `src/features/audit/types/index.ts`, `src/shared/components/CopyableIdTooltip.tsx`, `lucide-react`, `motion/react`, `nodemailer`
+- **Used By**: `src/features/management/pages/Management.tsx`, `src/App.tsx`, `src/shared/components/layout/Navbar.tsx`, app-wide backend mutation services
+- **Database**: `audit_logs`, `companies` (`settings.auditLogRetentionDays`, `settings.auditLogFailureAlertRecipients`), `users`
+- **Services**: `auditLog.service.ts`, `auditSanitizer.ts`, `authFailureAggregation.service.ts`, `auditWriteFailureAlert.service.ts`, `auditQuery.service.ts`, `auditExport.service.ts`
+- **Components**: `AuditLog.tsx`, `AuditLogView.tsx`, `AuditLogSettings.tsx`, `AuditLogFilters.tsx`, `AuditLogTable.tsx`, `AuditLogDetailModal.tsx`, `CopyableIdTooltip.tsx`
+- **Routes**: Client: `#management` (Audit Log sub-view); Backend: `/api/audit-logs/*`
+- **Events**: None (Synchronous write contract via `auditLogService.log` with retry-once-then-alert email dispatch via `auditWriteFailureAlertService`)
+
 ---
 
 

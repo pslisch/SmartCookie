@@ -368,6 +368,34 @@ Every registered component should include:
 - **Used By**: `src/features/management/pages/Management.tsx` (Notifications view)
 - **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `usePermission.ts`, `NotificationRuleManagement.tsx`, `DeliveryFailures.tsx`, `ScheduledNotificationManagement.tsx`, `EmailTemplateManagement.tsx`
 
+### 47. `AuditLog`
+- **Location**: `src/features/audit/pages/AuditLog.tsx`
+- **Purpose**: Consolidated administrative hub page for Audit Logging. Houses two permission-gated tabs: "Log" (`AuditLogView`) gated by `audit:view` and "Settings" (`AuditLogSettings`) gated by `audit:manage-retention`. Automatically synchronizes active tab to the first permitted tab if permissions shift or initial selection is not authorized.
+- **Props**: None (page component)
+- **Used By**: `src/features/management/pages/Management.tsx` (view === 'audit')
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`, `usePermission.ts`, `AuditLogView.tsx`, `AuditLogSettings.tsx`
+
+### 48. `AuditLogView`
+- **Location**: `src/features/audit/pages/AuditLogView.tsx`
+- **Purpose**: Primary audit log viewing interface. Manages debounced search (300ms), date range and category/outcome/actor/action filters, server-side pagination (clamped 1-100, default 30), CSV export triggers ("Export All" and "Export Filtered"), and detail modal state.
+- **Props**: None (page component)
+- **Used By**: `src/features/audit/pages/AuditLog.tsx`
+- **Dependencies**: React, `react-i18next`, `lucide-react`, `usePermission.ts`, `AuditLogFilters.tsx`, `AuditLogTable.tsx`, `AuditLogDetailModal.tsx`
+
+### 49. `AuditLogSettings`
+- **Location**: `src/features/audit/pages/AuditLogSettings.tsx`
+- **Purpose**: Administrative retention policy and write-failure alerting settings interface. Configures company `retentionDays` (positive integer validation) and manages email recipients for automated write-failure alerts with addition, deletion, and email regex validation.
+- **Props**: `initialData?: AuditSettingsResponse`
+- **Used By**: `src/features/audit/pages/AuditLog.tsx`
+- **Dependencies**: React, `react-i18next`, `lucide-react`, `usePermission.ts`
+
+### 50. `CopyableIdTooltip`
+- **Location**: `src/shared/components/CopyableIdTooltip.tsx`
+- **Purpose**: Reusable interactive technical ID viewer component. Renders truncated monospace ID badge with Hash icon; clicking triggers an animated popover showing the full un-truncated ID with click-to-copy clipboard action and click-outside dismissal.
+- **Props**: `idValue: string`, `label?: string`, `truncateLength?: number` (default 8), `className?: string`, `idPrefix?: string` (default `'copyable-id'`)
+- **Used By**: `AuditLogTable.tsx`, `AuditLogDetailModal.tsx`
+- **Dependencies**: React, `react-i18next`, `motion/react`, `lucide-react`
+
 
 
 

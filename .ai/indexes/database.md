@@ -402,12 +402,28 @@ This index describes the data models, entity relationships, and schemas supporti
 - **Fields**:
   - `id` (String, UUID, Primary Key)
   - `companyId` (String, Foreign Key to `companies.id`)
-  - `entityType` (String)
-  - `entityId` (String)
+  - `entityType` (String, maps to `entity_type`)
+  - `entityId` (String, maps to `entity_id`)
   - `action` (String)
-  - `actorId` (String, Nullable, Foreign Key to `users.id`)
-  - `metadata` (Json, Nullable)
-  - `createdAt` (DateTime, Default: `now()`)
+  - `actorId` (String, Nullable, Foreign Key to `users.id`, maps to `actor_id`)
+  - `category` (Enum: `AuditCategory`: `AUTHENTICATION_SECURITY`, `PERMISSIONS_ORGANIZATION`, `LEARNING_CONTENT_ASSIGNMENTS`, `LEARNING_RESULTS`, `DELETION`, `FAILURES`, Nullable)
+  - `outcome` (Enum: `AuditOutcome`: `SUCCESS`, `FAILURE`, `RESOLVED`, Nullable)
+  - `affectedObjectName` (String, Nullable, maps to `affected_object_name`)
+  - `additionalAffectedObjects` (Json, Nullable, maps to `additional_affected_objects`)
+  - `changes` (Json, Nullable)
+  - `details` (Json, Nullable, maps to `details`, renamed from `metadata`)
+  - `authFailureCount` (Int, Nullable, maps to `auth_failure_count`)
+  - `resolvedAt` (DateTime, Nullable, maps to `resolved_at`)
+  - `createdAt` (DateTime, Default: `now()`, maps to `created_at`)
+  - `updatedAt` (DateTime, Auto-updated, maps to `updated_at`)
+  - `searchText` (String, Text, Nullable, maps to `search_text`)
+- **Indexes & Constraints**:
+  - Composite index on `(companyId, createdAt)` (newest-first pagination)
+  - Composite index on `(companyId, category, createdAt)` (category filtering)
+  - Composite index on `(companyId, outcome, createdAt)` (outcome filtering)
+  - Composite index on `(companyId, actorId, createdAt)` (actor filtering)
+  - Composite index on `(companyId, actorId, category, outcome, action)` (unresolved auth failure lookup)
+  - Fulltext index `@@fulltext([searchText])` (fulltext search over denormalized metadata)
 - **Relations**:
   - Belongs to `Company` (via `companyId`, cascade on delete)
   - Belongs to `User` as actor (via `actorId`, set null on delete)
@@ -744,7 +760,7 @@ This index describes the data models, entity relationships, and schemas supporti
 
 ---
 
-## 🟢 Schema Registry (v1.14.0)
+## 🟢 Schema Registry (v1.15.0)
 
 - **v1.1.0**: Relational schema setup with Prisma and MariaDB (tables: `users`, `companies`, `sessions`), implementing superuser constraint and setup wizard persistence.
 - **v1.2.0**: Nullable username, added `email` field to `users`, added SQL CHECK constraint `username IS NOT NULL OR email IS NOT NULL`, and added `tokens` table with SHA-256 token hash and enum purposes.
@@ -759,7 +775,8 @@ This index describes the data models, entity relationships, and schemas supporti
 - **v1.11.0**: Microsoft Entra ID Integration Backend. Added `IdentityProviderConfig`, `EntraGroupSelection`, and `SyncLog` tables. Added `entraObjectId` and `profilePictureManuallySet` to `User` table. Added `syncSource` and `entraGroupId` to `OrganizationUnit` table. Added `SyncSource`, `IdentityProviderType`, `LoginMode`, `ImportStrategy`, `SyncStatus`, and `SyncTriggerType` enums.
 - **v1.12.0**: Theme & Branding Data Models. Added `Theme`, `Font`, and `ThemeLock` tables with `ThemeStatus` (`DRAFT`, `READY`, `ACTIVE`) and `ThemeLockType` (`EDIT`, `TEST`) enums. Soft-delete support with 14-day purge window on `Theme`. Seeded mandatory Smart Cookie Default theme and system `Inter` font per company.
 - **v1.13.0**: Notification System Phase 1. Added `NotificationRule`, `NotificationInstance`, `NotificationRecipient`, and `NotificationDelivery` models. Extended `NotificationPreference` with `emailEnabled` and `inLmsEnabled` columns (replacing the legacy `enabled` boolean, with persisted preference migration). Extended `NotificationType` enum with `MANAGER_COMPLETION` and `MANAGER_OVERDUE`. Added `NotificationChannel` (`IN_LMS`, `EMAIL`) and `NotificationDeliveryStatus` (`PENDING`, `SENT`, `FAILED`, `RETRIED`, `PERMANENTLY_FAILED`) enums.
-- **v1.14.0 (Current)**: Notification System Phase 2. Added `ScheduledNotification` model with recurrence (`NONE`, `DAILY`, `WEEKLY`, `MONTHLY`) and status (`ACTIVE`, `CANCELLED`). Added `EmailTemplate` model for rich HTML templates with `isDefault` per company and soft deletion. Linked `NotificationRule` to optional `EmailTemplate` via `emailTemplateId`.
+- **v1.14.0**: Notification System Phase 2. Added `ScheduledNotification` model with recurrence (`NONE`, `DAILY`, `WEEKLY`, `MONTHLY`) and status (`ACTIVE`, `CANCELLED`). Added `EmailTemplate` model for rich HTML templates with `isDefault` per company and soft deletion. Linked `NotificationRule` to optional `EmailTemplate` via `emailTemplateId`.
+- **v1.15.0 (Current)**: Enterprise Audit Log Schema Extension. Extended `AuditLog` model with `category` (`AuditCategory`: `AUTHENTICATION_SECURITY`, `PERMISSIONS_ORGANIZATION`, `LEARNING_CONTENT_ASSIGNMENTS`, `LEARNING_RESULTS`, `DELETION`, `FAILURES`), `outcome` (`AuditOutcome`: `SUCCESS`, `FAILURE`, `RESOLVED`), `affectedObjectName`, `additionalAffectedObjects`, `changes`, `details` (renamed from `metadata`), `authFailureCount`, `resolvedAt`, `updatedAt`, and `searchText` (`@db.Text` with `@@fulltext`). Added composite tenant indexes for category, outcome, actor, failure aggregation, and newest-first pagination.
 
 
 

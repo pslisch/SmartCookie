@@ -62,13 +62,14 @@ Every listed visual route should eventually document:
 - **Path**: Local State Tab & Hash URL (`#management`, legacy `#settings` redirects to `#management`)
 - **Component**: `src/features/management/pages/Management.tsx`
 - **Guards**: `AppGate` session verification (bounces to login if no active session), plus frontend permission check (bounces to `my-lessons` if no administrative permission)
-- **Permissions**: Requires active session with any administrative permission (`roles:manage`, `users:view`, `organization:*`, `assignments:*`, `profile-fields:manage-fields`, `theme:view`, `notifications:*`, or Superuser)
+- **Permissions**: Requires active session with any administrative permission (`roles:manage`, `users:view`, `organization:*`, `assignments:*`, `profile-fields:manage-fields`, `theme:view`, `notifications:*`, `audit:view`, `audit:manage-retention`, or Superuser)
 - **Hub Cards**:
   - **Users, Groups & Roles** (`#card-org-mgmt`): 5-tab workspace (`Users`, `Organization Structure`, `Learning Groups`, `Expiring Groups`, `Roles`) with per-tab permission gating.
   - **Content Management** (`#card-assignment-mgmt`): Course/lesson catalog and distribution dispatcher.
   - **Field Builder** (`#card-field-builder`): Profile field categories and dynamic attribute builder (`FieldBuilder.tsx`).
   - **Theme Management** (`#card-theme-management`): Theme and branding customization dashboard (`ThemeManagement.tsx`).
   - **Notifications** (`#card-notifications`): Consolidated notifications hub with permission-gated sub-tabs for Rules, Delivery Failures, Scheduled Notifications, and Email Templates (`NotificationsHub.tsx`).
+  - **Audit Log** (`#card-audit-log`): Enterprise compliance and audit event viewer with search, filtering, CSV export, and retention policy settings (`AuditLog.tsx`).
 
 ### 9. Full User Profile
 - **Path**: Local State Tab & Hash URL (`#profile`)
@@ -93,4 +94,10 @@ Every listed visual route should eventually document:
 - **Component**: Global application shell (`Shell.tsx`) with `ThemeTestBanner.tsx` and `ThemeRuntimeContext.tsx`
 - **Guards**: Intercepted by `ThemeRuntimeContext` and server `ThemeResolutionService`. Validates caller session and permissions; if the theme does not exist or user lacks permission, quietly falls back to active company theme.
 - **Permissions**: Requires active session with `theme:view` permission
+
+### 13. Audit Log Management Sub-view
+- **Path**: Local State View within Management Hub (`view === 'audit'`, accessed via `#card-audit-log` from `#management`)
+- **Component**: `src/features/audit/pages/AuditLog.tsx`
+- **Guards**: `AppGate` session verification, Management Hub access gate (`hasManagementAccess`), and internal `AuditLog` permission gate (`canViewAudit || canManageRetention`)
+- **Permissions**: Requires active session with `audit:view` or `audit:manage-retention` permission (or Superuser)
 

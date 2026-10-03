@@ -24,11 +24,12 @@ This document serves as the top-level directory map and semantic index of the **
   - **`src/features/profiles/`**: Full User Profile, custom Field Builder, notification preferences, and MFA security tabs.
   - **`src/features/identity/`**: Microsoft Entra ID connection wizard, sync status, and group mapping controls.
   - **`src/features/theme/`**: Theme & Branding manager, visual ThemeEditor (General, Colors, Fonts tabs), LivePreviewPane, FontLibrary, and modals for activation, scheduling, and font replacement.
+  - **`src/features/audit/`**: Audit Log management hub (`AuditLog.tsx`), log viewer with debounced search, filtering, and streamed CSV export (`AuditLogView.tsx`), and retention policy settings (`AuditLogSettings.tsx`).
 
 ### 3. Shared Layer (Client)
 - **`src/shared/`**: Resources, components, types, and hooks shared across multiple features.
   - **`src/shared/components/layout/`**: Shell viewport wrapper, responsive Navbar, sticky Footer, and LanguageSwitcher.
-  - **`src/shared/components/`**: AppGate auth state machine, PreviewBanner, RequiredFieldReminder, ProfileFieldInput, QuickProfile.
+  - **`src/shared/components/`**: AppGate auth state machine, PreviewBanner, RequiredFieldReminder, ProfileFieldInput, QuickProfile, CopyableIdTooltip.
   - **`src/shared/contexts/`**: PreviewContext for cosmetic role previewing, and ThemeRuntimeContext for dynamic CSS custom property injection, `@font-face` management, light/dark display mode, and test mode state.
   - **`src/shared/hooks/`**: `usePermission` for RBAC permission checks.
   - **`src/shared/i18n/`**: Internationalization configs and multi-language translation dictionaries.
@@ -37,9 +38,9 @@ This document serves as the top-level directory map and semantic index of the **
 ### 4. Backend Server Core
 - **`server/`**: Full-stack backend layer containing Express + TypeScript server, middleware, services, and database integration.
   - **`server/src/index.ts`**: Express application entrypoint, middleware configuration, and API route mounting.
-  - **`server/src/features/`**: Modular backend feature routes, controllers, services, and permission declarations (`auth`, `rbac`, `organization`, `assignments`, `content`, `profiles`, `identity`, `preview`, `theme`, `notifications`).
+  - **`server/src/features/`**: Modular backend feature routes, controllers, services, and permission declarations (`auth`, `rbac`, `organization`, `assignments`, `content`, `profiles`, `identity`, `preview`, `theme`, `notifications`, `audit`).
   - **`server/src/shared/`**: Cross-cutting backend infrastructure:
-    - **`server/src/shared/audit/`**: Audit logging service.
+    - **`server/src/shared/audit/`**: Audit logging service write contract with retry-once-then-alert resilience, recursive payload sanitization, 3-strikes authentication failure aggregation, and write failure alert dispatch.
     - **`server/src/shared/crypto/`**: AES-256-GCM encryption utilities for credentials and secrets.
     - **`server/src/shared/email/`**: Transactional email service supporting tenant SMTP and fallback configs.
     - **`server/src/shared/middleware/`**: Auth session verification, CSRF validation, permission checks, rate limiters, and error handling.

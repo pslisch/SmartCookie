@@ -367,6 +367,45 @@ Every logged feature should eventually document:
   3. Scheduled Notifications (Data model, CRUD APIs, background poller engine, and Management UI)
   4. Email Templates (Data model, CRUD APIs, Authoring UI with sandboxed preview and cursor variable insertion, rule form selector linkage, and send-path delivery integration with batched lookups and parameter interpolation).
 
+---
+
+## 🟢 v1.15.0 Audit Log
+
+### 18. Enterprise Audit Log Subsystem
+- **Description**: Comprehensive, immutable enterprise compliance logging and audit management subsystem. Features an extended single-table `AuditLog` relational schema supporting high-level event categorization (`AuditCategory`: `AUTHENTICATION_SECURITY`, `PERMISSIONS_ORGANIZATION`, `LEARNING_CONTENT_ASSIGNMENTS`, `LEARNING_RESULTS`, `DELETION`, `FAILURES`), explicit outcome tracking (`AuditOutcome`: `SUCCESS`, `FAILURE`, `RESOLVED`), immutable historical naming snapshots (`affectedObjectName`), structured `{ field, before, after }` differentials (`changes`), supplemental JSON context (`details`, renamed from `metadata`), multi-resource associations (`additionalAffectedObjects`), 3-strikes in-memory authentication failure aggregation with multi-series auto-resolution on successful login (`authFailureCount`, `resolvedAt`), and FULLTEXT search indexing (`searchText`). Built on a resilient write pipeline (`auditLogService.log`) that never throws past the service layer: attempts initial database insert, retries once on transient failure, and dispatches urgent failure alert emails (`auditWriteFailureAlertService`) with sanitized context to permission holders (`audit:receive-failure-alerts`) and configured company recipients (`settings.auditLogFailureAlertRecipients`) with a generic fallback template if rich email dispatch fails. Payload data is sanitized at the application layer (`auditSanitizer.ts`) using a recursive deny-list that drops sensitive keys (passwords, tokens, secrets, API keys, credentials) entirely. Delivers a dedicated, permission-gated administrative hub in Management (`AuditLog.tsx`) with two sub-views: "Log" (`AuditLogView.tsx`) featuring 300ms debounced search, date range/actor/action/outcome filtering, server-side pagination, streamed RFC4180 CSV export ("Export All" and "Export Filtered" in chunks of 500 rows with 13 standard columns), and an in-depth detail inspection modal (`AuditLogDetailModal.tsx`) with reusable truncated ID tooltips (`CopyableIdTooltip.tsx`); and "Settings" (`AuditLogSettings.tsx`) allowing authorized administrators (`audit:manage-retention`) to configure company retention windows (`settings.auditLogRetentionDays`) and manage email alert recipient lists.
+- **Components**:
+  - `AuditLog` (`src/features/audit/pages/AuditLog.tsx`)
+  - `AuditLogView` (`src/features/audit/pages/AuditLogView.tsx`)
+  - `AuditLogSettings` (`src/features/audit/pages/AuditLogSettings.tsx`)
+  - `AuditLogFilters` (`src/features/audit/components/AuditLogFilters.tsx`)
+  - `AuditLogTable` (`src/features/audit/components/AuditLogTable.tsx`)
+  - `AuditLogDetailModal` (`src/features/audit/components/AuditLogDetailModal.tsx`)
+  - `CopyableIdTooltip` (`src/shared/components/CopyableIdTooltip.tsx`)
+- **Pages**: Management Hub (`src/features/management/pages/Management.tsx`, view === 'audit'), Audit Log Hub (`src/features/audit/pages/AuditLog.tsx`)
+- **Services**:
+  - `AuditLogService` (`server/src/shared/audit/auditLog.service.ts`)
+  - `auditSanitizer` (`server/src/shared/audit/auditSanitizer.ts`)
+  - `AuthFailureAggregationService` (`server/src/shared/audit/authFailureAggregation.service.ts`)
+  - `AuditWriteFailureAlertService` (`server/src/shared/audit/auditWriteFailureAlert.service.ts`)
+  - `AuditQueryService` (`server/src/features/audit/services/auditQuery.service.ts`)
+  - `AuditExportService` (`server/src/features/audit/services/auditExport.service.ts`)
+- **APIs**:
+  - `GET /api/audit-logs` (company-scoped paginated audit log listing with query filters)
+  - `GET /api/audit-logs/search` (fulltext boolean search and exact UUID event/entity lookup)
+  - `GET /api/audit-logs/filter-options` (distinct actions, entityTypes, and actors for dropdown selectors)
+  - `GET /api/audit-logs/export/all` (streamed RFC4180 CSV of entire company audit log)
+  - `GET /api/audit-logs/export` (streamed RFC4180 CSV of filtered audit log results)
+  - `GET /api/audit-logs/:id` (full sanitized detail payload for a single audit event)
+  - `GET /api/audit-logs/settings` (retrieve company retentionDays and failureAlertRecipients)
+  - `PATCH /api/audit-logs/settings` (update company retentionDays and failureAlertRecipients)
+- **Database**: `audit_logs` (extended model with `AuditCategory` and `AuditOutcome` enums, composite tenant indexes, and fulltext index on `search_text`), `companies` (settings keys `auditLogRetentionDays` and `auditLogFailureAlertRecipients`), `users` (actor relation)
+- **Permissions**: `audit:view`, `audit:manage-retention`, `audit:receive-failure-alerts`
+- **Routes**:
+  - Client: Management Hub (`#management`, view === 'audit', card `#card-audit-log`)
+  - Backend: `/api/audit-logs/*` (`server/src/features/audit/routes/audit.routes.ts`)
+- **Events**: None (Synchronous resilient write contract via `auditLogService.log`; failure alerts dispatched directly through `emailService.send`)
+- **Dependencies**: Prisma ORM, Node.js, Express, Nodemailer, React, Tailwind CSS, `motion/react`, `lucide-react`, `react-i18next`
+
 
 
 
